@@ -1,0 +1,32 @@
+@import "tailwindcss";
+
+:root {
+  --ggm-bg-dark: #0b1220;
+  --ggm-bg-card-dark: #162032;
+  --ggm-primary-blue: #0052ff;
+  --ggm-accent-red: #ff3b30;
+  --ggm-accent-yellow: #ffcc00;
+  --ggm-text-light: #f8fafc;
+  --ggm-text-dark: #1e293b;
+  --ggm-gray-muted: #64748b;
+  --font-heading: 'Poppins', system-ui, sans-serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+  --radius-card: 16px;
+  --radius-btn: 50px;
+  --shadow-btn: 0 4px 15px rgba(255, 59, 48, 0.4);
+}
+
+body {
+  font-family: var(--font-body);
+  background-color: #ffffff;
+  color: var(--ggm-text-dark);
+  margin: 0;
+}
+h1, h2, h3 {
+  font-family: var(--font-heading);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+@media print {
+  .no-print { display: none !important; }
+}
