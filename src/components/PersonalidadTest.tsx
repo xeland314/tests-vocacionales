@@ -27,6 +27,8 @@ export default function PersonalidadTest() {
   const [name, setName] = useState("");
   const [savedAt, setSavedAt] = useState("");
   const [error, setError] = useState<string|null>(null);
+  const [saving, setSaving] = useState(false);
+  const [extra, setExtra] = useState({ padre:"", correoEst:"", correoPadre:"", cedulaEst:"", cedulaRepr:"" });
 
   useEffect(()=>{
     try {
@@ -50,11 +52,15 @@ export default function PersonalidadTest() {
     if(missing.length){ setError(`Falta responder la pregunta ${missing[0]}. Responde las 60 para ver el resultado.`); document.getElementById(`q-${missing[0]}`)?.scrollIntoView({behavior:"smooth",block:"center"}); return;}
     setShowResult(true); window.scrollTo({top:0,behavior:"smooth"});
   };
-  const save = ()=>{
+  const save = async ()=>{
     if(!name.trim()){ setError("Ingresa el nombre del estudiante para guardar."); return;}
-    const stamp=fmt(new Date());
+    const now=new Date(); const stamp=fmt(now); const fecha_unix=Math.floor(now.getTime()/1000);
     try{ localStorage.setItem(STORAGE_NAME,name.trim()); localStorage.setItem(STORAGE_DATE,stamp);}catch{}
-    setSavedAt(stamp); setError(null);
+    setSavedAt(stamp); setError(null); setSaving(true);
+    try{
+      const res=await fetch("/api/personalidad/submit",{ method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify({ nombre_estudiante:name.trim(), nombre_padre:extra.padre||null, correo_estudiante:extra.correoEst||null, correo_padre:extra.correoPadre||null, cedula_estudiante:extra.cedulaEst||null, cedula_representante:extra.cedulaRepr||null, fecha_unix, respuestas:answers })});
+      const j=await res.json(); if(!res.ok) throw new Error(j.error||"Error"); setSavedAt(stamp+" · guardado DB ✓");
+    }catch(e:any){ setError("Guardado local OK, pero DB falló: "+e.message); } finally{ setSaving(false); }
   };
   const reset = ()=>{ setAnswers({}); setShowResult(false); setError(null); try{localStorage.removeItem(STORAGE);}catch{}; window.scrollTo({top:0,behavior:"smooth"}); };
 
@@ -76,14 +82,18 @@ export default function PersonalidadTest() {
 
         <div className="max-w-4xl mx-auto px-4 py-6">
           {/* Guardar */}
-          <div className="bg-[#7C3AED]/10 border border-[#7C3AED]/20 rounded-2xl p-4 flex flex-col md:flex-row gap-3">
-            <div className="flex-1">
-              <label className="text-xs font-black uppercase tracking-wider text-[#0B1220]">Nombre del estudiante</label>
-              <input value={name} onChange={e=>setName(e.target.value)} placeholder="Ej: Carlos Ruiz - 3ro BGU" className="mt-1 w-full px-4 py-2.5 rounded-xl border-2 border-slate-300 focus:border-[#7C3AED] outline-none" />
-              {savedAt && <p className="text-xs text-slate-600 mt-1">Guardado: <b>{name||"—"} · {savedAt}</b></p>}
-              {error && <p className="text-xs text-red-600 font-bold mt-1">{error}</p>}
+          <div className="bg-[#7C3AED]/10 border border-[#7C3AED]/20 rounded-2xl p-4">
+            <div className="grid md:grid-cols-2 gap-3">
+              <div><label className="text-xs font-black uppercase">Nombre estudiante *</label><input value={name} onChange={e=>setName(e.target.value)} placeholder="Ej: Carlos Ruiz - 3ro BGU" className="mt-1 w-full px-4 py-2.5 rounded-xl border-2 border-slate-300 focus:border-[#7C3AED] outline-none" /></div>
+              <div><label className="text-xs font-bold uppercase text-slate-600">Padre / representante</label><input value={extra.padre} onChange={e=>setExtra(s=>({...s,padre:e.target.value}))} placeholder="Opcional" className="mt-1 w-full px-4 py-2.5 rounded-xl border-2 border-slate-200 outline-none text-sm" /></div>
+              <div><label className="text-xs font-bold uppercase text-slate-600">Correo estudiante</label><input value={extra.correoEst} onChange={e=>setExtra(s=>({...s,correoEst:e.target.value}))} placeholder="opcional@correo.com" className="mt-1 w-full px-4 py-2 rounded-xl border-2 border-slate-200 outline-none text-sm" /></div>
+              <div><label className="text-xs font-bold uppercase text-slate-600">Correo padre</label><input value={extra.correoPadre} onChange={e=>setExtra(s=>({...s,correoPadre:e.target.value}))} placeholder="opcional@correo.com" className="mt-1 w-full px-4 py-2 rounded-xl border-2 border-slate-200 outline-none text-sm" /></div>
+              <div><label className="text-xs font-bold uppercase text-slate-600">Cédula estudiante</label><input value={extra.cedulaEst} onChange={e=>setExtra(s=>({...s,cedulaEst:e.target.value.replace(/\D/g,"").slice(0,10)}))} placeholder="10 dígitos" className="mt-1 w-full px-4 py-2 rounded-xl border-2 border-slate-200 outline-none text-sm" /></div>
+              <div><label className="text-xs font-bold uppercase text-slate-600">Cédula representante</label><input value={extra.cedulaRepr} onChange={e=>setExtra(s=>({...s,cedulaRepr:e.target.value.replace(/\D/g,"").slice(0,10)}))} placeholder="10 dígitos" className="mt-1 w-full px-4 py-2 rounded-xl border-2 border-slate-200 outline-none text-sm" /></div>
             </div>
-            <button onClick={save} className="self-end bg-[#7C3AED] text-white font-bold px-6 py-2.5 rounded-full">💾 Guardar nombre y fecha</button>
+            {savedAt && <p className="text-xs text-slate-600 mt-2">Guardado: <b>{name||"—"} · {savedAt}</b></p>}
+            {error && <p className="text-xs text-red-600 font-bold mt-2">{error}</p>}
+            <button onClick={save} disabled={saving} className="mt-3 bg-[#7C3AED] text-white font-bold px-6 py-2.5 rounded-full disabled:opacity-60">{saving?"Guardando...":"💾 Guardar en BD (nombre + fecha UNIX)"}</button>
           </div>
 
           {/* Hero tipo - estilo 16personalities */}

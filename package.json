@@ -9,7 +9,8 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "seed": "node seed.mjs"
   },
   "dependencies": {
     "@astrojs/react": "^6.0.6",
@@ -19,6 +20,7 @@
     "@types/react-dom": "^19.3.0",
     "astro": "^7.3.3",
     "bcryptjs": "^3.0.3",
+    "plotly.js-dist-min": "^4.1.1",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "tailwindcss": "^4.3.3"
