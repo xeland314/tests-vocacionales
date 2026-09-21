@@ -26,7 +26,7 @@ users 1 ──< knox_authtoken
 - `preguntas`: catálogo **versionado** PK `(test_codigo, version, pregunta_id)`. 98 CHASIDE + 60 Personalidad + 60 Kuder por versión. Se carga una vez en `initDb()`.
 - `test_versiones`: `(codigo, version)` con `vigencia_desde` y `activo`. Inserta `CHASIDE v1`, `PERSONALIDAD v1`, `KUDER v1` al iniciar.
 - `chaside_resultados` / `personalidad_resultados` / `kuder_resultados`: **1 fila JSON por aplicación** (no 98 filas). Guarda `respuestas_json` + scores serializados + `top_*` + `fecha_unix` + `version`.
-- `users` + `knox_authtoken`: auth Knox SHA512 (token 64 chars, TTL 10h) — ver `src/lib/auth.ts`.
+- `users` + `knox_authtoken`: auth Knox SHA512 (token 64 chars, TTL 10h) — ver `src/lib/auth.ts`. `users.role` = `admin` (crea múltiples usuarios, gestiona panel + usuarios) / `docente` (solo accede y revisa formularios: `GET /api/admin/overview|estudiantes|estudiante/:id`, sin `POST/DELETE /api/users`). Primer usuario bootstrap siempre `admin`.
 
 Este modelo reemplaza al **legado normalizado** `respuestas(estudiante_id, pregunta_id, respuesta)` con PK compuesta y 98 filas por estudiante. El legado se documenta en §8 como apéndice y fue migrado en `src/lib/db.ts:22` (DROP si `test_codigo` legacy detectado).
 
@@ -157,16 +157,18 @@ CREATE TABLE kuder_resultados (
 CREATE INDEX idx_kuder_est ON kuder_resultados(estudiante_id);
 CREATE INDEX idx_kuder_top ON kuder_resultados(top);
 
--- Auth Knox
+-- Auth Knox + RBAC (admin gestiona usuarios, docente solo lectura formularios)
 CREATE TABLE users (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   email VARCHAR(255) NOT NULL UNIQUE,
   password_hash TEXT NOT NULL,
   first_name VARCHAR(100),
   last_name VARCHAR(100),
+  role VARCHAR(20) NOT NULL DEFAULT 'docente' CHECK (role IN ('admin','docente')),
   is_active BOOLEAN DEFAULT true,
   created_at TIMESTAMPTZ DEFAULT now()
 );
+CREATE INDEX idx_users_role ON users(role);
 CREATE TABLE knox_authtoken (
   digest TEXT PRIMARY KEY, -- SHA512 hex 128
   token_key VARCHAR(8) NOT NULL,
@@ -227,7 +229,7 @@ CREATE TABLE chaside_resultados (
 ) STRICT;
 
 -- personalidad_resultados y kuder_resultados idénticos a PG con TEXT
--- users / knox_authtoken idénticos a PG con TEXT
+-- users (con role CHECK admin/docente + idx_users_role) / knox_authtoken idénticos a PG con TEXT
 ```
 
 > UUID en SQLite: `TEXT 36` (debug-friendly) vs `BLOB 16` ahorra ~20 B/fila.

@@ -92,9 +92,11 @@ export async function authenticateToken(authHeader: string | null): Promise<{ us
     await db.execute({ sql: "UPDATE knox_authtoken SET expiry=? WHERE digest=?", args: [newExpiry, digest] });
     inst.expiry = newExpiry;
   }
-  const u = await db.execute({ sql: "SELECT id, email, first_name, last_name FROM users WHERE id=?", args: [inst.user_id] });
+  const u = await db.execute({ sql: "SELECT id, email, first_name, last_name, role, is_active FROM users WHERE id=?", args: [inst.user_id] });
   if (u.rows.length===0) return null;
-  return { user: u.rows[0], instance: inst };
+  const user = u.rows[0] as any;
+  if (user.is_active === 0) return null;
+  return { user, instance: inst };
 }
 
 // User helpers bcrypt
@@ -104,6 +106,16 @@ export async function hashPassword(plain: string): Promise<string> {
 }
 export async function verifyPassword(plain: string, hash: string): Promise<boolean> {
   return bcrypt.compare(plain, hash);
+}
+
+// RBAC
+export type UserRole = "admin" | "docente";
+export const ROLES: UserRole[] = ["admin", "docente"];
+
+export function requireRole(user: any, allowed: UserRole | UserRole[]): boolean {
+  if (!user?.role) return false;
+  const list = Array.isArray(allowed) ? allowed : [allowed];
+  return list.includes(user.role as UserRole);
 }
 
 // get_post_response_data equivalent

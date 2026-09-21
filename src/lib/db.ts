@@ -141,7 +141,7 @@ export async function initDb() {
     }
   }
 
-  // Auth
+  // Auth — roles: admin (gestiona usuarios) / docente (solo lectura formularios)
   await db.execute(`
     CREATE TABLE IF NOT EXISTS users (
       id TEXT PRIMARY KEY,
@@ -149,10 +149,26 @@ export async function initDb() {
       password_hash TEXT NOT NULL,
       first_name TEXT,
       last_name TEXT,
+      role TEXT NOT NULL DEFAULT 'docente' CHECK (role IN ('admin','docente')),
       is_active INTEGER NOT NULL DEFAULT 1,
       created_at INTEGER DEFAULT (unixepoch())
     )
   `);
+  // Migración: añade columna role si la tabla existía sin ella (instalaciones previas)
+  if (!(await hasColumn("users", "role"))) {
+    await db.execute(`ALTER TABLE users ADD COLUMN role TEXT NOT NULL DEFAULT 'docente' CHECK (role IN ('admin','docente'))`);
+  }
+  await db.execute(`CREATE INDEX IF NOT EXISTS idx_users_role ON users(role)`);
+  // Bootstrap: si no hay ningún admin, promueve el usuario más antiguo a admin (primer usuario = admin)
+  try {
+    const adminCount = await db.execute({ sql: `SELECT COUNT(*) as c FROM users WHERE role='admin'`, args: [] });
+    if (Number((adminCount.rows[0] as any).c) === 0) {
+      const first = await db.execute({ sql: `SELECT id FROM users ORDER BY created_at ASC LIMIT 1`, args: [] });
+      if (first.rows.length > 0) {
+        await db.execute({ sql: `UPDATE users SET role='admin' WHERE id=?`, args: [(first.rows[0] as any).id] });
+      }
+    }
+  } catch {}
   await db.execute(`
     CREATE TABLE IF NOT EXISTS knox_authtoken (
       digest TEXT PRIMARY KEY,

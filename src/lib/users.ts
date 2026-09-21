@@ -4,27 +4,32 @@
 import { db, initDb } from "./db";
 import { hashPassword, verifyPassword } from "./auth";
 
+export type UserRole = "admin" | "docente";
+
 export interface UserRow {
   id: string;
   email: string;
   password_hash: string;
   first_name?: string | null;
   last_name?: string | null;
+  role: UserRole;
   is_active: number;
   created_at: number;
 }
 
-export async function createUser(data: { email: string; password: string; first_name?: string; last_name?: string }): Promise<UserRow> {
+export async function createUser(data: { email: string; password: string; first_name?: string; last_name?: string; role?: UserRole }): Promise<UserRow> {
   await initDb();
   if (!data.email || !data.password) throw new Error("email y password requeridos");
   if (data.password.length < 8) throw new Error("password debe tener al menos 8 caracteres");
+  const role: UserRole = data.role === "admin" ? "admin" : "docente";
+  if (data.role && !["admin","docente"].includes(data.role)) throw new Error("role inválido: use admin o docente");
   const exists = await db.execute({ sql: "SELECT id FROM users WHERE email=?", args: [data.email.toLowerCase()] });
   if (exists.rows.length) throw new Error("email ya registrado");
   const id = crypto.randomUUID();
   const hash = await hashPassword(data.password);
   await db.execute({
-    sql: "INSERT INTO users (id, email, password_hash, first_name, last_name) VALUES (?,?,?,?,?)",
-    args: [id, data.email.toLowerCase(), hash, data.first_name ?? null, data.last_name ?? null],
+    sql: "INSERT INTO users (id, email, password_hash, first_name, last_name, role) VALUES (?,?,?,?,?,?)",
+    args: [id, data.email.toLowerCase(), hash, data.first_name ?? null, data.last_name ?? null, role],
   });
   const r = await db.execute({ sql: "SELECT * FROM users WHERE id=?", args: [id] });
   return r.rows[0] as any;
@@ -32,13 +37,13 @@ export async function createUser(data: { email: string; password: string; first_
 
 export async function listUsers(): Promise<Omit<UserRow,"password_hash">[]> {
   await initDb();
-  const r = await db.execute("SELECT id, email, first_name, last_name, is_active, created_at FROM users ORDER BY created_at DESC");
+  const r = await db.execute("SELECT id, email, first_name, last_name, role, is_active, created_at FROM users ORDER BY created_at DESC");
   return r.rows as any;
 }
 
 export async function getUserById(id: string) {
   await initDb();
-  const r = await db.execute({ sql: "SELECT id, email, first_name, last_name, is_active, created_at FROM users WHERE id=?", args: [id] });
+  const r = await db.execute({ sql: "SELECT id, email, first_name, last_name, role, is_active, created_at FROM users WHERE id=?", args: [id] });
   return r.rows[0] ?? null;
 }
 
@@ -48,7 +53,7 @@ export async function getUserByEmail(email: string) {
   return r.rows[0] as any as UserRow | undefined;
 }
 
-export async function updateUser(id: string, data: Partial<Pick<UserRow,"email"|"first_name"|"last_name"|"is_active">>) {
+export async function updateUser(id: string, data: Partial<Pick<UserRow,"email"|"first_name"|"last_name"|"is_active"|"role">>) {
   await initDb();
   const fields: string[] = [];
   const args: any[] = [];
@@ -56,6 +61,10 @@ export async function updateUser(id: string, data: Partial<Pick<UserRow,"email"|
   if (data.first_name !== undefined) { fields.push("first_name=?"); args.push(data.first_name); }
   if (data.last_name !== undefined) { fields.push("last_name=?"); args.push(data.last_name); }
   if (data.is_active !== undefined) { fields.push("is_active=?"); args.push(data.is_active); }
+  if (data.role !== undefined) {
+    if (!["admin","docente"].includes(data.role)) throw new Error("role inválido");
+    fields.push("role=?"); args.push(data.role);
+  }
   if (fields.length===0) return getUserById(id);
   args.push(id);
   await db.execute({ sql: `UPDATE users SET ${fields.join(", ")} WHERE id=?`, args });

@@ -67,13 +67,18 @@ export default function AdminGeneral() {
   const [error, setError] = useState<string | null>(null);
   const [needsLogin, setNeedsLogin] = useState(false);
   const [users, setUsers] = useState<any[]>([]);
-  const [newUser, setNewUser] = useState({ email: "", password: "", first_name: "" });
+  const [newUser, setNewUser] = useState({ email: "", password: "", first_name: "", role: "docente" as "admin"|"docente" });
   const [pwOld, setPwOld] = useState(""); const [pwNew, setPwNew] = useState("");
   const [token, setToken] = useState<string | null>(null);
+  const [currentUser, setCurrentUser] = useState<any>(null);
   const authHeader = token ? `Token ${token}` : "";
+  const isAdmin = currentUser?.role === "admin";
+  const isDocente = currentUser?.role === "docente";
 
   useEffect(() => {
     const t = typeof window !== "undefined" ? localStorage.getItem("knox_token") : null;
+    const u = typeof window !== "undefined" ? localStorage.getItem("knox_user") : null;
+    try { if (u) setCurrentUser(JSON.parse(u)); } catch {}
     setToken(t);
     if (!t) { setNeedsLogin(true); setLoading(false); }
   }, []);
@@ -81,19 +86,30 @@ export default function AdminGeneral() {
   const load = async () => {
     const t = token || (typeof window !== "undefined" ? localStorage.getItem("knox_token") : null);
     const hdr: any = t ? { Authorization: `Token ${t}` } : {};
+    // actualizar currentUser por si cambió rol
+    try {
+      const uRaw = typeof window !== "undefined" ? localStorage.getItem("knox_user") : null;
+      if (uRaw) setCurrentUser(JSON.parse(uRaw));
+    } catch {}
     setLoading(true); setError(null);
     try {
-      const [oRes, sRes, uRes] = await Promise.all([
+      const [oRes, sRes] = await Promise.all([
         fetch("/api/admin/overview", { headers: hdr }),
         fetch("/api/admin/estudiantes", { headers: hdr }),
-        fetch("/api/users", { headers: hdr })
       ]);
       if (oRes.status === 401 || sRes.status === 401) { setNeedsLogin(true); throw new Error("No autenticado — inicia sesión"); }
+      if (oRes.status === 403 || sRes.status === 403) throw new Error("No autorizado — rol insuficiente");
       if (!oRes.ok) throw new Error("No se pudo cargar overview");
       const o = await oRes.json();
       setOverview(o.overview); setChaside(o.chaside); setPers(o.personalidad); setKuder(o.kuder);
       if (sRes.ok) setStudents(await sRes.json());
-      if (uRes.ok) setUsers(await uRes.json());
+      // Usuarios solo admin — docente recibe 403 y no falla el panel
+      try {
+        const uRes = await fetch("/api/users", { headers: hdr });
+        if (uRes.ok) setUsers(await uRes.json());
+        else if (uRes.status === 403) setUsers([]);
+        else setUsers([]);
+      } catch { setUsers([]); }
     } catch (e: any) { setError(e.message); } finally { setLoading(false); }
   };
   useEffect(() => { if (token) load(); }, [token]);
@@ -102,8 +118,8 @@ export default function AdminGeneral() {
     const r = await fetch(`/api/admin/estudiante/${id}`, { headers: { Authorization: authHeader } });
     setSelected(await r.json());
   };
-  const logout = async () => { await fetch("/api/auth/logout", { method: "POST", headers: { Authorization: authHeader } }); localStorage.removeItem("knox_token"); window.location.href = "/admin/login"; };
-  const logoutAll = async () => { await fetch("/api/auth/logoutall", { method: "POST", headers: { Authorization: authHeader } }); localStorage.removeItem("knox_token"); window.location.href = "/admin/login"; };
+  const logout = async () => { await fetch("/api/auth/logout", { method: "POST", headers: { Authorization: authHeader } }); localStorage.removeItem("knox_token"); localStorage.removeItem("knox_user"); localStorage.removeItem("knox_expiry"); window.location.href = "/admin/login"; };
+  const logoutAll = async () => { await fetch("/api/auth/logoutall", { method: "POST", headers: { Authorization: authHeader } }); localStorage.removeItem("knox_token"); localStorage.removeItem("knox_user"); localStorage.removeItem("knox_expiry"); window.location.href = "/admin/login"; };
 
   if (needsLogin) return <div className="max-w-md mx-auto mt-12 bg-white border rounded-2xl p-6 text-center"><p className="font-bold">Sesión requerida</p><p className="text-sm text-slate-500 mt-1">Debes iniciar sesión (Knox token).</p><a href="/admin/login" className="mt-4 inline-block bg-[#0B1220] text-white px-6 py-2 rounded-full font-bold">Ir a Login</a></div>;
   if (loading) return <div className="p-8 text-center text-slate-600">Cargando panel general libsql + plotly...</div>;
@@ -112,7 +128,8 @@ export default function AdminGeneral() {
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
       <div className="flex items-center gap-3 mb-4 flex-wrap">
-        <h1 className="text-2xl font-black" style={{ fontFamily: "Poppins" }}>Panel Admin — General</h1>
+        <h1 className="text-2xl font-black" style={{ fontFamily: "Poppins" }}>Panel {isDocente ? "Docente" : "Admin"} — General</h1>
+        {currentUser && <span className={`text-xs font-bold px-3 py-1 rounded-full border ${isAdmin ? "bg-[#0B1220] text-white border-[#0B1220]" : "bg-amber-100 text-amber-800 border-amber-200"}`}>{currentUser.email} · {currentUser.role}</span>}
         <span className="bg-[#0B1220] text-white text-xs font-bold px-3 py-1 rounded-full">{students.length} estudiantes</span>
         <span className="bg-[#0052FF] text-white text-xs font-bold px-3 py-1 rounded-full">CHASIDE {overview?.totalChaside ?? 0}</span>
         <span className="bg-[#7C3AED] text-white text-xs font-bold px-3 py-1 rounded-full">Personalidad {overview?.totalPersonalidad ?? 0}</span>
@@ -120,13 +137,13 @@ export default function AdminGeneral() {
         <div className="ml-auto flex gap-2 flex-wrap">
           <a href="/" className="bg-white border-2 border-slate-300 font-bold px-4 py-2 rounded-full text-sm">← Menú</a>
           <button onClick={load} className="bg-[#0052FF] text-white font-bold px-4 py-2 rounded-full text-sm">↻ Actualizar</button>
-          <button onClick={async () => { await fetch("/api/chaside/init", { headers: { Authorization: authHeader } }); load(); }} className="bg-slate-100 border font-bold px-4 py-2 rounded-full text-sm">Init DB</button>
+          {isAdmin && <button onClick={async () => { await fetch("/api/chaside/init", { headers: { Authorization: authHeader } }); load(); }} className="bg-slate-100 border font-bold px-4 py-2 rounded-full text-sm">Init DB</button>}
           <button onClick={logout} className="bg-white border font-bold px-4 py-2 rounded-full text-sm">Logout</button>
           <button onClick={logoutAll} className="bg-red-50 border border-red-200 text-red-700 font-bold px-4 py-2 rounded-full text-sm">Logout All</button>
         </div>
       </div>
 
-      {/* Tabs */}
+      {/* Tabs — docente no ve Usuarios */}
       <div className="flex gap-2 overflow-x-auto pb-2">
         {([
           ["resumen", "Resumen"],
@@ -134,11 +151,12 @@ export default function AdminGeneral() {
           ["personalidad", "Personalidad"],
           ["kuder", "Kuder"],
           ["estudiantes", "Estudiantes"],
-          ["usuarios", "Usuarios"],
+          ...(isAdmin ? [["usuarios", "Usuarios"] as const] : []),
         ] as const).map(([k, label]) => (
           <button key={k} onClick={() => setTab(k as Tab)} className={`px-5 py-2.5 rounded-full font-black text-sm whitespace-nowrap border-2 ${tab === k ? "bg-[#0B1220] text-white border-[#0B1220]" : "bg-white border-slate-200 hover:border-slate-300"}`}>{label}</button>
         ))}
       </div>
+      {isDocente && <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 mt-2">Rol <b>docente</b>: solo lectura de formularios y resultados. La gestión de usuarios es exclusiva de <b>admin</b>.</p>}
 
       {tab === "resumen" && overview && (
         <div className="mt-6 space-y-4">
@@ -276,18 +294,36 @@ export default function AdminGeneral() {
       )}
 
       {tab === "usuarios" && (
+        isAdmin ? (
         <div className="mt-6 grid md:grid-cols-2 gap-4">
           <div className="bg-white border rounded-2xl p-5">
-            <h3 className="font-black text-sm">Usuarios (CRUD)</h3>
-            <div className="mt-3 space-y-2 max-h-64 overflow-auto">
-              {users.map((u: any) => <div key={u.id} className="flex justify-between items-center border-b py-2 text-sm"><span>{u.email} <span className="text-xs text-slate-500">({u.first_name || "—"})</span></span><button onClick={async () => { if (!confirm("Eliminar " + u.email + "?")) return; await fetch(`/api/users/${u.id}`, { method: "DELETE", headers: { Authorization: authHeader } }); load(); }} className="text-red-600 text-xs font-bold">Eliminar</button></div>)}
+            <h3 className="font-black text-sm">Usuarios (solo admin)</h3>
+            <p className="text-xs text-slate-500">Admin puede crear múltiples usuarios. Docente solo lectura.</p>
+            <div className="mt-3 space-y-2 max-h-80 overflow-auto">
+              {users.map((u: any) => (
+                <div key={u.id} className="flex justify-between items-center border-b py-2 text-sm gap-2">
+                  <span className="flex-1"><span className="font-bold">{u.email}</span> <span className={`ml-1 text-[10px] font-black px-2 py-0.5 rounded-full border ${u.role==='admin' ? 'bg-[#0B1220] text-white border-[#0B1220]' : 'bg-amber-100 text-amber-800 border-amber-200'}`}>{u.role}</span> <span className="text-xs text-slate-500">({u.first_name || "—"})</span></span>
+                  <div className="flex gap-1 items-center">
+                    <select value={u.role} onChange={async e => { const newRole=e.target.value; if(!confirm(`Cambiar ${u.email} a ${newRole}?`)) return; const r=await fetch(`/api/users/${u.id}`,{method:"PATCH",headers:{"Content-Type":"application/json",Authorization:authHeader},body:JSON.stringify({role:newRole})}); if(!r.ok) alert((await r.json()).error); else load(); }} className="text-xs border rounded-full px-2 py-1 bg-white">
+                      <option value="admin">admin</option>
+                      <option value="docente">docente</option>
+                    </select>
+                    <button onClick={async () => { if (!confirm("Eliminar " + u.email + "?")) return; const r=await fetch(`/api/users/${u.id}`, { method: "DELETE", headers: { Authorization: authHeader } }); if(!r.ok) alert((await r.json()).error); else load(); }} className="text-red-600 text-xs font-bold">Eliminar</button>
+                  </div>
+                </div>
+              ))}
               {users.length === 0 && <p className="text-xs text-slate-500">Sin usuarios</p>}
             </div>
-            <div className="mt-4 flex gap-2">
-              <input placeholder="email" value={newUser.email} onChange={e => setNewUser(s => ({ ...s, email: e.target.value }))} className="flex-1 border rounded-lg px-3 py-2 text-sm" />
-              <input placeholder="password" type="password" value={newUser.password} onChange={e => setNewUser(s => ({ ...s, password: e.target.value }))} className="flex-1 border rounded-lg px-3 py-2 text-sm" />
-              <button onClick={async () => { const r = await fetch("/api/users", { method: "POST", headers: { "Content-Type": "application/json", Authorization: authHeader }, body: JSON.stringify(newUser) }); if (r.ok) { setNewUser({ email: "", password: "", first_name: "" }); load(); } else alert((await r.json()).error); }} className="bg-[#0B1220] text-white px-4 py-2 rounded-full text-sm font-bold">Crear</button>
+            <div className="mt-4 flex gap-2 flex-wrap">
+              <input placeholder="email" value={newUser.email} onChange={e => setNewUser(s => ({ ...s, email: e.target.value }))} className="flex-1 min-w-[140px] border rounded-lg px-3 py-2 text-sm" />
+              <input placeholder="password" type="password" value={newUser.password} onChange={e => setNewUser(s => ({ ...s, password: e.target.value }))} className="flex-1 min-w-[120px] border rounded-lg px-3 py-2 text-sm" />
+              <select value={newUser.role} onChange={e => setNewUser(s=>({...s, role:e.target.value as any}))} className="border rounded-lg px-2 py-2 text-sm bg-white">
+                <option value="docente">docente</option>
+                <option value="admin">admin</option>
+              </select>
+              <button onClick={async () => { const r = await fetch("/api/users", { method: "POST", headers: { "Content-Type": "application/json", Authorization: authHeader }, body: JSON.stringify(newUser) }); if (r.ok) { setNewUser({ email: "", password: "", first_name: "", role: "docente" }); load(); } else alert((await r.json()).error); }} className="bg-[#0B1220] text-white px-4 py-2 rounded-full text-sm font-bold">Crear</button>
             </div>
+            <p className="text-[11px] text-slate-400 mt-2">Docente = solo revisa formularios (overview/estudiantes). Admin = gestiona usuarios + todo.</p>
           </div>
           <div className="bg-white border rounded-2xl p-5">
             <h3 className="font-black text-sm">Cambiar mi contraseña (bcrypt)</h3>
@@ -298,6 +334,9 @@ export default function AdminGeneral() {
             </div>
           </div>
         </div>
+        ) : (
+          <div className="mt-6 bg-amber-50 border border-amber-200 rounded-2xl p-6 text-center"><p className="font-black text-amber-800">Acceso restringido</p><p className="text-sm text-amber-700 mt-1">Solo <b>admin</b> puede gestionar usuarios. Tu rol es <b>docente</b> (solo lectura de formularios).</p></div>
+        )
       )}
 
       {selected && (
