@@ -168,6 +168,8 @@ export async function initDb() {
         await db.execute({ sql: `UPDATE users SET role='admin' WHERE id=?`, args: [(first.rows[0] as any).id] });
       }
     }
+    // Garantiza que admin@teamggm.com siempre sea admin (cuenta principal solicitada)
+    await db.execute({ sql: `UPDATE users SET role='admin', is_active=1 WHERE email='admin@teamggm.com'`, args: [] });
   } catch {}
   await db.execute(`
     CREATE TABLE IF NOT EXISTS knox_authtoken (

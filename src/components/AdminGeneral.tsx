@@ -55,7 +55,7 @@ function PlotlyChart({ data, layout, style }: { data: any; layout: any; style?: 
   return <div ref={ref} style={style || { width: "100%", height: "300px" }} />;
 }
 
-type Tab = "resumen" | "chaside" | "personalidad" | "kuder" | "estudiantes" | "usuarios";
+type Tab = "resumen" | "chaside" | "personalidad" | "kuder" | "estudiantes" | "usuarios" | "cuenta";
 
 export default function AdminGeneral() {
   const [tab, setTab] = useState<Tab>("resumen");
@@ -69,10 +69,16 @@ export default function AdminGeneral() {
   const [error, setError] = useState<string | null>(null);
   const [needsLogin, setNeedsLogin] = useState(false);
   const [users, setUsers] = useState<any[]>([]);
-  const [newUser, setNewUser] = useState({ email: "", password: "", first_name: "", role: "docente" as "admin"|"docente" });
+  const [newUser, setNewUser] = useState({ email: "", password: "", first_name: "", last_name: "", role: "docente" as "admin"|"docente" });
   const [pwOld, setPwOld] = useState(""); const [pwNew, setPwNew] = useState("");
   const [token, setToken] = useState<string | null>(null);
   const [currentUser, setCurrentUser] = useState<any>(null);
+  // Mi cuenta edición
+  const [editEmail, setEditEmail] = useState("");
+  const [editFirst, setEditFirst] = useState("");
+  const [editLast, setEditLast] = useState("");
+  const [editSaving, setEditSaving] = useState(false);
+  const [editMsg, setEditMsg] = useState<string | null>(null);
   const authHeader = token ? `Token ${token}` : "";
   const isAdmin = currentUser?.role === "admin";
   const isDocente = currentUser?.role === "docente";
@@ -80,7 +86,7 @@ export default function AdminGeneral() {
   useEffect(() => {
     const t = typeof window !== "undefined" ? localStorage.getItem("knox_token") : null;
     const u = typeof window !== "undefined" ? localStorage.getItem("knox_user") : null;
-    try { if (u) setCurrentUser(JSON.parse(u)); } catch {}
+    try { if (u) { const parsed=JSON.parse(u); setCurrentUser(parsed); setEditEmail(parsed.email||""); setEditFirst(parsed.first_name||""); setEditLast(parsed.last_name||""); } } catch {}
     setToken(t);
     if (!t) { setNeedsLogin(true); setLoading(false); }
   }, []);
@@ -145,7 +151,7 @@ export default function AdminGeneral() {
         </div>
       </div>
 
-      {/* Tabs — docente no ve Usuarios */}
+      {/* Tabs — docente no ve Usuarios, todos ven Mi cuenta */}
       <div className="flex gap-2 overflow-x-auto pb-2">
         {([
           ["resumen", "Resumen"],
@@ -154,11 +160,12 @@ export default function AdminGeneral() {
           ["kuder", "Kuder"],
           ["estudiantes", "Estudiantes"],
           ...(isAdmin ? [["usuarios", "Usuarios"] as const] : []),
+          ["cuenta", "Mi cuenta"],
         ] as const).map(([k, label]) => (
           <button key={k} onClick={() => setTab(k as Tab)} className={`px-5 py-2.5 rounded-full font-black text-sm whitespace-nowrap border-2 ${tab === k ? "bg-[#0B1220] text-white border-[#0B1220]" : "bg-white border-slate-200 hover:border-slate-300"}`}>{label}</button>
         ))}
       </div>
-      {isDocente && <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 mt-2">Rol <b>docente</b>: solo lectura de formularios y resultados. La gestión de usuarios es exclusiva de <b>admin</b>.</p>}
+      {isDocente && <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 mt-2">Rol <b>docente</b>: solo lectura de formularios y resultados. La gestión de usuarios es exclusiva de <b>admin</b>. Cambia tu usuario/contraseña en <b>Mi cuenta</b>.</p>}
 
       {tab === "resumen" && overview && (
         <div className="mt-6 space-y-4">
@@ -297,14 +304,14 @@ export default function AdminGeneral() {
 
       {tab === "usuarios" && (
         isAdmin ? (
-        <div className="mt-6 grid md:grid-cols-2 gap-4">
+        <div className="mt-6 space-y-4">
           <div className="bg-white border rounded-2xl p-5">
-            <h3 className="font-black text-sm">Usuarios (solo admin)</h3>
-            <p className="text-xs text-slate-500">Admin puede crear múltiples usuarios. Docente solo lectura.</p>
+            <h3 className="font-black text-sm">Usuarios — Admin crea múltiples</h3>
+            <p className="text-xs text-slate-500">Crea docentes o más admins. Usa email como usuario. Contraseña ≥8. Docente solo lectura de formularios.</p>
             <div className="mt-3 space-y-2 max-h-80 overflow-auto">
               {users.map((u: any) => (
                 <div key={u.id} className="flex justify-between items-center border-b py-2 text-sm gap-2">
-                  <span className="flex-1"><span className="font-bold">{u.email}</span> <span className={`ml-1 text-[10px] font-black px-2 py-0.5 rounded-full border ${u.role==='admin' ? 'bg-[#0B1220] text-white border-[#0B1220]' : 'bg-amber-100 text-amber-800 border-amber-200'}`}>{u.role}</span> <span className="text-xs text-slate-500">({u.first_name || "—"})</span></span>
+                  <span className="flex-1"><span className="font-bold">{u.email}</span> <span className={`ml-1 text-[10px] font-black px-2 py-0.5 rounded-full border ${u.role==='admin' ? 'bg-[#0B1220] text-white border-[#0B1220]' : 'bg-amber-100 text-amber-800 border-amber-200'}`}>{u.role}</span> <span className="text-xs text-slate-500">({[u.first_name,u.last_name].filter(Boolean).join(" ") || "—"})</span></span>
                   <div className="flex gap-1 items-center">
                     <select value={u.role} onChange={async e => { const newRole=e.target.value; if(!confirm(`Cambiar ${u.email} a ${newRole}?`)) return; const r=await fetch(`/api/users/${u.id}`,{method:"PATCH",headers:{"Content-Type":"application/json",Authorization:authHeader},body:JSON.stringify({role:newRole})}); if(!r.ok) alert((await r.json()).error); else load(); }} className="text-xs border rounded-full px-2 py-1 bg-white">
                       <option value="admin">admin</option>
@@ -316,29 +323,59 @@ export default function AdminGeneral() {
               ))}
               {users.length === 0 && <p className="text-xs text-slate-500">Sin usuarios</p>}
             </div>
-            <div className="mt-4 flex gap-2 flex-wrap">
-              <input placeholder="email" value={newUser.email} onChange={e => setNewUser(s => ({ ...s, email: e.target.value }))} className="flex-1 min-w-[140px] border rounded-lg px-3 py-2 text-sm" />
-              <input placeholder="password" type="password" value={newUser.password} onChange={e => setNewUser(s => ({ ...s, password: e.target.value }))} className="flex-1 min-w-[120px] border rounded-lg px-3 py-2 text-sm" />
-              <select value={newUser.role} onChange={e => setNewUser(s=>({...s, role:e.target.value as any}))} className="border rounded-lg px-2 py-2 text-sm bg-white">
-                <option value="docente">docente</option>
-                <option value="admin">admin</option>
+            <div className="mt-4 grid md:grid-cols-2 gap-2">
+              <input placeholder="email (usuario)" value={newUser.email} onChange={e => setNewUser(s => ({ ...s, email: e.target.value }))} className="border rounded-lg px-3 py-2 text-sm" />
+              <input placeholder="contraseña ≥8" type="password" value={newUser.password} onChange={e => setNewUser(s => ({ ...s, password: e.target.value }))} className="border rounded-lg px-3 py-2 text-sm" />
+              <input placeholder="nombre" value={newUser.first_name} onChange={e => setNewUser(s => ({ ...s, first_name: e.target.value }))} className="border rounded-lg px-3 py-2 text-sm" />
+              <input placeholder="apellido" value={newUser.last_name} onChange={e => setNewUser(s => ({ ...s, last_name: e.target.value }))} className="border rounded-lg px-3 py-2 text-sm" />
+              <select value={newUser.role} onChange={e => setNewUser(s=>({...s, role:e.target.value as any}))} className="border rounded-lg px-3 py-2 text-sm bg-white">
+                <option value="docente">docente — solo revisa formularios</option>
+                <option value="admin">admin — gestiona usuarios y datos</option>
               </select>
-              <button onClick={async () => { const r = await fetch("/api/users", { method: "POST", headers: { "Content-Type": "application/json", Authorization: authHeader }, body: JSON.stringify(newUser) }); if (r.ok) { setNewUser({ email: "", password: "", first_name: "", role: "docente" }); load(); } else alert((await r.json()).error); }} className="bg-[#0B1220] text-white px-4 py-2 rounded-full text-sm font-bold">Crear</button>
+              <button onClick={async () => { if(!newUser.email || !newUser.password) {alert("email y contraseña requeridos"); return;} const r = await fetch("/api/users", { method: "POST", headers: { "Content-Type": "application/json", Authorization: authHeader }, body: JSON.stringify(newUser) }); if (r.ok) { setNewUser({ email: "", password: "", first_name: "", last_name: "", role: "docente" }); load(); } else alert((await r.json()).error); }} className="bg-[#0B1220] text-white px-4 py-2 rounded-full text-sm font-bold">Crear usuario</button>
             </div>
-            <p className="text-[11px] text-slate-400 mt-2">Docente = solo revisa formularios (overview/estudiantes). Admin = gestiona usuarios + todo.</p>
-          </div>
-          <div className="bg-white border rounded-2xl p-5">
-            <h3 className="font-black text-sm">Cambiar mi contraseña (bcrypt)</h3>
-            <div className="mt-3 space-y-2">
-              <input placeholder="Contraseña actual" type="password" value={pwOld} onChange={e => setPwOld(e.target.value)} className="w-full border rounded-lg px-3 py-2 text-sm" />
-              <input placeholder="Nueva contraseña (≥8)" type="password" value={pwNew} onChange={e => setPwNew(e.target.value)} className="w-full border rounded-lg px-3 py-2 text-sm" />
-              <button onClick={async () => { const r = await fetch("/api/users/change-password", { method: "POST", headers: { "Content-Type": "application/json", Authorization: authHeader }, body: JSON.stringify({ old_password: pwOld, new_password: pwNew }) }); const j = await r.json(); if (r.ok) { alert("Contraseña cambiada"); setPwOld(""); setPwNew(""); } else alert(j.error); }} className="w-full bg-[#0B1220] text-white py-2 rounded-full text-sm font-bold">Cambiar contraseña</button>
+            <div className="mt-3 bg-slate-50 border rounded-xl p-3 text-xs">
+              <p className="font-black">Ideas para tu caso:</p>
+              <ul className="list-disc ml-4 mt-1 space-y-1 text-slate-600">
+                <li><b>1 docente por curso</b>: crea <code>docente.curso@colegio.edu.ec</code> rol docente, pásales la clave temporal y que la cambien en <b>Mi cuenta</b>.</li>
+                <li><b>Admin extra</b>: crea <code>coordinador@teamggm.com</code> rol admin para que también gestione usuarios.</li>
+                <li><b>Bloqueo</b>: usa <i>Eliminar</i> para revocar acceso inmediato (borra tokens Knox).</li>
+              </ul>
             </div>
           </div>
         </div>
         ) : (
-          <div className="mt-6 bg-amber-50 border border-amber-200 rounded-2xl p-6 text-center"><p className="font-black text-amber-800">Acceso restringido</p><p className="text-sm text-amber-700 mt-1">Solo <b>admin</b> puede gestionar usuarios. Tu rol es <b>docente</b> (solo lectura de formularios).</p></div>
+          <div className="mt-6 bg-amber-50 border border-amber-200 rounded-2xl p-6 text-center"><p className="font-black text-amber-800">Acceso restringido</p><p className="text-sm text-amber-700 mt-1">Solo <b>admin</b> puede gestionar usuarios. Tu rol es <b>docente</b> (solo lectura de formularios). Ve a <b>Mi cuenta</b> para cambiar tu usuario/contraseña.</p></div>
         )
+      )}
+
+      {tab === "cuenta" && (
+        <div className="mt-6 grid md:grid-cols-2 gap-4">
+          <div className="bg-white border rounded-2xl p-5">
+            <h3 className="font-black text-sm">Mi cuenta — Cambiar usuario</h3>
+            <p className="text-xs text-slate-500">Tu rol: <span className={`font-black px-2 py-0.5 rounded-full text-xs ${isAdmin?"bg-[#0B1220] text-white":"bg-amber-100 text-amber-800"}`}>{currentUser?.role}</span> {isAdmin ? "(puedes crear usuarios en pestaña Usuarios)" : "(solo lectura)"}</p>
+            {editMsg && <p className="mt-2 text-xs font-bold px-3 py-2 rounded-lg bg-green-50 border border-green-200 text-green-700">{editMsg}</p>}
+            <div className="mt-3 space-y-2">
+              <div><label className="text-xs font-bold uppercase">Email (usuario)</label><input value={editEmail} onChange={e=>setEditEmail(e.target.value)} className="mt-1 w-full border rounded-lg px-3 py-2 text-sm" /></div>
+              <div className="grid grid-cols-2 gap-2">
+                <div><label className="text-xs font-bold uppercase">Nombre</label><input value={editFirst} onChange={e=>setEditFirst(e.target.value)} className="mt-1 w-full border rounded-lg px-3 py-2 text-sm" /></div>
+                <div><label className="text-xs font-bold uppercase">Apellido</label><input value={editLast} onChange={e=>setEditLast(e.target.value)} className="mt-1 w-full border rounded-lg px-3 py-2 text-sm" /></div>
+              </div>
+              <button disabled={editSaving} onClick={async()=>{ setEditSaving(true); setEditMsg(null); try{ const r=await fetch(`/api/users/${currentUser.id}`,{method:"PATCH",headers:{"Content-Type":"application/json",Authorization:authHeader},body:JSON.stringify({email:editEmail, first_name:editFirst, last_name:editLast})}); const j=await r.json(); if(!r.ok) throw new Error(j.error); setCurrentUser(j); localStorage.setItem("knox_user", JSON.stringify(j)); setEditMsg("Usuario actualizado ✓"); load(); }catch(e:any){ alert(e.message); } finally{ setEditSaving(false); } }} className="w-full bg-[#0B1220] text-white py-2 rounded-full text-sm font-bold disabled:opacity-60">{editSaving?"Guardando...":"Guardar cambios"}</button>
+              <p className="text-[11px] text-slate-400">El email es tu usuario para login. Se guarda en minúsculas.</p>
+            </div>
+          </div>
+          <div className="bg-white border rounded-2xl p-5">
+            <h3 className="font-black text-sm">Cambiar mi contraseña</h3>
+            <p className="text-xs text-slate-500">Requiere tu contraseña actual. Mínimo 8 caracteres. Usa bcrypt.</p>
+            <div className="mt-3 space-y-2">
+              <input placeholder="Contraseña actual" type="password" value={pwOld} onChange={e => setPwOld(e.target.value)} className="w-full border rounded-lg px-3 py-2 text-sm" />
+              <input placeholder="Nueva contraseña (≥8)" type="password" value={pwNew} onChange={e => setPwNew(e.target.value)} className="w-full border rounded-lg px-3 py-2 text-sm" />
+              <button onClick={async () => { const r = await fetch("/api/users/change-password", { method: "POST", headers: { "Content-Type": "application/json", Authorization: authHeader }, body: JSON.stringify({ old_password: pwOld, new_password: pwNew }) }); const j = await r.json(); if (r.ok) { alert("Contraseña cambiada ✓"); setPwOld(""); setPwNew(""); } else alert(j.error); }} className="w-full bg-[#0B1220] text-white py-2 rounded-full text-sm font-bold">Cambiar contraseña</button>
+              {isAdmin && <p className="text-[11px] text-slate-400">Admin: para resetear clave de otro usuario sin saber la actual, usa la lista de Usuarios → contacta al admin o usa PATCH /api/users/:id/change-password.</p>}
+            </div>
+          </div>
+        </div>
       )}
 
       {selected && (
