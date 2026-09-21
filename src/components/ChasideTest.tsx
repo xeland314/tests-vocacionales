@@ -353,6 +353,22 @@ function ResultadoView({
         <p className="text-sm text-slate-500 mb-2">Test vocacional CHASIDE</p>
         <h1 className="text-2xl font-extrabold text-[#0B1220] uppercase tracking-tight">Resultado del Test</h1>
 
+        {/* Leyenda para nuevos — cómo interpretar */}
+        <div className="mt-4 bg-[#F8FAFC] border border-slate-200 rounded-2xl p-4">
+          <h3 className="font-black text-xs uppercase tracking-wider text-[#0B1220]">📖 Cómo leer tu resultado</h3>
+          <p className="text-sm text-slate-700 mt-2"><b>CHASIDE</b> mide 7 áreas vocacionales. Cada letra es un área:</p>
+          <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+            {AREA_ORDER.map(k=> (
+              <div key={k} className="flex gap-2 items-center bg-white border rounded-xl px-3 py-2"><span className="w-7 h-7 rounded-full text-white text-xs font-black flex items-center justify-center shrink-0" style={{background: AREAS[k].color}}>{k}</span><div><p className="font-bold leading-none">{AREAS[k].nombre}</p><p className="text-xs text-slate-500">{AREAS[k].nombreCorto}</p></div></div>
+            ))}
+          </div>
+          <div className="mt-3 grid sm:grid-cols-2 gap-3 text-xs">
+            <div className="bg-[#FFCC00]/30 border border-[#FFCC00]/50 rounded-xl p-3"><p className="font-black">Intereses (0–10)</p><p className="text-slate-700 mt-1">10 preguntas por área. Si marcaste <b>SÍ</b> en 7 de esas 10, tu puntaje es 7/10. <b>Top = mayor puntaje</b> (tus intereses más marcados).</p></div>
+            <div className="bg-white border rounded-xl p-3"><p className="font-black">Aptitudes (0–4)</p><p className="text-slate-700 mt-1">4 preguntas por área (mostrado como máx. 5 por compatibilidad con referencia impresa). Mide facilidad natural. Puede no coincidir con intereses: te puede gustar algo donde aún no eres fuerte.</p></div>
+          </div>
+          <p className="text-xs text-slate-500 mt-3">Fila amarilla = tu puntaje. Tablas base = números de pregunta por área (ver grids oficiales).</p>
+        </div>
+
         {/* Intereses */}
         <section className="mt-6">
           <h2 className="text-xl font-extrabold text-[#0B1220]">Intereses</h2>

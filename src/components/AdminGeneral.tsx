@@ -1,4 +1,7 @@
 import { useEffect, useState, useRef } from "react";
+import { AREAS, AREA_ORDER } from "../data/chaside";
+import { TYPES } from "../data/personalidad";
+import { KUDER_AREAS, KUDER_ORDER } from "../data/kuder";
 
 function PlotlyChart({ data, layout, style }: { data: any; layout: any; style?: any }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -171,6 +174,13 @@ export default function AdminGeneral() {
 
       {tab === "chaside" && chaside && (
         <div className="mt-6 space-y-4">
+          <div className="bg-[#F8FAFC] border rounded-2xl p-4">
+            <h3 className="font-black text-xs uppercase tracking-wider">📖 Leyenda CHASIDE</h3>
+            <div className="mt-2 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2 text-xs">
+              {AREA_ORDER.map(k=>{ const info=AREAS[k]; return <div key={k} className="bg-white border rounded-xl px-2 py-2 text-center"><span className="w-6 h-6 rounded-full text-white text-xs font-black inline-flex items-center justify-center" style={{background:info.color}}>{k}</span><p className="font-bold mt-1 leading-none">{info.nombreCorto}</p><p className="text-[10px] text-slate-500 leading-none">{info.nombre}</p></div>; })}
+            </div>
+            <p className="text-xs text-slate-600 mt-2">Intereses 0–10 (10 preguntas SÍ/NO por área), Aptitudes 0–4 (4 preguntas). Top = mayor puntaje. Fila amarilla en tablas = tu puntaje. Si ves solo resumen aquí, abre “Estudiantes → Ver” para ver el texto completo como lo ve el estudiante (interesesDesc, aptitudesTraits y carreras).</p>
+          </div>
           <div className="grid md:grid-cols-3 gap-4">
             <div className="bg-white border rounded-2xl p-5"><p className="text-xs font-black uppercase text-slate-500">Total CHASIDE</p><p className="text-3xl font-black">{chaside.total}</p></div>
             <div className="bg-white border rounded-2xl p-5"><p className="text-xs font-black uppercase text-slate-500">Top intereses</p><div className="mt-2 space-y-1 text-sm">{Object.entries(chaside.topIntereses).sort((a: any, b: any) => b[1] - a[1]).slice(0, 3).map(([k, v]: any) => <div key={k} className="flex justify-between"><span className="font-bold">{k}</span><span>{String(v)}</span></div>)}</div></div>
@@ -186,6 +196,16 @@ export default function AdminGeneral() {
 
       {tab === "personalidad" && pers && (
         <div className="mt-6 space-y-4">
+          <div className="bg-[#F9F9FB] border border-[#7C3AED]/20 rounded-2xl p-4">
+            <h3 className="font-black text-xs uppercase tracking-wider">📖 Leyenda MBTI — Qué significa cada letra</h3>
+            <div className="mt-2 grid sm:grid-cols-2 gap-3 text-xs">
+              <div><b>Mente:</b> <b>E</b> Extravertido (energía con gente) vs <b>I</b> Introvertido (energía a solas)</div>
+              <div><b>Energía:</b> <b>S</b> Observador/Sensorial (concreto, presente) vs <b>N</b> Intuitivo (posibilidades, futuro)</div>
+              <div><b>Naturaleza:</b> <b>T</b> Pensamiento (lógica, verdad) vs <b>F</b> Sentimiento (empatía, armonía)</div>
+              <div><b>Táctica:</b> <b>J</b> Juzgador (orden, planes) vs <b>P</b> Prospección (flexible, improvisas)</div>
+            </div>
+            <p className="text-xs text-slate-500 mt-2">Tipo = 4 letras (ej: INFP = I+N+F+P). % = fuerza (50% neutral, &gt;75% marcada). Roles: Analistas (NT, morado), Diplomáticos (NF, verde), Centinelas (SJ, celeste), Exploradores (SP, ámbar).</p>
+          </div>
           <div className="grid md:grid-cols-3 gap-4">
             <div className="bg-white border rounded-2xl p-5"><p className="text-xs font-black uppercase text-slate-500">Total Personalidad</p><p className="text-3xl font-black">{pers.total}</p></div>
             <div className="bg-white border rounded-2xl p-5"><p className="text-xs font-black uppercase text-slate-500">Top tipos (16)</p><div className="mt-2 space-y-1 text-sm">{Object.entries(pers.byType).sort((a: any, b: any) => b[1] - a[1]).slice(0, 5).map(([k, v]: any) => <div key={k} className="flex justify-between"><span className="font-bold">{k}</span><span>{String(v)}</span></div>)}</div></div>
@@ -201,6 +221,13 @@ export default function AdminGeneral() {
 
       {tab === "kuder" && kuder && (
         <div className="mt-6 space-y-4">
+          <div className="bg-[#EFF6FF] border border-[#2563EB]/20 rounded-2xl p-4">
+            <h3 className="font-black text-xs uppercase tracking-wider">📖 Leyenda Kuder — Nomenclatura</h3>
+            <div className="mt-2 grid grid-cols-2 sm:grid-cols-5 gap-2 text-xs">
+              {KUDER_ORDER.map(k=>{ const info=KUDER_AREAS[k]; return <div key={k} className="bg-white border rounded-xl px-2 py-2 flex gap-2 items-center"><span className="text-base">{info.icono}</span><div><p className="font-black leading-none">{k}</p><p className="font-bold text-[11px] leading-none">{info.nombre}</p><p className="text-[10px] text-slate-500 leading-none">{info.nombreCorto}</p></div></div>; })}
+            </div>
+            <p className="text-xs text-slate-600 mt-2">10 áreas, 60 diadas (eliges A o B), cada elección suma +1. Puntaje 0–60, Top = área más elegida, Ranking ordena mayor a menor. Verificación = válido si 60 respuestas.</p>
+          </div>
           <div className="grid md:grid-cols-3 gap-4">
             <div className="bg-white border rounded-2xl p-5"><p className="text-xs font-black uppercase text-slate-500">Total Kuder</p><p className="text-3xl font-black">{kuder.total}</p></div>
             <div className="bg-white border rounded-2xl p-5"><p className="text-xs font-black uppercase text-slate-500">Top áreas</p><div className="mt-2 space-y-1 text-sm">{Object.entries(kuder.byTop).sort((a: any, b: any) => b[1] - a[1]).slice(0, 5).map(([k, v]: any) => <div key={k} className="flex justify-between"><span className="font-bold">{k}</span><span>{String(v)}</span></div>)}</div></div>
@@ -214,7 +241,14 @@ export default function AdminGeneral() {
       )}
 
       {tab === "estudiantes" && (
-        <div className="mt-6">
+        <div className="mt-6 space-y-3">
+          <div className="bg-[#F8FAFC] border rounded-2xl p-3 text-xs flex flex-wrap gap-3">
+            <span><b>C</b> = CHASIDE (✓ + letra = top interés, ej: C=I)</span>
+            <span><b>P</b> = Personalidad MBTI (✓ + tipo, ej: P=INFP)</span>
+            <span><b>K</b> = Kuder (✓ + área, ej: K=PER)</span>
+            <span><b>Faltan</b> = 3 - completados</span>
+            <span className="text-slate-500">Ver = abre el resultado completo como lo ve el estudiante</span>
+          </div>
           <div className="bg-white border rounded-2xl overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
@@ -277,30 +311,60 @@ export default function AdminGeneral() {
               </div>
               <button onClick={() => setSelected(null)} className="bg-slate-100 border rounded-full w-8 h-8">✕</button>
             </div>
-            <div className="mt-4 grid md:grid-cols-3 gap-3">
+            {/* Leyenda general para quien ve el detalle por primera vez */}
+            <div className="mt-3 bg-[#F8FAFC] border rounded-xl p-3 text-xs">
+              <p className="font-black">Cómo leer:</p>
+              <p className="text-slate-600 mt-1"><b>CHASIDE</b> C=Administrativa, H=Humanística, A=Artística, S=Salud, I=Ingeniería, D=Defensa, E=Exactas — Intereses 0–10, Aptitudes 0–4. <b>MBTI</b> E/I (Mente), S/N (Energía), T/F (Naturaleza), J/P (Táctica) — 50% neutral, 4 letras = tipo. <b>Kuder</b> EXT=Aire Libre 🌿, MEC=Mecánico 🔧, CAL=Cálculo 🔢, CIE=Científico 🔬, PER=Persuasivo 🤝, ART=Artístico 🎨, LIT=Literario 📚, MUS=Musical 🎵, SOC=Servicio Social ❤️, OFI=Oficina 🏢 — 60 elecciones, puntaje = veces elegido.</p>
+            </div>
+            <div className="mt-4 grid lg:grid-cols-3 gap-3">
               <div className={`border rounded-xl p-4 ${selected.chaside ? "bg-green-50 border-green-200" : "bg-red-50 border-red-200"}`}>
                 <h4 className="font-black text-sm">CHASIDE {selected.chaside ? "✓" : "— faltante"}</h4>
-                {selected.chaside && <>
-                  <div className="mt-2 grid grid-cols-7 gap-1 text-[10px] text-center">{Object.entries(selected.chaside.intereses).map(([k, v]: any) => <div key={k} className="bg-[#FFCC00] font-black p-1 rounded">{k}<br />{String(v)}</div>)}</div>
-                  <p className="text-xs mt-2"><b>Top:</b> {selected.chaside.topInteres} · <b>2do:</b> {selected.chaside.segundoInteres || "—"} · <b>Apt:</b> {selected.chaside.topAptitud}</p>
-                  <p className="text-xs text-slate-500">{new Date(selected.chaside.fecha_unix * 1000).toLocaleString()}</p>
-                </>}
+                {selected.chaside ? <>
+                  <div className="mt-2 grid grid-cols-7 gap-1 text-[10px] text-center">{Object.entries(selected.chaside.intereses).map(([k, v]: any) => <div key={k} className={`font-black p-1 rounded border ${k===selected.chaside.topInteres ? "bg-[#0B1220] text-white" : "bg-[#FFCC00]"}`}>{k}<br />{String(v)}</div>)}</div>
+                  <div className="mt-2 grid grid-cols-7 gap-1 text-[10px] text-center">{Object.entries(selected.chaside.aptitudes).map(([k, v]: any) => <div key={k} className={`p-1 rounded border text-xs ${k===selected.chaside.topAptitud ? "bg-[#0B1220] text-white font-black" : "bg-white"}`}>{k}<br />{String(v)}</div>)}</div>
+                  <p className="text-[11px] text-slate-500 mt-1">Amarillo/Negro = top. Intereses 0–10 (10 preguntas), Aptitudes 0–4.</p>
+                  {/* Contexto completo como ve el estudiante */}
+                  <div className="mt-3 bg-white border rounded-xl p-3">
+                    <p className="text-xs font-black">Lo que más le interesa: {AREAS[selected.chaside.topInteres as keyof typeof AREAS]?.nombre} ({selected.chaside.topInteres}) — {selected.chaside.intereses[selected.chaside.topInteres]}/10</p>
+                    <p className="text-xs text-slate-700 mt-1">{AREAS[selected.chaside.topInteres as keyof typeof AREAS]?.interesesDesc} Aptitudes: {AREAS[selected.chaside.topInteres as keyof typeof AREAS]?.aptitudesTraits}.</p>
+                    <p className="text-xs mt-1"><b>Carreras:</b> {AREAS[selected.chaside.topInteres as keyof typeof AREAS]?.carreras}</p>
+                    {selected.chaside.segundoInteres && selected.chaside.intereses[selected.chaside.segundoInteres] > 0 && <>
+                      <p className="text-xs font-black mt-2">También le interesa: {AREAS[selected.chaside.segundoInteres as keyof typeof AREAS]?.nombre} ({selected.chaside.segundoInteres}) — {selected.chaside.intereses[selected.chaside.segundoInteres]}/10</p>
+                      <p className="text-xs text-slate-700 mt-1">{AREAS[selected.chaside.segundoInteres as keyof typeof AREAS]?.interesesDesc} Aptitudes: {AREAS[selected.chaside.segundoInteres as keyof typeof AREAS]?.aptitudesTraits}.</p>
+                      <p className="text-xs mt-1"><b>Carreras:</b> {AREAS[selected.chaside.segundoInteres as keyof typeof AREAS]?.carreras}</p>
+                    </>}
+                    <p className="text-xs font-black mt-2">Tiene aptitudes para: {AREAS[selected.chaside.topAptitud as keyof typeof AREAS]?.nombre} ({selected.chaside.topAptitud}) — {selected.chaside.aptitudes[selected.chaside.topAptitud]}/4</p>
+                    <p className="text-xs text-slate-700 mt-1">Aptitudes: {AREAS[selected.chaside.topAptitud as keyof typeof AREAS]?.aptitudesTraits}. Le gustan: {AREAS[selected.chaside.topAptitud as keyof typeof AREAS]?.interesesTraits}.</p>
+                    <p className="text-xs mt-1"><b>Carreras:</b> {AREAS[selected.chaside.topAptitud as keyof typeof AREAS]?.carreras}</p>
+                  </div>
+                  <p className="text-xs text-slate-500 mt-2">{new Date(selected.chaside.fecha_unix * 1000).toLocaleString()} · {selected.chaside.segundoInteres ? `2do ${selected.chaside.segundoInteres}` : "sin 2do"} · Apt {selected.chaside.topAptitud}</p>
+                </> : <p className="text-xs text-slate-600 mt-2">Pendiente de rendir. El estudiante aún no completó las 98 preguntas SÍ/NO. Intereses 0–10, Aptitudes 0–4.</p>}
               </div>
               <div className={`border rounded-xl p-4 ${selected.personalidad ? "bg-purple-50 border-purple-200" : "bg-red-50 border-red-200"}`}>
                 <h4 className="font-black text-sm">Personalidad {selected.personalidad ? `✓ ${selected.personalidad.tipo}` : "— faltante"}</h4>
-                {selected.personalidad && <>
-                  <p className="text-xs mt-2 font-bold">{selected.personalidad.tipo}</p>
-                  <div className="mt-1 text-xs space-y-1">{Object.entries(selected.personalidad.dimensiones as any).map(([k, v]: any) => <div key={k} className="flex justify-between"><span>{k}</span><span>{v.letter} {v.percent}%</span></div>)}</div>
-                  <p className="text-xs text-slate-500">{new Date(selected.personalidad.fecha_unix * 1000).toLocaleString()}</p>
-                </>}
+                {selected.personalidad ? (()=>{ const t=TYPES[selected.personalidad.tipo as keyof typeof TYPES]; return <>
+                  <p className="text-xs font-black mt-2" style={{color:t.color}}>{t.code} — {t.name} <span className="text-slate-500">({t.role})</span></p>
+                  <p className="text-xs text-slate-700 mt-1">{t.tagline} — {t.description}</p>
+                  <div className="mt-2 flex flex-wrap gap-1">{t.strengths.map((s:string)=><span key={s} className="text-[10px] font-bold px-2 py-1 rounded-full border bg-white">{s}</span>)}</div>
+                  <div className="mt-3 space-y-2">{Object.entries(selected.personalidad.dimensiones as any).map(([k, v]: any) => {
+                    const label = k==="EI" ? "Mente E/I" : k==="SN" ? "Energía S/N" : k==="TF" ? "Naturaleza T/F" : "Táctica J/P";
+                    const left = k==="EI" ? "I Introvertido" : k==="SN" ? "N Intuitivo" : k==="TF" ? "F Sentimiento" : "P Prospección";
+                    const right = k==="EI" ? "E Extravertido" : k==="SN" ? "S Observador" : k==="TF" ? "T Pensamiento" : "J Juzgador";
+                    return <div key={k} className="bg-white border rounded-lg p-2"><p className="text-[10px] font-black uppercase tracking-wider">{label}: {v.letter} {v.percent}%</p><div className="mt-1 h-2 bg-slate-200 rounded-full overflow-hidden flex"><div className="h-full bg-[#0B1220]" style={{width:`${v.percent}%`}} /><div className="h-full bg-slate-300" style={{width:`${100-v.percent}%`}} /></div><p className="text-[10px] flex justify-between mt-1"><span>{left}</span><span>{right}</span></p></div>;
+                  })}</div>
+                  <p className="text-xs text-slate-500 mt-2">{new Date(selected.personalidad.fecha_unix * 1000).toLocaleString()} · 50% neutral, &gt;60% ligera, &gt;75% marcada</p>
+                </>; })() : <p className="text-xs text-slate-600 mt-2">Pendiente. 60 preguntas Likert -3..+3 → 4 dicotomías → tipo 4 letras (ej: INFP). Ver leyenda MBTI.</p>}
               </div>
               <div className={`border rounded-xl p-4 ${selected.kuder ? "bg-blue-50 border-blue-200" : "bg-red-50 border-red-200"}`}>
                 <h4 className="font-black text-sm">Kuder {selected.kuder ? `✓ ${selected.kuder.top}` : "— faltante"}</h4>
-                {selected.kuder && <>
-                  <p className="text-xs mt-2"><b>Top:</b> {selected.kuder.top} · <b>Ranking:</b> {selected.kuder.ranking.slice(0, 3).join(" > ")}</p>
-                  <div className="mt-1 grid grid-cols-5 gap-1 text-[10px] text-center">{Object.entries(selected.kuder.scores).map(([k, v]: any) => <div key={k} className="bg-slate-100 border rounded p-1"><b>{k}</b><br />{String(v)}</div>)}</div>
-                  <p className="text-xs text-slate-500">{new Date(selected.kuder.fecha_unix * 1000).toLocaleString()}</p>
-                </>}
+                {selected.kuder ? (()=>{ const topInfo=KUDER_AREAS[selected.kuder.top as keyof typeof KUDER_AREAS]; return <>
+                  <p className="text-xs font-black mt-2" style={{color:topInfo.color}}>{topInfo.icono} {topInfo.nombre} ({selected.kuder.top}) — {selected.kuder.scores[selected.kuder.top]}/60 ({Math.round(selected.kuder.scores[selected.kuder.top]/60*100)}%)</p>
+                  <p className="text-xs text-slate-700 mt-1">{topInfo.descripcion}</p>
+                  <p className="text-xs mt-1"><b>Carreras:</b> {topInfo.carreras}</p>
+                  <p className="text-xs mt-2"><b>Ranking:</b> {selected.kuder.ranking.map((k:string)=>`${k} ${KUDER_AREAS[k as keyof typeof KUDER_AREAS].icono} ${selected.kuder.scores[k]}`).join(" > ")}</p>
+                  <div className="mt-2 grid grid-cols-5 gap-1 text-[10px] text-center">{Object.entries(selected.kuder.scores).map(([k, v]: any) => { const info=KUDER_AREAS[k as keyof typeof KUDER_AREAS]; const isTop=k===selected.kuder.top; return <div key={k} className={`border rounded p-1 ${isTop?"bg-[#0B1220] text-white font-black":"bg-white"}`}><div>{info.icono}</div><b>{k}</b><div className="text-[9px]">{info.nombreCorto}</div><div>{String(v)}</div></div>; })}</div>
+                  <p className="text-xs text-slate-500 mt-2">{new Date(selected.kuder.fecha_unix * 1000).toLocaleString()} · Verif: {selected.kuder.verificacion} · 60 diadas, cada elección +1</p>
+                </>; })() : <p className="text-xs text-slate-600 mt-2">Pendiente. 60 diadas (elige A o B), cada área puntúa 0–60. Ver leyenda: EXT=Aire Libre 🌿 etc.</p>}
               </div>
             </div>
             <div className="mt-4 flex gap-2 flex-wrap">

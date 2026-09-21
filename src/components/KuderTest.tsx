@@ -96,6 +96,16 @@ export default function KuderTest(){
               <p className="mt-3 text-xs font-bold text-slate-500">Puntaje {result.scores[result.top]}/60 · {Math.round(result.scores[result.top]/60*100)}% de elecciones</p>
             </div>
 
+            {/* Leyenda Kuder para nuevos */}
+            <div className="mx-6 mt-2 bg-[#EFF6FF] border border-[#2563EB]/20 rounded-2xl p-4">
+              <h3 className="font-black text-xs uppercase tracking-wider text-[#0B1220]">📖 Leyenda — Cómo leer Kuder</h3>
+              <p className="text-sm text-slate-700 mt-1">Kuder es <b>ipsativo</b>: en cada diada eliges 1, esa área suma <b>+1</b>. Total <b>60 elecciones</b>. Tu puntaje por área = cuántas veces la preferiste. <b>Top = área con más elecciones</b>. No hay respuestas correctas.</p>
+              <div className="mt-3 grid grid-cols-2 sm:grid-cols-5 gap-2 text-xs">
+                {KUDER_ORDER.map(k=>{ const info=KUDER_AREAS[k]; return <div key={k} className="bg-white border rounded-xl px-2 py-2 flex gap-2 items-center"><span className="text-base">{info.icono}</span><div><p className="font-black leading-none">{k}</p><p className="font-bold text-[11px] leading-none">{info.nombreCorto}</p><p className="text-[10px] text-slate-500 leading-none">{info.nombre}</p></div></div>; })}
+              </div>
+              <p className="text-xs text-slate-500 mt-2">Ej: si tu top es <b>PER 12</b>, elegiste lo persuasivo 12/60 veces (20%). Ranking ordena de mayor a menor.</p>
+            </div>
+
             <div className="px-6 pb-6">
               <h3 className="font-black text-xs uppercase tracking-wider text-slate-500">Ranking 10 áreas</h3>
               <div className="mt-3 space-y-3">

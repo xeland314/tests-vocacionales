@@ -137,6 +137,25 @@ export default function PersonalidadTest() {
             </div>
           </div>
 
+          {/* Leyenda MBTI para nuevos */}
+          <div className="mt-6 bg-white border border-slate-200 rounded-2xl p-5">
+            <h3 className="font-black text-xs uppercase tracking-wider text-[#0B1220]">📖 Cómo leer tu resultado — Leyenda MBTI</h3>
+            <p className="text-sm text-slate-600 mt-2">Tu tipo son <b>4 letras</b> (ej: <b>INFP</b>). Cada letra es una preferencia con <b>0–100%</b> (50% = neutral). La barra muestra hacia dónde te inclinas.</p>
+            <div className="mt-4 grid sm:grid-cols-2 gap-3 text-sm">
+              <div className="bg-[#F9F9FB] border rounded-xl p-3"><p className="font-black">Mente: <span className="text-[#7C3AED]">E</span> vs <span className="text-slate-600">I</span></p><p className="text-xs text-slate-600 mt-1"><b>E Extravertido</b>: te energiza la gente, hablas mucho. <b>I Introvertido</b>: te recarga la soledad, escuchas más.</p></div>
+              <div className="bg-[#F9F9FB] border rounded-xl p-3"><p className="font-black">Energía: <span className="text-[#7C3AED]">S</span> vs <span className="text-slate-600">N</span></p><p className="text-xs text-slate-600 mt-1"><b>S Observador/Sensorial</b>: concreto, detalles, presente. <b>N Intuitivo</b>: abstracto, posibilidades, futuro.</p></div>
+              <div className="bg-[#F9F9FB] border rounded-xl p-3"><p className="font-black">Naturaleza: <span className="text-[#7C3AED]">T</span> vs <span className="text-slate-600">F</span></p><p className="text-xs text-slate-600 mt-1"><b>T Pensamiento</b>: lógica, verdad &gt; armonía. <b>F Sentimiento</b>: empatía, armonía &gt; lógica.</p></div>
+              <div className="bg-[#F9F9FB] border rounded-xl p-3"><p className="font-black">Táctica: <span className="text-[#7C3AED]">J</span> vs <span className="text-slate-600">P</span></p><p className="text-xs text-slate-600 mt-1"><b>J Juzgador</b>: orden, planes, plazos. <b>P Prospección/Percepción</b>: flexible, improvisas, opciones abiertas.</p></div>
+            </div>
+            <div className="mt-3 flex flex-wrap gap-2 text-xs font-bold">
+              <span className="px-3 py-1 rounded-full text-white" style={{background:"#7C3AED"}}>Analistas (NT)</span>
+              <span className="px-3 py-1 rounded-full text-white" style={{background:"#10B981"}}>Diplomáticos (NF)</span>
+              <span className="px-3 py-1 rounded-full text-white" style={{background:"#0EA5E9"}}>Centinelas (SJ)</span>
+              <span className="px-3 py-1 rounded-full text-white" style={{background:"#F59E0B"}}>Exploradores (SP)</span>
+            </div>
+            <p className="text-xs text-slate-500 mt-2">% = (raw+45)/90*100. Ej: 70% E = 70% hacia Extravertido, 30% hacia Introvertido. &lt;60% = preferencia ligera, &gt;75% = marcada.</p>
+          </div>
+
           {/* 16 tipos grid */}
           <div className="mt-8">
             <h3 className="font-black uppercase tracking-wider text-xs text-slate-500">Los 16 tipos</h3>
