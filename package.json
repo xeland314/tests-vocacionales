@@ -10,7 +10,11 @@
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
-    "seed": "node seed.mjs"
+    "seed": "node seed.mjs",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "check": "astro check",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@astrojs/react": "^6.0.6",
@@ -26,14 +30,18 @@
     "tailwindcss": "^4.3.3"
   },
   "allowScripts": {
-    "esbuild": true
+    "esbuild": true,
+    "sharp": true
   },
   "devDependencies": {
+    "@astrojs/check": "^0.9.10",
     "@astrojs/node": "^11.1.6",
     "@testing-library/jest-dom": "^6.4.2",
     "@testing-library/react": "^16.3.3",
     "@types/bcryptjs": "^2.4.6",
+    "@vitejs/plugin-react": "^6.1.1",
     "jsdom": "^28.1.0",
+    "typescript": "^5.9.3",
     "vitest": "^5.0.1"
   }
 }

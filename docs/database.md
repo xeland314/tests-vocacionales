@@ -1,248 +1,340 @@
-# Especificación de Base de Datos — Test CHASIDE TeamGGM
+# Especificación de Base de Datos — Test Vocacional TeamGGM
 
 > Volumen objetivo: **600 estudiantes cada 6 meses durante 10 años = 12.000 estudiantes**  
 > Motores: **PostgreSQL 15+ / SQLite 3.45+** — únicos soportados.  
-> PK estudiante: **UUIDv4**.  
+> PK estudiante: **UUIDv4 (TEXT 36 / BLOB 16)**.  
 > Fecha encuesta: **UNIX timestamp (INTEGER)**.  
-> Cédulas: **opcionales** (estudiante y representante).
+> Cédulas: **opcionales** (estudiante y representante).  
+> **Modelo vigente (2026-02):** persona única + resultados JSON versionados. Ver `src/lib/db.ts:17`.
 
 ---
 
-## 1. Modelo
+## 1. Modelo vigente
 
 ### 1.1 Entidades
 
 ```
-estudiantes 1 ──< respuestas >── 1 preguntas
+estudiantes 1 ──< chaside_resultados
+            1 ──< personalidad_resultados
+            1 ──< kuder_resultados
+            1 ──< preguntas (catálogo versionado)
+test_versiones 1 ──< preguntas
+users 1 ──< knox_authtoken
 ```
 
-- `preguntas`: catálogo fijo de 98 preguntas (id 1..98), se carga una vez.
-- `estudiantes`: 1 fila por aplicación del test. PK = UUIDv4.
-- `respuestas`: 98 filas por estudiante (1 por pregunta). PK compuesta, sin surrogate.
+- `estudiantes`: **persona única** (no 1 fila por aplicación). PK = UUIDv4. Datos personales + cédulas opcionales. Sin `fecha_unix` por test; cada test tiene su `fecha_unix` en su tabla de resultados.
+- `preguntas`: catálogo **versionado** PK `(test_codigo, version, pregunta_id)`. 98 CHASIDE + 60 Personalidad + 60 Kuder por versión. Se carga una vez en `initDb()`.
+- `test_versiones`: `(codigo, version)` con `vigencia_desde` y `activo`. Inserta `CHASIDE v1`, `PERSONALIDAD v1`, `KUDER v1` al iniciar.
+- `chaside_resultados` / `personalidad_resultados` / `kuder_resultados`: **1 fila JSON por aplicación** (no 98 filas). Guarda `respuestas_json` + scores serializados + `top_*` + `fecha_unix` + `version`.
+- `users` + `knox_authtoken`: auth Knox SHA512 (token 64 chars, TTL 10h) — ver `src/lib/auth.ts`.
 
-### 1.2 Diagrama
+Este modelo reemplaza al **legado normalizado** `respuestas(estudiante_id, pregunta_id, respuesta)` con PK compuesta y 98 filas por estudiante. El legado se documenta en §8 como apéndice y fue migrado en `src/lib/db.ts:22` (DROP si `test_codigo` legacy detectado).
+
+### 1.2 Diagrama vigente
 
 ```
-┌──────────────┐       ┌──────────────┐       ┌──────────────────────┐
-│  preguntas   │       │  respuestas  │       │ estudiantes          │
-├──────────────┤       ├──────────────┤       ├──────────────────────┤
-│ PK id INTEGER│<──────│ FK pregunta  │       │ PK id UUID           │
-│ texto TEXT   │       │ FK estudiante│──────>│ nombre_est  TEXT     │
-└──────────────┘       │ respuesta INT│       │ nombre_padre TEXT    │
-                       │ PK(est,preg) │       │ correo_est  TEXT     │
-                       └──────────────┘       │ correo_padre TEXT    │
-                                              │ cedula_est TEXT NULL │
-                                              │ cedula_repr TEXT NULL│
-                                              │ fecha_unix INTEGER   │
-                                              └──────────────────────┘
-```
+┌──────────────────┐       ┌─────────────────────────┐
+│ test_versiones   │       │ preguntas               │
+├──────────────────┤       ├─────────────────────────┤
+│ PK id            │  ┌───>│ PK (test_codigo,        │
+│ codigo CHASIDE/  │  │    │     version, pregunta_id)│
+│   PERSONALIDAD/  │──┘    │ texto TEXT              │
+│   KUDER          │       └─────────────────────────┘
+│ version INT      │
+│ vigencia_desde   │
+│ activo BOOL      │
+└──────────────────┘
 
-- Cédulas opcionales → `NULL` permitido. Se valida en app (Ecuador: 10 dígitos), no `NOT NULL`.
-- `fecha_unix` = `strftime('%s','now')` (SQLite) / `extract(epoch from now())` (Postgres).
+┌──────────────────┐       ┌─────────────────────────┐       ┌──────────────────────┐
+│ estudiantes      │       │ chaside_resultados      │       │ personalidad_result. │
+├──────────────────┤       ├─────────────────────────┤       ├──────────────────────┤
+│ PK id UUID       │<──────│ FK estudiante_id        │       │ FK estudiante_id     │
+│ nombre_est TEXT  │       │ fecha_unix INT          │       │ fecha_unix INT       │
+│ nombre_padre TEXT│       │ version INT             │       │ version INT          │
+│ correo_est TEXT  │       │ top_interes TEXT        │       │ tipo TEXT (INTJ…)   │
+│ correo_padre TEXT│       │ segundo_interes TEXT    │       │ dimensiones_json TEXT│
+│ cedula_est NULL  │       │ top_aptitud TEXT        │       │ percentages_json TEXT│
+│ cedula_repr NULL │       │ intereses_json TEXT     │       │ respuestas_json TEXT │
+│ created_at INT   │       │ aptitudes_json TEXT     │       └──────────────────────┘
+└──────────────────┘       │ respuestas_json TEXT    │       ┌──────────────────────┐
+                           └─────────────────────────┘       │ kuder_resultados     │
+┌──────────────┐           ┌──────────────────────┐          ├──────────────────────┤
+│ users        │           │ knox_authtoken       │          │ FK estudiante_id     │
+├──────────────┤           ├──────────────────────┤          │ fecha_unix INT       │
+│ PK id UUID   │<──────────│ FK user_id           │          │ version INT          │
+│ email UNIQUE │           │ digest PK (SHA512)   │          │ top TEXT             │
+│ password_hash│           │ token_key TEXT(8)    │          │ ranking_json TEXT    │
+│ first_name   │           │ created INT          │          │ scores_json TEXT     │
+│ last_name    │           │ expiry INT           │          │ respuestas_json TEXT │
+│ is_active    │           └──────────────────────┘          │ verificacion TEXT    │
+│ created_at   │                                             └──────────────────────┘
+└──────────────┘
+```
 
 ---
 
-## 2. DDL
+## 2. DDL vigente (`src/lib/db.ts`)
 
-### 2.1 PostgreSQL (recomendado producción)
+### 2.1 PostgreSQL (producción)
 
 ```sql
-CREATE EXTENSION IF NOT EXISTS pgcrypto; -- gen_random_uuid()
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
-CREATE TABLE preguntas (
-  id SMALLINT PRIMARY KEY CHECK (id BETWEEN 1 AND 98),
-  texto VARCHAR(280) NOT NULL
+CREATE TABLE test_versiones (
+  id SERIAL PRIMARY KEY,
+  codigo TEXT NOT NULL CHECK (codigo IN ('CHASIDE','PERSONALIDAD','KUDER')),
+  version INT NOT NULL,
+  vigencia_desde TIMESTAMPTZ NOT NULL,
+  activo BOOLEAN DEFAULT false,
+  UNIQUE (codigo, version)
 );
+INSERT INTO test_versiones (codigo, version, vigencia_desde, activo) VALUES
+  ('CHASIDE',1,'2026-01-01',true), ('PERSONALIDAD',1,'2026-01-01',true), ('KUDER',1,'2026-01-01',true);
 
 CREATE TABLE estudiantes (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(), -- 16 bytes binario
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   nombre_estudiante VARCHAR(100) NOT NULL,
-  nombre_padre      VARCHAR(100) NOT NULL,
-  correo_estudiante VARCHAR(100) NOT NULL,
-  correo_padre      VARCHAR(100) NOT NULL,
+  nombre_padre VARCHAR(100),
+  correo_estudiante VARCHAR(100),
+  correo_padre VARCHAR(100),
   cedula_estudiante VARCHAR(10) NULL CHECK (cedula_estudiante ~ '^[0-9]{10}$' OR cedula_estudiante IS NULL),
   cedula_representante VARCHAR(10) NULL CHECK (cedula_representante ~ '^[0-9]{10}$' OR cedula_representante IS NULL),
-  fecha_unix        INTEGER NOT NULL, -- s desde 1970, hasta 2038/2106 con INT; usa BIGINT si necesitas ms
-  created_at        TIMESTAMPTZ DEFAULT now()
+  created_at TIMESTAMPTZ DEFAULT now()
 );
-CREATE INDEX idx_estudiantes_fecha ON estudiantes (fecha_unix);
--- Opcional: índice parcial para cédulas no nulas
--- CREATE INDEX idx_est_cedula ON estudiantes (cedula_estudiante) WHERE cedula_estudiante IS NOT NULL;
+CREATE INDEX idx_estudiantes_created ON estudiantes(created_at);
 
-CREATE TABLE respuestas (
+CREATE TABLE preguntas (
+  test_codigo TEXT NOT NULL,
+  version INT NOT NULL,
+  pregunta_id SMALLINT NOT NULL,
+  texto VARCHAR(280) NOT NULL,
+  PRIMARY KEY (test_codigo, version, pregunta_id),
+  FOREIGN KEY (test_codigo, version) REFERENCES test_versiones(codigo, version)
+);
+
+CREATE TABLE chaside_resultados (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   estudiante_id UUID NOT NULL REFERENCES estudiantes(id) ON DELETE CASCADE,
-  pregunta_id   SMALLINT NOT NULL REFERENCES preguntas(id),
-  respuesta     SMALLINT NOT NULL CHECK (respuesta IN (0,1)), -- 0=NO,1=SÍ
-  PRIMARY KEY (estudiante_id, pregunta_id)
+  fecha_unix INTEGER NOT NULL,
+  version INT NOT NULL DEFAULT 1,
+  top_interes TEXT NOT NULL,
+  segundo_interes TEXT,
+  top_aptitud TEXT NOT NULL,
+  intereses_json TEXT NOT NULL,   -- {"C":7,"H":2,...}
+  aptitudes_json TEXT NOT NULL,   -- {"C":3,"H":1,...}
+  respuestas_json TEXT NOT NULL,  -- {"1":true,"2":false,...98}
+  created_at TIMESTAMPTZ DEFAULT now()
 );
-CREATE INDEX idx_respuestas_pregunta ON respuestas (pregunta_id);
+CREATE INDEX idx_chaside_est ON chaside_resultados(estudiante_id);
+CREATE INDEX idx_chaside_fecha ON chaside_resultados(fecha_unix);
 
--- FK estricta a dominio 0/1 (opcional, si se exige literal "foreing key de respuesta"):
--- CREATE TABLE dominio_respuesta (id SMALLINT PRIMARY KEY, label TEXT);
--- INSERT INTO dominio_respuesta VALUES (0,'NO'),(1,'SÍ');
--- ALTER TABLE respuestas ADD CONSTRAINT fk_resp_dom FOREIGN KEY (respuesta) REFERENCES dominio_respuesta(id);
+CREATE TABLE personalidad_resultados (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  estudiante_id UUID NOT NULL REFERENCES estudiantes(id) ON DELETE CASCADE,
+  fecha_unix INTEGER NOT NULL,
+  version INT NOT NULL DEFAULT 1,
+  tipo TEXT NOT NULL, -- INTJ..ESFP
+  dimensiones_json TEXT NOT NULL, -- {EI:{raw,percent,letter}...}
+  percentages_json TEXT NOT NULL,
+  respuestas_json TEXT NOT NULL,  -- {"1":-3,..."60":3}
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+CREATE INDEX idx_pers_est ON personalidad_resultados(estudiante_id);
+CREATE INDEX idx_pers_tipo ON personalidad_resultados(tipo);
+
+CREATE TABLE kuder_resultados (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  estudiante_id UUID NOT NULL REFERENCES estudiantes(id) ON DELETE CASCADE,
+  fecha_unix INTEGER NOT NULL,
+  version INT NOT NULL DEFAULT 1,
+  top TEXT NOT NULL, -- EXT..OFI
+  ranking_json TEXT NOT NULL,
+  scores_json TEXT NOT NULL,
+  respuestas_json TEXT NOT NULL, -- {"1":"a","2":"b"...}
+  verificacion TEXT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+CREATE INDEX idx_kuder_est ON kuder_resultados(estudiante_id);
+CREATE INDEX idx_kuder_top ON kuder_resultados(top);
+
+-- Auth Knox
+CREATE TABLE users (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  email VARCHAR(255) NOT NULL UNIQUE,
+  password_hash TEXT NOT NULL,
+  first_name VARCHAR(100),
+  last_name VARCHAR(100),
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+CREATE TABLE knox_authtoken (
+  digest TEXT PRIMARY KEY, -- SHA512 hex 128
+  token_key VARCHAR(8) NOT NULL,
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created INTEGER NOT NULL,
+  expiry INTEGER NOT NULL
+);
+CREATE INDEX idx_knox_user ON knox_authtoken(user_id);
+CREATE INDEX idx_knox_expiry ON knox_authtoken(expiry);
 ```
 
-### 2.2 SQLite (desarrollo / edge / offline)
+### 2.2 SQLite (desarrollo / edge — `src/lib/db.ts:17`)
 
 ```sql
 PRAGMA journal_mode=WAL;
 PRAGMA foreign_keys=ON;
 
-CREATE TABLE preguntas (
-  id INTEGER PRIMARY KEY CHECK (id BETWEEN 1 AND 98),
-  texto TEXT NOT NULL
+CREATE TABLE test_versiones (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  codigo TEXT NOT NULL CHECK (codigo IN ('CHASIDE','PERSONALIDAD','KUDER')),
+  version INTEGER NOT NULL,
+  vigencia_desde INTEGER NOT NULL,
+  activo INTEGER NOT NULL DEFAULT 0,
+  UNIQUE(codigo, version)
 ) STRICT;
 
 CREATE TABLE estudiantes (
-  id TEXT PRIMARY KEY, -- UUIDv4 texto 36 car "xxxxxxxx-xxxx-4xxx-..."; o BLOB 16 para ahorrar
-  -- Recomendado generar en app (crypto.randomUUID()) y guardar como TEXT 36
+  id TEXT PRIMARY KEY,
   nombre_estudiante TEXT NOT NULL,
-  nombre_padre      TEXT NOT NULL,
-  correo_estudiante TEXT NOT NULL,
-  correo_padre      TEXT NOT NULL,
+  nombre_padre TEXT,
+  correo_estudiante TEXT,
+  correo_padre TEXT,
   cedula_estudiante TEXT CHECK (cedula_estudiante IS NULL OR length(cedula_estudiante)=10),
   cedula_representante TEXT CHECK (cedula_representante IS NULL OR length(cedula_representante)=10),
-  fecha_unix        INTEGER NOT NULL,
-  created_at        INTEGER DEFAULT (unixepoch())
+  created_at INTEGER DEFAULT (unixepoch())
 ) STRICT;
-CREATE INDEX idx_estudiantes_fecha ON estudiantes(fecha_unix);
 
-CREATE TABLE respuestas (
-  estudiante_id TEXT NOT NULL REFERENCES estudiantes(id) ON DELETE CASCADE,
-  pregunta_id   INTEGER NOT NULL REFERENCES preguntas(id),
-  respuesta     INTEGER NOT NULL CHECK (respuesta IN (0,1)),
-  PRIMARY KEY (estudiante_id, pregunta_id)
+CREATE TABLE preguntas (
+  test_codigo TEXT NOT NULL,
+  version INTEGER NOT NULL,
+  pregunta_id INTEGER NOT NULL,
+  texto TEXT NOT NULL,
+  PRIMARY KEY (test_codigo, version, pregunta_id)
 ) STRICT;
-CREATE INDEX idx_respuestas_pregunta ON respuestas(pregunta_id);
+
+CREATE TABLE chaside_resultados (
+  id TEXT PRIMARY KEY,
+  estudiante_id TEXT NOT NULL REFERENCES estudiantes(id) ON DELETE CASCADE,
+  fecha_unix INTEGER NOT NULL,
+  version INTEGER NOT NULL DEFAULT 1,
+  top_interes TEXT NOT NULL,
+  segundo_interes TEXT,
+  top_aptitud TEXT NOT NULL,
+  intereses_json TEXT NOT NULL,
+  aptitudes_json TEXT NOT NULL,
+  respuestas_json TEXT NOT NULL,
+  created_at INTEGER DEFAULT (unixepoch())
+) STRICT;
+
+-- personalidad_resultados y kuder_resultados idénticos a PG con TEXT
+-- users / knox_authtoken idénticos a PG con TEXT
 ```
 
-> **Nota UUID en SQLite:** `TEXT 36` ocupa 36 B + overhead vs `BLOB 16` (20 B ahorro/fila respuestas = ~23 MB en 10 años). Si el disco importa, guarda `BLOB 16` (`randomblob(16)` con bits versión/variante) y convierte en app. Para simplicidad y debuggabilidad el ejemplo usa `TEXT 36`.
+> UUID en SQLite: `TEXT 36` (debug-friendly) vs `BLOB 16` ahorra ~20 B/fila.
 
 ---
 
-## 3. Tamaño por fila
+## 3. Tamaño por fila (modelo JSON vigente)
 
-### 3.1 Supuestos
+### 3.1 Estudiantes (igual que antes)
 
-| Campo | Tipo PG / SQLite | Long. promedio | Bytes datos |
-|---|---|---|---|
-| nombre_estudiante | VARCHAR(100)/TEXT | 22 car | 22+1 |
-| nombre_padre | VARCHAR(100)/TEXT | 22 car | 22+1 |
-| correo_estudiante | VARCHAR(100) | 24 car | 24+1 |
-| correo_padre | VARCHAR(100) | 24 car | 24+1 |
-| cedula_estudiante | VARCHAR(10) NULL | 10 car si se informa, NULL 60% casos | 10+1 si no NULL, 1 bitmap si NULL |
-| cedula_representante | VARCHAR(10) NULL | idem | idem |
-| id | UUID 16 B (PG) / TEXT 36 B (SQLite) | — | 16 / 36 |
-| fecha_unix | INTEGER 4 B | — | 4 |
-| pregunta_id | SMALLINT/INTEGER 1-2 B | — | 2 |
-| respuesta | SMALLINT/INTEGER 1 B | — | 1 |
+- Sin cédula: **~143 B PG / ~151 B SQLite** (+ índice ~28/20 B) → **~171 B**
+- Con 2 cédulas: **~193 B**
+- Promedio 1 cédula: **~182 B** — pesimista 50 car → **~252 B**
 
-Overhead fila: PostgreSQL header 23 B + null bitmap + alineamiento ≈ **26 B**; SQLite B-Tree leaf ≈ **12-18 B** (sin TOAST). Se usa **27 B PG / 15 B SQLite** para cálculo.
+### 3.2 Resultados (1 fila JSON por aplicación, no 98)
 
-### 3.2 Fila `estudiantes`
+| Tabla | Campos JSON | Tamaño estimado fila |
+|---|---|---|
+| `chaside_resultados` | `respuestas_json` ~800 B (98 bools) + `intereses/aptitudes` ~80 B + 5×UUID/text + header 27 B | **~1.1 KB PG / ~1.2 KB SQLite-TEXT** |
+| `personalidad_resultados` | 60 ints -3..3 ~400 B + `dimensiones/percentages` ~300 B | **~0.9 KB** |
+| `kuder_resultados` | 60 a/b ~300 B + `ranking/scores` ~200 B | **~0.8 KB** |
+| `preguntas` | 98+60+60 filas × ~200 B | **~44 KB total** (despreciable) |
 
-**PostgreSQL (UUID 16 B):**
-- Sin cédula (NULL ambas): 16 +23+23+25+25 +4 +27 ≈ **143 B** (+ idx_fecha ~28 B) ⇒ **~171 B** con índice.
-- Con 1 cédula (10 car): **+11 B** ⇒ **~182 B**.
-- Con 2 cédulas: **+22 B** ⇒ **~193 B**.
-- Promedio ponderado (50% estudiantes con ambas cédulas): **~182 B**.
+Vs legado `respuestas` 98 filas ×46 B = **~4.5 KB por CHASIDE** → JSON ahorra **~4×**.
 
-**SQLite (UUID TEXT 36 B):**
-- Sin cédula: 36 +23+23+25+25 +4 +15 ≈ **151 B** (+ idx 20 B) ⇒ **~171 B**.
-- Con 2 cédulas (TEXT 10+10): **~193 B** → promedio **~182 B** también (UUID más grande compensa overhead menor).
+### 3.3 Índices
 
-> Pesimista nombres 50 car: **~252 B PG / ~250 B SQLite**.
-
-### 3.3 Fila `respuestas`
-
-- **PostgreSQL:** `estudiante_id` 16 + `pregunta_id` 2 + `respuesta` 1 + header 27 = **~46 B** (con PK cluster). Índice secundario `idx_pregunta` amortizado **+ ~8 B** ⇒ **46 / 54 B**.
-- **SQLite TEXT 36:** 36 +2+1+15 = **54 B** / con índice **62 B**.
-- **SQLite BLOB 16:** 16+2+1+15 = **34 B** / con índice **42 B** (recomendado si se optimiza).
-
-### 3.4 `preguntas`
-
-98 filas × ~200 B = **~20 KB** (despreciable).
+Solo `idx_*_est` + `idx_*_fecha/tipo/top` + `idx_estudiantes_created`. Sin índice por pregunta (no hay tabla `respuestas`).
 
 ---
 
-## 4. Volumen total (600/semestre × 20 semestres = 12.000 est. ×1.176.000 respuestas)
+## 4. Volumen total vigente (600/semestre × 20 semestres = 12.000 estudiantes)
 
-### 4.1 PostgreSQL (UUID 16 B, promedio 1 cédula informada)
+### 4.1 Solo CHASIDE (caso histórico)
 
-| Nivel | Estudiantes | Respuestas | Estudiantes (182 B) | Respuestas (46 B) | Subtotal | +Índices 25% | **Total disco** |
-|---|---|---|---|---|---|---|---|
-| 1 semestre (600) | 600 | 58.800 | 0,11 MB | 2,70 MB | 2,81 MB | 3,51 MB | **~3,5 MB** |
-| 1 año (1.200) | 1.200 | 117.600 | 0,22 MB | 5,41 MB | 5,63 MB | 7,03 MB | **~7,0 MB** |
-| **10 años (12.000)** | 12.000 | 1.176.000 | 2,18 MB | 54,10 MB | 56,28 MB | 70,35 MB | **~55-70 MB** |
+| Nivel | Estudiantes (182 B) | chaside_resultados (~1.1 KB) | **Total PG** | **SQLite TEXT** |
+|---|---|---|---|---|
+| 1 semestre (600) | 0,11 MB | 0,66 MB | **~0,96 MB** (+25% índices → ~1,2 MB) | **~1,4 MB** |
+| 1 año (1.200) | 0,22 MB | 1,32 MB | **~1,9 MB** | **~2,8 MB** |
+| **10 años (12.000)** | 2,18 MB | 13,2 MB | **~15,4 MB → ~19 MB con índices/WAL** | **~22 MB** |
 
-Pesimista nombres 50 car + respuestas 54 B: **~63,5 MB datos → ~80 MB con índices**.
+Legado `respuestas`: ~70 MB → **ahorro ~70%**.
 
-### 4.2 SQLite TEXT 36 (sin optimizar)
+### 4.2 Personalidad (60 Q) y Kuder (60 diadas)
 
-| Nivel | Respuestas (54 B) | + Estudiantes (182 B) | **Total** |
-|---|---|---|---|
-| 1 semestre | 3,18 MB | 0,11 MB | **~3,3 MB + WAL** |
-| 10 años | 63,50 MB | 2,18 MB | **~65,7 MB → ~82 MB con índices/WAL** |
+| Test | 12.000 filas ×0.9/0.8 KB | 10 años PG |
+|---|---|---|
+| Personalidad | 10,8 MB | **~13,5 MB** |
+| Kuder | 9,6 MB | **~12 MB** |
 
-### 4.3 SQLite BLOB 16 (optimizado)
+### 4.3 Los 3 tests combinados (12.000 estudiantes × 3 = 36.000 aplicaciones)
 
-10 años: 12.000×182 B=2,18 MB + 1.176.000×34 B=40,0 MB ⇒ **~42 MB → ~53 MB con índices** (igual que ex-INT, + solo 2 MB por UUID vs INT).
+- **PG UUID 16 B:** 2,18 +13,2+10,8+9,6 = **35,8 MB → ~45 MB con índices/WAL**
+- **SQLite TEXT 36:** **~50 MB → ~65 MB con WAL**
+- **SQLite BLOB 16:** **~42 MB**
 
-> **Conclusión sin cédulas:** Si no se informa ninguna cédula (NULL), se ahorra ~11-22 B/fila ⇒ total 10 años **~52-66 MB PG** (vs 55-70 MB). Con ambas cédulas siempre informadas, **~58-73 MB**. Diferencia **<10%** — despreciable.
->
-> Si se interpreta 600/año (300/semestre) ⇒ mitad: **~27-35 MB PG en 10 años**.
->
-> Un semestre cabe en **~4 MB** (menos que una foto). **Provisionar 300 MB** (5×) cubre 10 años + WAL + backups + VACUUM.
+> Un semestre (600×3): **~2,1 MB PG**. **Provisionar 300 MB** cubre 10 años + backups + 3 versiones.
 
----
-
-## 5. Optimizaciones
-
-1. **Tipos mínimos:** `pregunta_id SMALLINT` (SQLite INTEGER), `respuesta SMALLINT CHECK 0/1`. No `VARCHAR`.
-2. **UUID:** PG `uuid` (16 B) + `pgcrypto`. SQLite `TEXT 36` para simplicidad o `BLOB 16` para ahorrar 20 B/fila respuestas (~23 MB en 10 años).
-3. **Cédulas opcionales:** `NULL` no ocupa espacio TOAST; índice parcial `WHERE cedula IS NOT NULL` evita indexar NULLs.
-4. **Sin surrogate en respuestas:** PK `(estudiante_id, pregunta_id)` ahorra 12 B×1,1M = ~13 MB.
-5. **Particionamiento:** PG declarativo por `fecha_unix` semestral; SQLite sin partición nativa → sharding por archivo `chaside_2026s1.db` o `ATTACH`.
-   ```sql
-   -- PG
-   CREATE TABLE estudiantes_2026s1 PARTITION OF estudiantes
-     FOR VALUES FROM (to_timestamp('2026-01-01')) TO (to_timestamp('2026-07-01'));
-   ```
-6. **Índices esenciales solo:** `idx_fecha` y `idx_pregunta`. No indexar correos salvo búsqueda.
-7. **Bulk insert:** 98 respuestas por estudiante en una transacción `BEGIN; INSERT ... VALUES (...),(... ) 98; COMMIT;` (PG `COPY`, SQLite `executemany`).
-8. **Vacuum/WAL:** PG `autovacuum`; SQLite `PRAGMA journal_mode=WAL; PRAGMA auto_vacuum=INCREMENTAL;`.
-9. **Archivo frío:** >3 años mover a `chaside_archive` o Parquet en S3.
-
-### 5.1 Alternativa ultra-compacta
-
-`estudiantes.respuestas_bits BLOB(13)` (98 bits). Elimina `respuestas` (1,1M filas). 12.000×13 B=156 KB vs 54 MB → **350× menos**. Pierde FK por pregunta; solo para archivo.
+Ver `docs/versionado-espacio.md` para detalle con versionado (overhead +2 B por fila si se añade `version` — ya incluido en el esquema vigente).
 
 ---
 
-## 6. Consultas
+## 5. Consultas vigentes
 
 ```sql
--- Baremo idéntico a src/data/scoring.ts (Intereses C=98,12... y Aptitudes C=15,51...)
-SELECT
-  SUM(CASE WHEN r.pregunta_id IN (98,12,64,53,85,1,78,20,71,91) THEN r.respuesta ELSE 0 END) AS c_intereses,
-  SUM(CASE WHEN r.pregunta_id IN (15,51,2,46) THEN r.respuesta ELSE 0 END) AS c_aptitudes,
-  e.cedula_estudiante -- opcional
-FROM respuestas r
-JOIN estudiantes e ON e.id=r.estudiante_id
-WHERE e.id = :uuid;
+-- Top CHASIDE de un estudiante (ya agregado, sin baremo SQL)
+SELECT top_interes, segundo_interes, top_aptitud, intereses_json, aptitudes_json
+FROM chaside_resultados WHERE estudiante_id = :uuid ORDER BY fecha_unix DESC LIMIT 1;
 
--- Cohorte semestral
+-- Si se necesitara baremo SQL puro (compatibilidad legado), usar json_extract:
+SELECT json_extract(respuestas_json, '$.1') FROM chaside_resultados WHERE id=:id;
+
+-- Cohorte mensual (por test)
 SELECT date(fecha_unix,'unixepoch','start of month') AS mes, COUNT(*) 
-FROM estudiantes GROUP BY mes ORDER BY mes;
+FROM chaside_resultados GROUP BY mes ORDER BY mes;
+
+-- Stats agregados (usadas en src/lib/admin.ts:56)
+SELECT top_interes, COUNT(*) FROM chaside_resultados GROUP BY top_interes;
+SELECT tipo, COUNT(*) FROM personalidad_resultados GROUP BY tipo;
 ```
 
 ---
 
-## 7. Recomendación final
+## 6. Migración desde legado
 
-- **Motor:** PostgreSQL si hay concurrencia (>50 escrituras/semestre) o SQLite si es despliegue single-file/offline. Ambos <100 MB en 10 años.
-- **Provisionar:** **300 MB** (PG) / **150 MB** (SQLite BLOB) con holgura para WAL/backups.
-- **Esquema:** 3 tablas normalizadas + cédulas `NULL` + UUIDv4 + partición semestral. No se requiere sharding.
+`src/lib/db.ts:21` detecta `hasColumn("estudiantes","test_codigo")` (legado tenía `test_codigo + fecha_unix` por fila). Si existe, hace `DROP TABLE respuestas, estudiantes` y recrea. No hay migración de datos (entorno dev).
 
-*Fuente preguntas/baremo: `src/data/chaside.ts` (CUESA 1998).*
+Si necesitas migrar datos reales: `INSERT INTO estudiantes (id, nombre...) SELECT DISTINCT estudiante_id,... FROM respuestas` + `INSERT INTO chaside_resultados SELECT ... json_group_object(pregunta_id, respuesta)`.
+
+---
+
+## 7. Optimizaciones vigentes
+
+1. **1 fila JSON vs 98 filas:** -70% espacio + 1 INSERT vs 98.
+2. **UUID TEXT 36** para debug; **BLOB 16** si >50k aplicaciones.
+3. **Versionado** ya en `version INT` por resultado + `test_versiones` + `preguntas` PK compuesta. Alternativa `aplicaciones` tabla intermedia no necesaria (simplificado).
+4. **Índices mínimos:** solo `estudiante_id` y `fecha/tipo`. No `pregunta_id`.
+5. **WAL + foreign_keys ON** obligatorio.
+
+---
+
+## 8. Apéndice — Modelo legado deprecated (pre-2026-02)
+
+> Se mantiene solo como referencia histórica para entender `docs/versionado-espacio.md:1.1` alternativa `aplicaciones/respuestas`.
+
+```
+estudiantes 1 ──< respuestas >── 1 preguntas   (98 filas por estudiante)
+```
+
+DDL legado y cálculos de 55–70 MB / 10 años se conservan en git history (`git show HEAD~1:docs/database.md`). No usar para nuevas implementaciones. Fuente preguntas/baremo: `src/data/chaside.ts` (CUESA 1998).
