@@ -15,6 +15,12 @@ export default defineConfig({
     resolve: {
       dedupe: ["react", "react-dom"],
     },
+    optimizeDeps: {
+      exclude: ["plotly.js-dist-min"],
+    },
+    ssr: {
+      noExternal: ["plotly.js-dist-min"],
+    },
   },
 
   integrations: [react()]
