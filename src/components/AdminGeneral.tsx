@@ -2,6 +2,8 @@ import { useEffect, useState, useRef } from "react";
 import { AREAS, AREA_ORDER } from "../data/chaside";
 import { TYPES } from "../data/personalidad";
 import { KUDER_AREAS, KUDER_ORDER } from "../data/kuder";
+import { LucideIcon } from "../lib/icons";
+import { BookOpen, Check, Minus, X } from "lucide-react";
 
 function PlotlyChart({ data, layout, style }: { data: any; layout: any; style?: any }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -183,7 +185,7 @@ export default function AdminGeneral() {
             <div className="overflow-x-auto mt-3">
               <table className="w-full text-xs">
                 <thead className="bg-slate-50"><tr><th className="px-2 py-2 text-left">Estudiante</th><th className="px-2 py-2">C</th><th className="px-2 py-2">P</th><th className="px-2 py-2">K</th><th className="px-2 py-2">Faltan</th></tr></thead>
-                <tbody>{students.slice(0, 20).map((s: any) => <tr key={s.id} className="border-t"><td className="px-2 py-2 font-bold">{s.nombre_estudiante}</td><td className="px-2 py-2 text-center">{s.hasChaside ? "✓" : "—"}</td><td className="px-2 py-2 text-center">{s.hasPersonalidad ? "✓" : "—"}</td><td className="px-2 py-2 text-center">{s.hasKuder ? "✓" : "—"}</td><td className="px-2 py-2 text-center font-bold text-red-600">{3 - s.completados}</td></tr>)}</tbody>
+                <tbody>{students.slice(0, 20).map((s: any) => <tr key={s.id} className="border-t"><td className="px-2 py-2 font-bold">{s.nombre_estudiante}</td><td className="px-2 py-2 text-center">{s.hasChaside ? <Check size={14} className="inline text-green-600" /> : <Minus size={14} className="inline text-slate-400" />}</td><td className="px-2 py-2 text-center">{s.hasPersonalidad ? <Check size={14} className="inline text-green-600" /> : <Minus size={14} className="inline text-slate-400" />}</td><td className="px-2 py-2 text-center">{s.hasKuder ? <Check size={14} className="inline text-green-600" /> : <Minus size={14} className="inline text-slate-400" />}</td><td className="px-2 py-2 text-center font-bold text-red-600">{3 - s.completados}</td></tr>)}</tbody>
               </table>
             </div>
           </div>
@@ -193,7 +195,7 @@ export default function AdminGeneral() {
       {tab === "chaside" && chaside && (
         <div className="mt-6 space-y-4">
           <div className="bg-[#F8FAFC] border rounded-2xl p-4">
-            <h3 className="font-black text-xs uppercase tracking-wider">📖 Leyenda CHASIDE</h3>
+            <h3 className="font-black text-xs uppercase tracking-wider flex items-center gap-1"><BookOpen size={14} />Leyenda CHASIDE</h3>
             <div className="mt-2 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2 text-xs">
               {AREA_ORDER.map(k=>{ const info=AREAS[k]; return <div key={k} className="bg-white border rounded-xl px-2 py-2 text-center"><span className="w-6 h-6 rounded-full text-white text-xs font-black inline-flex items-center justify-center" style={{background:info.color}}>{k}</span><p className="font-bold mt-1 leading-none">{info.nombreCorto}</p><p className="text-[10px] text-slate-500 leading-none">{info.nombre}</p></div>; })}
             </div>
@@ -215,7 +217,7 @@ export default function AdminGeneral() {
       {tab === "personalidad" && pers && (
         <div className="mt-6 space-y-4">
           <div className="bg-[#F9F9FB] border border-[#7C3AED]/20 rounded-2xl p-4">
-            <h3 className="font-black text-xs uppercase tracking-wider">📖 Leyenda MBTI — Qué significa cada letra</h3>
+            <h3 className="font-black text-xs uppercase tracking-wider flex items-center gap-1"><BookOpen size={14} />Leyenda MBTI — Qué significa cada letra</h3>
             <div className="mt-2 grid sm:grid-cols-2 gap-3 text-xs">
               <div><b>Mente:</b> <b>E</b> Extravertido (energía con gente) vs <b>I</b> Introvertido (energía a solas)</div>
               <div><b>Energía:</b> <b>S</b> Observador/Sensorial (concreto, presente) vs <b>N</b> Intuitivo (posibilidades, futuro)</div>
@@ -240,9 +242,9 @@ export default function AdminGeneral() {
       {tab === "kuder" && kuder && (
         <div className="mt-6 space-y-4">
           <div className="bg-[#EFF6FF] border border-[#2563EB]/20 rounded-2xl p-4">
-            <h3 className="font-black text-xs uppercase tracking-wider">📖 Leyenda Kuder — Nomenclatura</h3>
+            <h3 className="font-black text-xs uppercase tracking-wider flex items-center gap-1"><BookOpen size={14} />Leyenda Kuder — Nomenclatura</h3>
             <div className="mt-2 grid grid-cols-2 sm:grid-cols-5 gap-2 text-xs">
-              {KUDER_ORDER.map(k=>{ const info=KUDER_AREAS[k]; return <div key={k} className="bg-white border rounded-xl px-2 py-2 flex gap-2 items-center"><span className="text-base">{info.icono}</span><div><p className="font-black leading-none">{k}</p><p className="font-bold text-[11px] leading-none">{info.nombre}</p><p className="text-[10px] text-slate-500 leading-none">{info.nombreCorto}</p></div></div>; })}
+              {KUDER_ORDER.map(k=>{ const info=KUDER_AREAS[k]; return <div key={k} className="bg-white border rounded-xl px-2 py-2 flex gap-2 items-center"><LucideIcon name={info.icono} size={16} style={{color:info.color}} /><div><p className="font-black leading-none">{k}</p><p className="font-bold text-[11px] leading-none">{info.nombre}</p><p className="text-[10px] text-slate-500 leading-none">{info.nombreCorto}</p></div></div>; })}
             </div>
             <p className="text-xs text-slate-600 mt-2">10 áreas, 60 diadas (eliges A o B), cada elección suma +1. Puntaje 0–60, Top = área más elegida, Ranking ordena mayor a menor. Verificación = válido si 60 respuestas.</p>
           </div>
@@ -260,10 +262,10 @@ export default function AdminGeneral() {
 
       {tab === "estudiantes" && (
         <div className="mt-6 space-y-3">
-          <div className="bg-[#F8FAFC] border rounded-2xl p-3 text-xs flex flex-wrap gap-3">
-            <span><b>C</b> = CHASIDE (✓ + letra = top interés, ej: C=I)</span>
-            <span><b>P</b> = Personalidad MBTI (✓ + tipo, ej: P=INFP)</span>
-            <span><b>K</b> = Kuder (✓ + área, ej: K=PER)</span>
+          <div className="bg-[#F8FAFC] border rounded-2xl p-3 text-xs flex flex-wrap gap-3 items-center">
+            <span className="inline-flex items-center gap-1"><b>C</b> = CHASIDE (<Check size={12} className="inline text-green-600" /> + letra = top interés, ej: C=I)</span>
+            <span className="inline-flex items-center gap-1"><b>P</b> = Personalidad MBTI (<Check size={12} className="inline text-green-600" /> + tipo, ej: P=INFP)</span>
+            <span className="inline-flex items-center gap-1"><b>K</b> = Kuder (<Check size={12} className="inline text-green-600" /> + área, ej: K=PER)</span>
             <span><b>Faltan</b> = 3 - completados</span>
             <span className="text-slate-500">Ver = abre el resultado completo como lo ve el estudiante</span>
           </div>
@@ -278,9 +280,9 @@ export default function AdminGeneral() {
                       <td className="px-3 py-2">{s.nombre_padre || "—"}</td>
                       <td className="px-3 py-2 text-xs">{[s.correo_estudiante, s.correo_padre].filter(Boolean).join(" / ") || "—"}</td>
                       <td className="px-3 py-2 text-xs">{[s.cedula_estudiante, s.cedula_representante].filter(Boolean).join(" / ") || "—"}</td>
-                      <td className="px-3 py-2 text-center">{s.hasChaside ? <span className="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs font-bold">✓ {s.chaside?.top_interes}</span> : <span className="bg-red-100 text-red-600 px-2 py-1 rounded-full text-xs">—</span>}</td>
-                      <td className="px-3 py-2 text-center">{s.hasPersonalidad ? <span className="bg-purple-100 text-purple-700 px-2 py-1 rounded-full text-xs font-bold">{s.personalidad?.tipo}</span> : <span className="bg-red-100 text-red-600 px-2 py-1 rounded-full text-xs">—</span>}</td>
-                      <td className="px-3 py-2 text-center">{s.hasKuder ? <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded-full text-xs font-bold">{s.kuder?.top}</span> : <span className="bg-red-100 text-red-600 px-2 py-1 rounded-full text-xs">—</span>}</td>
+                      <td className="px-3 py-2 text-center">{s.hasChaside ? <span className="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs font-bold inline-flex items-center gap-1"><Check size={12} />{s.chaside?.top_interes}</span> : <span className="bg-red-100 text-red-600 px-2 py-1 rounded-full text-xs inline-flex items-center gap-1"><Minus size={12} /></span>}</td>
+                      <td className="px-3 py-2 text-center">{s.hasPersonalidad ? <span className="bg-purple-100 text-purple-700 px-2 py-1 rounded-full text-xs font-bold">{s.personalidad?.tipo}</span> : <span className="bg-red-100 text-red-600 px-2 py-1 rounded-full text-xs inline-flex items-center gap-1"><Minus size={12} /></span>}</td>
+                      <td className="px-3 py-2 text-center">{s.hasKuder ? <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded-full text-xs font-bold">{s.kuder?.top}</span> : <span className="bg-red-100 text-red-600 px-2 py-1 rounded-full text-xs inline-flex items-center gap-1"><Minus size={12} /></span>}</td>
                       <td className="px-3 py-2 text-center font-black text-red-600">{3 - s.completados}</td>
                       <td className="px-3 py-2"><button onClick={() => openDetail(s.id)} className="bg-[#0B1220] text-white px-3 py-1 rounded-full text-xs font-bold">Ver</button></td>
                     </tr>
@@ -348,16 +350,16 @@ export default function AdminGeneral() {
                 <p className="text-xs text-slate-500">ID {selected.estudiante.id} · Creado {new Date((selected.estudiante.created_at || 0) * 1000).toLocaleString()}</p>
                 <p className="text-xs mt-1">Padre: {selected.estudiante.nombre_padre || "—"} | Correos: {selected.estudiante.correo_estudiante || "—"} / {selected.estudiante.correo_padre || "—"} | Cédulas: {selected.estudiante.cedula_estudiante || "—"} / {selected.estudiante.cedula_representante || "—"}</p>
               </div>
-              <button onClick={() => setSelected(null)} className="bg-slate-100 border rounded-full w-8 h-8">✕</button>
+              <button onClick={() => setSelected(null)} className="bg-slate-100 border rounded-full w-8 h-8 flex items-center justify-center"><X size={16} /></button>
             </div>
             {/* Leyenda general para quien ve el detalle por primera vez */}
             <div className="mt-3 bg-[#F8FAFC] border rounded-xl p-3 text-xs">
-              <p className="font-black">Cómo leer:</p>
-              <p className="text-slate-600 mt-1"><b>CHASIDE</b> C=Administrativa, H=Humanística, A=Artística, S=Salud, I=Ingeniería, D=Defensa, E=Exactas — Intereses 0–10, Aptitudes 0–4. <b>MBTI</b> E/I (Mente), S/N (Energía), T/F (Naturaleza), J/P (Táctica) — 50% neutral, 4 letras = tipo. <b>Kuder</b> EXT=Aire Libre 🌿, MEC=Mecánico 🔧, CAL=Cálculo 🔢, CIE=Científico 🔬, PER=Persuasivo 🤝, ART=Artístico 🎨, LIT=Literario 📚, MUS=Musical 🎵, SOC=Servicio Social ❤️, OFI=Oficina 🏢 — 60 elecciones, puntaje = veces elegido.</p>
+              <p className="font-black flex items-center gap-1"><BookOpen size={14} />Cómo leer:</p>
+              <p className="text-slate-600 mt-1 flex flex-wrap gap-1 items-center"><b>CHASIDE</b> C=Administrativa, H=Humanística, A=Artística, S=Salud, I=Ingeniería, D=Defensa, E=Exactas — Intereses 0–10, Aptitudes 0–4. <b>MBTI</b> E/I (Mente), S/N (Energía), T/F (Naturaleza), J/P (Táctica) — 50% neutral, 4 letras = tipo. <b>Kuder</b> <span className="inline-flex items-center gap-1"><LucideIcon name="Trees" size={12} />EXT</span> <span className="inline-flex items-center gap-1"><LucideIcon name="Wrench" size={12} />MEC</span> <span className="inline-flex items-center gap-1"><LucideIcon name="Calculator" size={12} />CAL</span> <span className="inline-flex items-center gap-1"><LucideIcon name="FlaskConical" size={12} />CIE</span> <span className="inline-flex items-center gap-1"><LucideIcon name="Handshake" size={12} />PER</span> <span className="inline-flex items-center gap-1"><LucideIcon name="Palette" size={12} />ART</span> <span className="inline-flex items-center gap-1"><LucideIcon name="BookOpen" size={12} />LIT</span> <span className="inline-flex items-center gap-1"><LucideIcon name="Music" size={12} />MUS</span> <span className="inline-flex items-center gap-1"><LucideIcon name="HeartHandshake" size={12} />SOC</span> <span className="inline-flex items-center gap-1"><LucideIcon name="Building2" size={12} />OFI</span> — 60 elecciones, puntaje = veces elegido.</p>
             </div>
             <div className="mt-4 grid lg:grid-cols-3 gap-3">
               <div className={`border rounded-xl p-4 ${selected.chaside ? "bg-green-50 border-green-200" : "bg-red-50 border-red-200"}`}>
-                <h4 className="font-black text-sm">CHASIDE {selected.chaside ? "✓" : "— faltante"}</h4>
+                <h4 className="font-black text-sm flex items-center gap-1">CHASIDE {selected.chaside ? <><Check size={14} className="text-green-600" /></> : <><Minus size={14} className="text-red-500" />faltante</>}</h4>
                 {selected.chaside ? <>
                   <div className="mt-2 grid grid-cols-7 gap-1 text-[10px] text-center">{Object.entries(selected.chaside.intereses).map(([k, v]: any) => <div key={k} className={`font-black p-1 rounded border ${k===selected.chaside.topInteres ? "bg-[#0B1220] text-white" : "bg-[#FFCC00]"}`}>{k}<br />{String(v)}</div>)}</div>
                   <div className="mt-2 grid grid-cols-7 gap-1 text-[10px] text-center">{Object.entries(selected.chaside.aptitudes).map(([k, v]: any) => <div key={k} className={`p-1 rounded border text-xs ${k===selected.chaside.topAptitud ? "bg-[#0B1220] text-white font-black" : "bg-white"}`}>{k}<br />{String(v)}</div>)}</div>
@@ -380,7 +382,7 @@ export default function AdminGeneral() {
                 </> : <p className="text-xs text-slate-600 mt-2">Pendiente de rendir. El estudiante aún no completó las 98 preguntas SÍ/NO. Intereses 0–10, Aptitudes 0–4.</p>}
               </div>
               <div className={`border rounded-xl p-4 ${selected.personalidad ? "bg-purple-50 border-purple-200" : "bg-red-50 border-red-200"}`}>
-                <h4 className="font-black text-sm">Personalidad {selected.personalidad ? `✓ ${selected.personalidad.tipo}` : "— faltante"}</h4>
+                <h4 className="font-black text-sm flex items-center gap-1">Personalidad {selected.personalidad ? <><Check size={14} className="text-green-600" />{selected.personalidad.tipo}</> : <><Minus size={14} className="text-red-500" />faltante</>}</h4>
                 {selected.personalidad ? (()=>{ const t=TYPES[selected.personalidad.tipo as keyof typeof TYPES]; return <>
                   <p className="text-xs font-black mt-2" style={{color:t.color}}>{t.code} — {t.name} <span className="text-slate-500">({t.role})</span></p>
                   <p className="text-xs text-slate-700 mt-1">{t.tagline} — {t.description}</p>
@@ -395,15 +397,15 @@ export default function AdminGeneral() {
                 </>; })() : <p className="text-xs text-slate-600 mt-2">Pendiente. 60 preguntas Likert -3..+3 → 4 dicotomías → tipo 4 letras (ej: INFP). Ver leyenda MBTI.</p>}
               </div>
               <div className={`border rounded-xl p-4 ${selected.kuder ? "bg-blue-50 border-blue-200" : "bg-red-50 border-red-200"}`}>
-                <h4 className="font-black text-sm">Kuder {selected.kuder ? `✓ ${selected.kuder.top}` : "— faltante"}</h4>
+                <h4 className="font-black text-sm flex items-center gap-1">Kuder {selected.kuder ? <><Check size={14} className="text-green-600" />{selected.kuder.top}</> : <><Minus size={14} className="text-red-500" />faltante</>}</h4>
                 {selected.kuder ? (()=>{ const topInfo=KUDER_AREAS[selected.kuder.top as keyof typeof KUDER_AREAS]; return <>
-                  <p className="text-xs font-black mt-2" style={{color:topInfo.color}}>{topInfo.icono} {topInfo.nombre} ({selected.kuder.top}) — {selected.kuder.scores[selected.kuder.top]}/60 ({Math.round(selected.kuder.scores[selected.kuder.top]/60*100)}%)</p>
+                  <p className="text-xs font-black mt-2 flex items-center gap-1" style={{color:topInfo.color}}><LucideIcon name={topInfo.icono} size={14} style={{color:topInfo.color}} />{topInfo.nombre} ({selected.kuder.top}) — {selected.kuder.scores[selected.kuder.top]}/60 ({Math.round(selected.kuder.scores[selected.kuder.top]/60*100)}%)</p>
                   <p className="text-xs text-slate-700 mt-1">{topInfo.descripcion}</p>
                   <p className="text-xs mt-1"><b>Carreras:</b> {topInfo.carreras}</p>
-                  <p className="text-xs mt-2"><b>Ranking:</b> {selected.kuder.ranking.map((k:string)=>`${k} ${KUDER_AREAS[k as keyof typeof KUDER_AREAS].icono} ${selected.kuder.scores[k]}`).join(" > ")}</p>
-                  <div className="mt-2 grid grid-cols-5 gap-1 text-[10px] text-center">{Object.entries(selected.kuder.scores).map(([k, v]: any) => { const info=KUDER_AREAS[k as keyof typeof KUDER_AREAS]; const isTop=k===selected.kuder.top; return <div key={k} className={`border rounded p-1 ${isTop?"bg-[#0B1220] text-white font-black":"bg-white"}`}><div>{info.icono}</div><b>{k}</b><div className="text-[9px]">{info.nombreCorto}</div><div>{String(v)}</div></div>; })}</div>
+                  <p className="text-xs mt-2"><b>Ranking:</b> {selected.kuder.ranking.map((k:string, i:number)=> <span key={k} className="inline-flex items-center gap-1">{i>0 && " > "}<LucideIcon name={KUDER_AREAS[k as keyof typeof KUDER_AREAS].icono} size={12} />{k} {selected.kuder.scores[k]}</span>)}</p>
+                  <div className="mt-2 grid grid-cols-5 gap-1 text-[10px] text-center">{Object.entries(selected.kuder.scores).map(([k, v]: any) => { const info=KUDER_AREAS[k as keyof typeof KUDER_AREAS]; const isTop=k===selected.kuder.top; return <div key={k} className={`border rounded p-1 flex flex-col items-center gap-0.5 ${isTop?"bg-[#0B1220] text-white font-black":"bg-white"}`}><LucideIcon name={info.icono} size={14} style={isTop ? {color:"white"} : {color:info.color}} /><b>{k}</b><div className="text-[9px]">{info.nombreCorto}</div><div>{String(v)}</div></div>; })}</div>
                   <p className="text-xs text-slate-500 mt-2">{new Date(selected.kuder.fecha_unix * 1000).toLocaleString()} · Verif: {selected.kuder.verificacion} · 60 diadas, cada elección +1</p>
-                </>; })() : <p className="text-xs text-slate-600 mt-2">Pendiente. 60 diadas (elige A o B), cada área puntúa 0–60. Ver leyenda: EXT=Aire Libre 🌿 etc.</p>}
+                </>; })() : <p className="text-xs text-slate-600 mt-2">Pendiente. 60 diadas (elige A o B), cada área puntúa 0–60.</p>}
               </div>
             </div>
             <div className="mt-4 flex gap-2 flex-wrap">

@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { KUDER_DIADAS, KUDER_AREAS, KUDER_ORDER } from "../data/kuder";
 import { calculateKuder, type KuderAnswers } from "../data/kuderScoring";
+import { LucideIcon } from "../lib/icons";
+import { BookOpen, Save, Printer, RotateCcw, Check } from "lucide-react";
 
 const STORAGE = "kuder_answers_v1";
 const STORAGE_NAME = "kuder_student_name";
@@ -50,7 +52,7 @@ export default function KuderTest(){
     setSavedAt(stamp); setError(null); setSaving(true);
     try{
       const res=await fetch("/api/kuder/submit",{ method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify({ nombre_estudiante:name.trim(), nombre_padre:extra.padre||null, correo_estudiante:extra.correoEst||null, correo_padre:extra.correoPadre||null, cedula_estudiante:extra.cedulaEst||null, cedula_representante:extra.cedulaRepr||null, fecha_unix, respuestas:answers })});
-      const j=await res.json(); if(!res.ok) throw new Error(j.error||"Error"); setSavedAt(stamp+" · guardado DB ✓");
+      const j=await res.json(); if(!res.ok) throw new Error(j.error||"Error"); setSavedAt(stamp+" · guardado DB");
     }catch(e:any){ setError("Guardado local OK, pero DB falló: "+e.message); } finally{ setSaving(false); }
   };
   const reset=()=>{ setAnswers({}); setShowResult(false); setError(null); try{localStorage.removeItem(STORAGE);}catch{}; window.scrollTo({top:0,behavior:"smooth"}); };
@@ -59,14 +61,14 @@ export default function KuderTest(){
     const topInfo = KUDER_AREAS[result.top];
     return (
       <div className="min-h-screen bg-[#F9F9FB]">
-        <div className="bg-white border-b sticky top-0 z-20">
+          <div className="bg-white border-b sticky top-0 z-20">
           <div className="max-w-4xl mx-auto px-4 py-3 flex items-center gap-3">
             <a href="/" className="text-sm font-bold text-slate-600 hover:text-slate-900">← Menú</a>
             <span className="text-slate-300">/</span>
-            <span className="text-sm font-black" style={{color:topInfo.color}}>{topInfo.nombre} · Kuder</span>
+            <span className="text-sm font-extrabold flex items-center gap-2" style={{color:topInfo.color}}><LucideIcon name={topInfo.icono} size={16} />{topInfo.nombre} · Kuder</span>
             <div className="ml-auto flex gap-2">
-              <button onClick={()=>window.print()} className="text-sm bg-[#0B1220] text-white px-4 py-1.5 rounded-full font-bold">Imprimir / PDF</button>
-              <button onClick={reset} className="text-sm bg-white border px-4 py-1.5 rounded-full font-bold">Nuevo</button>
+              <button onClick={()=>window.print()} className="text-sm bg-[#0B1220] text-white px-4 py-1.5 rounded-full font-bold inline-flex items-center gap-1"><Printer size={14} />Imprimir / PDF</button>
+              <button onClick={reset} className="text-sm bg-white border px-4 py-1.5 rounded-full font-bold inline-flex items-center gap-1"><RotateCcw size={14} />Nuevo</button>
             </div>
           </div>
         </div>
@@ -81,16 +83,16 @@ export default function KuderTest(){
               <div><label className="text-xs font-bold uppercase text-slate-600">Cédula estudiante</label><input value={extra.cedulaEst} onChange={e=>setExtra(s=>({...s,cedulaEst:e.target.value.replace(/\D/g,"").slice(0,10)}))} placeholder="10 dígitos" className="mt-1 w-full px-4 py-2 rounded-xl border-2 border-slate-200 outline-none text-sm" /></div>
               <div><label className="text-xs font-bold uppercase text-slate-600">Cédula representante</label><input value={extra.cedulaRepr} onChange={e=>setExtra(s=>({...s,cedulaRepr:e.target.value.replace(/\D/g,"").slice(0,10)}))} placeholder="10 dígitos" className="mt-1 w-full px-4 py-2 rounded-xl border-2 border-slate-200 outline-none text-sm" /></div>
             </div>
-            {savedAt && <p className="text-xs text-slate-600 mt-2">Guardado: <b>{name||"—"} · {savedAt}</b></p>}
+            {savedAt && <p className="text-xs text-slate-600 mt-2 flex items-center gap-1">{savedAt.includes("guardado") && <Check size={14} className="text-green-600" />}Guardado: <b>{name||"—"} · {savedAt}</b></p>}
             {error && <p className="text-xs text-red-600 font-bold mt-2">{error}</p>}
-            <button onClick={save} disabled={saving} className="mt-3 bg-[#2563EB] text-white font-bold px-6 py-2.5 rounded-full disabled:opacity-60">{saving?"Guardando...":"💾 Guardar en BD (nombre + fecha UNIX)"}</button>
+            <button onClick={save} disabled={saving} className="mt-3 bg-[#2563EB] text-white font-bold px-6 py-2.5 rounded-full disabled:opacity-60 inline-flex items-center gap-2"><Save size={16} />{saving?"Guardando...":"Guardar en BD (nombre + fecha UNIX)"}</button>
           </div>
 
           <div className="mt-6 bg-white border border-slate-200 rounded-[20px] overflow-hidden">
             <div className="h-2" style={{background:topInfo.color}}/>
             <div className="p-8 text-center">
               <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-500">Kuder Forma C · 10 áreas · Escala V: {result.verificacion}</p>
-              <h1 className="mt-2 text-3xl font-black" style={{fontFamily:"Poppins, system-ui, sans-serif", color:topInfo.color}}>{topInfo.icono} {topInfo.nombre}</h1>
+              <h1 className="mt-2 text-3xl font-black flex items-center justify-center gap-2" style={{fontFamily:"Poppins, system-ui, sans-serif", color:topInfo.color}}><LucideIcon name={topInfo.icono} size={32} style={{color:topInfo.color}} />{topInfo.nombre}</h1>
               <p className="mt-2 text-slate-600 max-w-2xl mx-auto">{topInfo.descripcion}</p>
               <p className="mt-2 text-sm"><b>Carreras afines:</b> {topInfo.carreras}</p>
               <p className="mt-3 text-xs font-bold text-slate-500">Puntaje {result.scores[result.top]}/60 · {Math.round(result.scores[result.top]/60*100)}% de elecciones</p>
@@ -98,10 +100,10 @@ export default function KuderTest(){
 
             {/* Leyenda Kuder para nuevos */}
             <div className="mx-6 mt-2 bg-[#EFF6FF] border border-[#2563EB]/20 rounded-2xl p-4">
-              <h3 className="font-black text-xs uppercase tracking-wider text-[#0B1220]">📖 Leyenda — Cómo leer Kuder</h3>
+              <h3 className="font-black text-xs uppercase tracking-wider text-[#0B1220] flex items-center gap-1"><BookOpen size={14} />Leyenda — Cómo leer Kuder</h3>
               <p className="text-sm text-slate-700 mt-1">Kuder es <b>ipsativo</b>: en cada diada eliges 1, esa área suma <b>+1</b>. Total <b>60 elecciones</b>. Tu puntaje por área = cuántas veces la preferiste. <b>Top = área con más elecciones</b>. No hay respuestas correctas.</p>
               <div className="mt-3 grid grid-cols-2 sm:grid-cols-5 gap-2 text-xs">
-                {KUDER_ORDER.map(k=>{ const info=KUDER_AREAS[k]; return <div key={k} className="bg-white border rounded-xl px-2 py-2 flex gap-2 items-center"><span className="text-base">{info.icono}</span><div><p className="font-black leading-none">{k}</p><p className="font-bold text-[11px] leading-none">{info.nombreCorto}</p><p className="text-[10px] text-slate-500 leading-none">{info.nombre}</p></div></div>; })}
+                {KUDER_ORDER.map(k=>{ const info=KUDER_AREAS[k]; return <div key={k} className="bg-white border rounded-xl px-2 py-2 flex gap-2 items-center"><LucideIcon name={info.icono} size={16} style={{color:info.color}} /><div><p className="font-black leading-none">{k}</p><p className="font-bold text-[11px] leading-none">{info.nombreCorto}</p><p className="text-[10px] text-slate-500 leading-none">{info.nombre}</p></div></div>; })}
               </div>
               <p className="text-xs text-slate-500 mt-2">Ej: si tu top es <b>PER 12</b>, elegiste lo persuasivo 12/60 veces (20%). Ranking ordena de mayor a menor.</p>
             </div>
@@ -113,10 +115,10 @@ export default function KuderTest(){
                   const info=KUDER_AREAS[k];
                   const pct = Math.round(result.scores[k]/60*100);
                   const w = Math.round(result.scores[k]/maxScore*100);
-                  return (
+                    return (
                     <div key={k} className="flex items-center gap-3">
                       <span className="w-10 text-xs font-black">{k}</span>
-                      <span className="w-8 text-center">{info.icono}</span>
+                      <span className="w-8 flex justify-center"><LucideIcon name={info.icono} size={16} style={{color:info.color}} /></span>
                       <span className="w-28 text-sm font-bold hidden sm:block">{info.nombreCorto}</span>
                       <div className="flex-1 h-4 bg-slate-200 rounded-full overflow-hidden">
                         <div className="h-full flex items-center justify-end pr-2 text-[10px] font-black text-white" style={{width:`${w}%`, background: info.color, minWidth: result.scores[k]>0 ? "32px":"0"}}>
@@ -143,7 +145,7 @@ export default function KuderTest(){
               const info=KUDER_AREAS[k];
               const isTop = k===result.top;
               return <div key={k} className={`p-4 rounded-2xl border-2 ${isTop?"border-[#0B1220] bg-white shadow":"border-slate-200 bg-white/60"}`}>
-                <p className="text-lg">{info.icono}</p>
+                <LucideIcon name={info.icono} size={20} style={{color:info.color}} />
                 <p className="font-black text-sm" style={{color:info.color}}>{k}</p>
                 <p className="text-xs font-bold">{info.nombre}</p>
                 <p className="text-xs text-slate-500">{result.scores[k]} pts</p>
@@ -198,10 +200,10 @@ export default function KuderTest(){
                   {(["a","b"] as const).map(ch=>{
                     const opt = ch==="a"? d.a : d.b;
                     const active = v===ch;
-                    const info = KUDER_AREAS[opt.area];
-                    return (
+                      const info = KUDER_AREAS[opt.area];
+                      return (
                       <button key={ch} onClick={()=>handle(d.id,ch)} className={`text-left p-3 rounded-xl border-2 flex gap-3 items-center transition ${active?"border-[#0B1220] bg-[#0B1220] text-white shadow":"bg-white border-slate-300 hover:border-slate-400"}`}>
-                        <span className="text-lg">{info.icono}</span>
+                        <LucideIcon name={info.icono} size={18} className={active ? "text-white" : ""} style={!active ? {color:info.color} : undefined} />
                         <div className="flex-1">
                           <p className={`text-sm font-bold leading-tight ${active?"text-white":"text-[#0B1220]"}`}>{opt.texto}</p>
                           <p className={`text-[10px] font-black uppercase tracking-wider ${active?"text-white/70":"text-slate-500"}`}>{opt.area} · {info.nombre}</p>

@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo, type Dispatch, type SetStateAction } from "react";
 import { QUESTIONS, AREAS, AREA_ORDER, INTERESES_GRID, APTITUDES_GRID } from "../data/chaside";
 import { calculateScores, type Answers } from "../data/scoring";
+import { Zap, Rocket, Save, Printer, BookOpen, RotateCcw, Download, Check } from "lucide-react";
 
 const STORAGE_KEY = "chaside_answers_v1";
 const STORAGE_NAME = "chaside_student_name";
@@ -99,7 +100,7 @@ export default function ChasideTest() {
       });
       const j = await res.json();
       if(!res.ok) throw new Error(j.error||"Error al guardar");
-      setSavedAt(stamp + ` · guardado DB ✓`);
+      setSavedAt(stamp + ` · guardado DB`);
     } catch(e:any){
       setError("Guardado local OK, pero DB falló: " + e.message);
     } finally { setSaving(false); }
@@ -169,8 +170,8 @@ export default function ChasideTest() {
       {/* Hero TeamGGM */}
       <section className="bg-[#0B1220] text-white px-6 py-10 text-center border-b border-white/10">
         <div className="max-w-4xl mx-auto space-y-4">
-          <span className="bg-[#0052FF] text-white text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-wider inline-block">
-            ⚡ TeamGGM · Orientación Vocacional
+          <span className="bg-[#0052FF] text-white text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-wider inline-flex items-center gap-1">
+            <Zap size={14} /> TeamGGM · Orientación Vocacional
           </span>
           <h1 className="text-4xl md:text-5xl font-extrabold uppercase tracking-tight leading-tight" style={{ fontFamily: "Poppins, system-ui, sans-serif" }}>
             Test vocacional <span className="text-[#FFCC00]">CHASIDE</span>
@@ -260,7 +261,7 @@ export default function ChasideTest() {
             onClick={handleSubmit}
             className="bg-[#FF3B30] hover:bg-[#E02D23] text-white font-extrabold px-8 py-4 rounded-full shadow-[0_4px_20px_rgba(255,59,48,0.5)] text-lg transition hover:-translate-y-0.5"
           >
-            🚀 Ver mi resultado CHASIDE
+            <span className="inline-flex items-center gap-2"><Rocket size={18} /> Ver mi resultado CHASIDE</span>
           </button>
           <button onClick={handleReset} className="bg-white border-2 border-slate-200 hover:border-slate-300 text-slate-700 font-bold px-6 py-3 rounded-full">
             Reiniciar
@@ -336,14 +337,14 @@ function ResultadoView({
               <input value={extra.cedulaRepr} onChange={(e)=> setExtra(s=>({...s, cedulaRepr:e.target.value.replace(/\D/g,"").slice(0,10)}))} placeholder="10 dígitos" className="mt-1 w-full px-4 py-2 rounded-xl border-2 border-slate-200 focus:border-[#0052FF] outline-none text-sm" />
             </div>
           </div>
-          {savedAt && <p className="text-xs text-slate-600 mt-2">Guardado: <span className="font-bold text-[#0B1220]">{studentName || "—"} · {savedAt}</span></p>}
+          {savedAt && <p className="text-xs text-slate-600 mt-2 flex items-center gap-1">{savedAt.includes("guardado") && <Check size={14} className="text-green-600" />}Guardado: <span className="font-bold text-[#0B1220]">{studentName || "—"} · {savedAt}</span></p>}
           {error && <p className="text-xs text-[#FF3B30] font-bold mt-2">{error}</p>}
           <div className="mt-3 flex gap-2 flex-wrap">
-            <button onClick={onSave} disabled={saving} className="bg-[#0B1220] text-white font-bold px-5 py-2.5 rounded-full hover:bg-black transition text-sm disabled:opacity-60">
-              {saving?"Guardando...":"💾 Guardar en BD (nombre + fecha UNIX)"}
+            <button onClick={onSave} disabled={saving} className="bg-[#0B1220] text-white font-bold px-5 py-2.5 rounded-full hover:bg-black transition text-sm disabled:opacity-60 inline-flex items-center gap-2">
+              <Save size={16} />{saving?"Guardando...":"Guardar en BD (nombre + fecha UNIX)"}
             </button>
-            <button onClick={onPrint} className="bg-[#0052FF] text-white font-bold px-5 py-2.5 rounded-full hover:bg-[#0040CC] transition text-sm">🖨️ Imprimir / PDF</button>
-            <button onClick={onDownload} className="bg-white border-2 border-slate-300 font-bold px-5 py-2.5 rounded-full hover:border-slate-400 text-sm">⬇️ Descargar JSON</button>
+            <button onClick={onPrint} className="bg-[#0052FF] text-white font-bold px-5 py-2.5 rounded-full hover:bg-[#0040CC] transition text-sm inline-flex items-center gap-2"><Printer size={16} />Imprimir / PDF</button>
+            <button onClick={onDownload} className="bg-white border-2 border-slate-300 font-bold px-5 py-2.5 rounded-full hover:border-slate-400 text-sm inline-flex items-center gap-2"><Download size={16} />Descargar JSON</button>
           </div>
         </div>
       </div>
@@ -355,7 +356,7 @@ function ResultadoView({
 
         {/* Leyenda para nuevos — cómo interpretar */}
         <div className="mt-4 bg-[#F8FAFC] border border-slate-200 rounded-2xl p-4">
-          <h3 className="font-black text-xs uppercase tracking-wider text-[#0B1220]">📖 Cómo leer tu resultado</h3>
+          <h3 className="font-black text-xs uppercase tracking-wider text-[#0B1220] flex items-center gap-1"><BookOpen size={14} />Cómo leer tu resultado</h3>
           <p className="text-sm text-slate-700 mt-2"><b>CHASIDE</b> mide 7 áreas vocacionales. Cada letra es un área:</p>
           <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
             {AREA_ORDER.map(k=> (
@@ -506,7 +507,7 @@ function ResultadoView({
 
         <div className="mt-6 flex flex-wrap gap-3 print:hidden">
           <button onClick={onBack} className="bg-white border-2 border-slate-300 font-bold px-6 py-2.5 rounded-full hover:border-slate-400">← Volver al test</button>
-          <button onClick={onReset} className="bg-[#0B1220] text-white font-bold px-6 py-2.5 rounded-full hover:bg-black">🔄 Nuevo test</button>
+          <button onClick={onReset} className="bg-[#0B1220] text-white font-bold px-6 py-2.5 rounded-full hover:bg-black inline-flex items-center gap-2"><RotateCcw size={16} />Nuevo test</button>
         </div>
       </div>
 

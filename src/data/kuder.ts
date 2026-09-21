@@ -15,20 +15,20 @@ export interface KuderAreaInfo {
   color: string;
   descripcion: string;
   carreras: string;
-  icono: string;
+  icono: string; // Lucide icon name (e.g. "Trees")
 }
 
 export const KUDER_AREAS: Record<KuderAreaKey, KuderAreaInfo> = {
-  EXT: { key:"EXT", nombre:"Aire Libre", nombreCorto:"Aire Libre", color:"#16A34A", icono:"🌿", descripcion:"Gusto por actividades al aire libre, naturaleza, agricultura y trabajo físico.", carreras:"Agronomía, Veterinaria, Forestal, Biología de campo, Educación física, Topografía y afines." },
-  MEC: { key:"MEC", nombre:"Mecánico", nombreCorto:"Mecánico", color:"#EA580C", icono:"🔧", descripcion:"Interés por manipular herramientas, máquinas y construir/reparar.", carreras:"Ing. Mecánica, Industrial, Electrónica, Automotriz, Arquitectura, Diseño industrial." },
-  CAL: { key:"CAL", nombre:"Cálculo", nombreCorto:"Cálculo", color:"#2563EB", icono:"🔢", descripcion:"Gusto por trabajar con números, estadísticas y cálculos.", carreras:"Matemática, Economía, Contaduría, Finanzas, Estadística, Actuaría, Auditoría." },
-  CIE: { key:"CIE", nombre:"Científico", nombreCorto:"Científico", color:"#0891B2", icono:"🔬", descripcion:"Interés por investigar, experimentar y descubrir causas.", carreras:"Medicina, Química, Farmacia, Física, Bioquímica, Investigación, Laboratorio." },
-  PER: { key:"PER", nombre:"Persuasivo", nombreCorto:"Persuasivo", color:"#DC2626", icono:"🤝", descripcion:"Gusto por convencer, liderar, negociar y tratar con gente.", carreras:"Marketing, Ventas, Derecho, RRPP, Comercio, Administración, Política." },
-  ART: { key:"ART", nombre:"Artístico", nombreCorto:"Artístico", color:"#9333EA", icono:"🎨", descripcion:"Interés por lo estético, diseño, creación visual y manual.", carreras:"Diseño gráfico, Bellas artes, Arquitectura, Moda, Publicidad, Fotografía." },
-  LIT: { key:"LIT", nombre:"Literario", nombreCorto:"Literario", color:"#4F46E5", icono:"📚", descripcion:"Gusto por leer, escribir, idiomas e historia.", carreras:"Literatura, Periodismo, Comunicación, Filosofía, Historia, Traducción, Educación." },
-  MUS: { key:"MUS", nombre:"Musical", nombreCorto:"Musical", color:"#DB2777", icono:"🎵", descripcion:"Interés por la música, canto e instrumentos.", carreras:"Música, Musicoterapia, Producción musical, Docencia musical." },
-  SOC: { key:"SOC", nombre:"Servicio Social", nombreCorto:"Asistencial", color:"#0D9488", icono:"❤️", descripcion:"Deseo de ayudar, enseñar y servir a los demás.", carreras:"Psicología, Trabajo social, Enfermería, Medicina, Educación, Terapia, Cuidado." },
-  OFI: { key:"OFI", nombre:"Oficina", nombreCorto:"Oficina", color:"#64748B", icono:"🏢", descripcion:"Gusto por tareas organizadas, de oficina, orden y precisión.", carreras:"Administración, Secretariado, Contaduría, RRHH, Logística, Archivo." },
+  EXT: { key:"EXT", nombre:"Aire Libre", nombreCorto:"Aire Libre", color:"#16A34A", icono:"Trees", descripcion:"Gusto por actividades al aire libre, naturaleza, agricultura y trabajo físico.", carreras:"Agronomía, Veterinaria, Forestal, Biología de campo, Educación física, Topografía y afines." },
+  MEC: { key:"MEC", nombre:"Mecánico", nombreCorto:"Mecánico", color:"#EA580C", icono:"Wrench", descripcion:"Interés por manipular herramientas, máquinas y construir/reparar.", carreras:"Ing. Mecánica, Industrial, Electrónica, Automotriz, Arquitectura, Diseño industrial." },
+  CAL: { key:"CAL", nombre:"Cálculo", nombreCorto:"Cálculo", color:"#2563EB", icono:"Calculator", descripcion:"Gusto por trabajar con números, estadísticas y cálculos.", carreras:"Matemática, Economía, Contaduría, Finanzas, Estadística, Actuaría, Auditoría." },
+  CIE: { key:"CIE", nombre:"Científico", nombreCorto:"Científico", color:"#0891B2", icono:"FlaskConical", descripcion:"Interés por investigar, experimentar y descubrir causas.", carreras:"Medicina, Química, Farmacia, Física, Bioquímica, Investigación, Laboratorio." },
+  PER: { key:"PER", nombre:"Persuasivo", nombreCorto:"Persuasivo", color:"#DC2626", icono:"Handshake", descripcion:"Gusto por convencer, liderar, negociar y tratar con gente.", carreras:"Marketing, Ventas, Derecho, RRPP, Comercio, Administración, Política." },
+  ART: { key:"ART", nombre:"Artístico", nombreCorto:"Artístico", color:"#9333EA", icono:"Palette", descripcion:"Interés por lo estético, diseño, creación visual y manual.", carreras:"Diseño gráfico, Bellas artes, Arquitectura, Moda, Publicidad, Fotografía." },
+  LIT: { key:"LIT", nombre:"Literario", nombreCorto:"Literario", color:"#4F46E5", icono:"BookOpen", descripcion:"Gusto por leer, escribir, idiomas e historia.", carreras:"Literatura, Periodismo, Comunicación, Filosofía, Historia, Traducción, Educación." },
+  MUS: { key:"MUS", nombre:"Musical", nombreCorto:"Musical", color:"#DB2777", icono:"Music", descripcion:"Interés por la música, canto e instrumentos.", carreras:"Música, Musicoterapia, Producción musical, Docencia musical." },
+  SOC: { key:"SOC", nombre:"Servicio Social", nombreCorto:"Asistencial", color:"#0D9488", icono:"HeartHandshake", descripcion:"Deseo de ayudar, enseñar y servir a los demás.", carreras:"Psicología, Trabajo social, Enfermería, Medicina, Educación, Terapia, Cuidado." },
+  OFI: { key:"OFI", nombre:"Oficina", nombreCorto:"Oficina", color:"#64748B", icono:"Building2", descripcion:"Gusto por tareas organizadas, de oficina, orden y precisión.", carreras:"Administración, Secretariado, Contaduría, RRHH, Logística, Archivo." },
 };
 
 // 60 diadas: [opción A área, opción B área]. El usuario elige 1 de las 2.

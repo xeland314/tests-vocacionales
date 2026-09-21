@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { X } from "lucide-react";
 
 interface Estudiante {
   id: string;
@@ -169,7 +170,7 @@ export default function AdminChaside(){
                 <p className="text-xs text-slate-500">ID {selected.estudiante.id} · UNIX {selected.estudiante.fecha_unix} · {new Date(selected.estudiante.fecha_unix*1000).toLocaleString()}</p>
                 <p className="text-xs mt-1">Padre: {selected.estudiante.nombre_padre||"—"} | Correos: {selected.estudiante.correo_estudiante||"—"} / {selected.estudiante.correo_padre||"—"} | Cédulas: {selected.estudiante.cedula_estudiante||"—"} / {selected.estudiante.cedula_representante||"—"}</p>
               </div>
-              <button onClick={()=>setSelected(null)} className="bg-slate-100 border rounded-full w-8 h-8">✕</button>
+              <button onClick={()=>setSelected(null)} className="bg-slate-100 border rounded-full w-8 h-8 flex items-center justify-center"><X size={16} /></button>
             </div>
             <div className="mt-4 grid grid-cols-7 gap-2 text-center text-xs">
               {Object.entries(selected.scores.intereses).map(([k,v]:any)=> <div key={k} className="bg-[#FFCC00] font-black p-2 rounded-lg">{k}<br/>{String(v)}/10</div>)}

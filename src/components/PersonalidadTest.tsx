@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { PERSONALITY_QUESTIONS, TYPES, ROLE_COLOR, type AnswerValue } from "../data/personalidad";
 import { calculatePersonality, type AnswersPers } from "../data/personalidadScoring";
+import { Save, BookOpen, Printer, RotateCcw, Check } from "lucide-react";
 
 const STORAGE = "pers_answers_v1";
 const STORAGE_NAME = "pers_student_name";
@@ -59,7 +60,7 @@ export default function PersonalidadTest() {
     setSavedAt(stamp); setError(null); setSaving(true);
     try{
       const res=await fetch("/api/personalidad/submit",{ method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify({ nombre_estudiante:name.trim(), nombre_padre:extra.padre||null, correo_estudiante:extra.correoEst||null, correo_padre:extra.correoPadre||null, cedula_estudiante:extra.cedulaEst||null, cedula_representante:extra.cedulaRepr||null, fecha_unix, respuestas:answers })});
-      const j=await res.json(); if(!res.ok) throw new Error(j.error||"Error"); setSavedAt(stamp+" · guardado DB ✓");
+      const j=await res.json(); if(!res.ok) throw new Error(j.error||"Error"); setSavedAt(stamp+" · guardado DB");
     }catch(e:any){ setError("Guardado local OK, pero DB falló: "+e.message); } finally{ setSaving(false); }
   };
   const reset = ()=>{ setAnswers({}); setShowResult(false); setError(null); try{localStorage.removeItem(STORAGE);}catch{}; window.scrollTo({top:0,behavior:"smooth"}); };
@@ -69,13 +70,13 @@ export default function PersonalidadTest() {
     return (
       <div className="min-h-screen bg-[#F9F9FB]">
         <div className="bg-white border-b sticky top-0 z-20">
-          <div className="max-w-4xl mx-auto px-4 py-3 flex items-center gap-3">
+            <div className="max-w-4xl mx-auto px-4 py-3 flex items-center gap-3">
             <a href="/" className="text-sm font-bold text-slate-600 hover:text-slate-900">← Menú</a>
             <span className="text-slate-300">/</span>
             <span className="text-sm font-extrabold" style={{color:info.color}}>{result.type} · {info.name}</span>
             <div className="ml-auto flex gap-2">
-              <button onClick={()=>window.print()} className="text-sm bg-[#0B1220] text-white px-4 py-1.5 rounded-full font-bold">Imprimir / PDF</button>
-              <button onClick={reset} className="text-sm bg-white border px-4 py-1.5 rounded-full font-bold">Nuevo</button>
+              <button onClick={()=>window.print()} className="text-sm bg-[#0B1220] text-white px-4 py-1.5 rounded-full font-bold inline-flex items-center gap-1"><Printer size={14} />Imprimir / PDF</button>
+              <button onClick={reset} className="text-sm bg-white border px-4 py-1.5 rounded-full font-bold inline-flex items-center gap-1"><RotateCcw size={14} />Nuevo</button>
             </div>
           </div>
         </div>
@@ -91,9 +92,9 @@ export default function PersonalidadTest() {
               <div><label className="text-xs font-bold uppercase text-slate-600">Cédula estudiante</label><input value={extra.cedulaEst} onChange={e=>setExtra(s=>({...s,cedulaEst:e.target.value.replace(/\D/g,"").slice(0,10)}))} placeholder="10 dígitos" className="mt-1 w-full px-4 py-2 rounded-xl border-2 border-slate-200 outline-none text-sm" /></div>
               <div><label className="text-xs font-bold uppercase text-slate-600">Cédula representante</label><input value={extra.cedulaRepr} onChange={e=>setExtra(s=>({...s,cedulaRepr:e.target.value.replace(/\D/g,"").slice(0,10)}))} placeholder="10 dígitos" className="mt-1 w-full px-4 py-2 rounded-xl border-2 border-slate-200 outline-none text-sm" /></div>
             </div>
-            {savedAt && <p className="text-xs text-slate-600 mt-2">Guardado: <b>{name||"—"} · {savedAt}</b></p>}
+            {savedAt && <p className="text-xs text-slate-600 mt-2 flex items-center gap-1">{savedAt.includes("guardado") && <Check size={14} className="text-green-600" />}Guardado: <b>{name||"—"} · {savedAt}</b></p>}
             {error && <p className="text-xs text-red-600 font-bold mt-2">{error}</p>}
-            <button onClick={save} disabled={saving} className="mt-3 bg-[#7C3AED] text-white font-bold px-6 py-2.5 rounded-full disabled:opacity-60">{saving?"Guardando...":"💾 Guardar en BD (nombre + fecha UNIX)"}</button>
+            <button onClick={save} disabled={saving} className="mt-3 bg-[#7C3AED] text-white font-bold px-6 py-2.5 rounded-full disabled:opacity-60 inline-flex items-center gap-2"><Save size={16} />{saving?"Guardando...":"Guardar en BD (nombre + fecha UNIX)"}</button>
           </div>
 
           {/* Hero tipo - estilo 16personalities */}
@@ -139,7 +140,7 @@ export default function PersonalidadTest() {
 
           {/* Leyenda MBTI para nuevos */}
           <div className="mt-6 bg-white border border-slate-200 rounded-2xl p-5">
-            <h3 className="font-black text-xs uppercase tracking-wider text-[#0B1220]">📖 Cómo leer tu resultado — Leyenda MBTI</h3>
+            <h3 className="font-black text-xs uppercase tracking-wider text-[#0B1220] flex items-center gap-1"><BookOpen size={14} />Cómo leer tu resultado — Leyenda MBTI</h3>
             <p className="text-sm text-slate-600 mt-2">Tu tipo son <b>4 letras</b> (ej: <b>INFP</b>). Cada letra es una preferencia con <b>0–100%</b> (50% = neutral). La barra muestra hacia dónde te inclinas.</p>
             <div className="mt-4 grid sm:grid-cols-2 gap-3 text-sm">
               <div className="bg-[#F9F9FB] border rounded-xl p-3"><p className="font-black">Mente: <span className="text-[#7C3AED]">E</span> vs <span className="text-slate-600">I</span></p><p className="text-xs text-slate-600 mt-1"><b>E Extravertido</b>: te energiza la gente, hablas mucho. <b>I Introvertido</b>: te recarga la soledad, escuchas más.</p></div>
