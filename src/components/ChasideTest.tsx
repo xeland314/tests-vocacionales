@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, type Dispatch, type SetStateAction } from "react";
 import { QUESTIONS, AREAS, AREA_ORDER, INTERESES_GRID, APTITUDES_GRID } from "../data/chaside";
 import { calculateScores, type Answers } from "../data/scoring";
 
@@ -63,21 +63,46 @@ export default function ChasideTest() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const handleSave = () => {
+  const [saving, setSaving] = useState(false);
+  const [extra, setExtra] = useState({ padre:"", correoEst:"", correoPadre:"", cedulaEst:"", cedulaRepr:"" });
+
+  const handleSave = async () => {
     if (!studentName.trim()) {
       setError("Debe ingresar el nombre del estudiante para guardar el resultado.");
       return;
     }
     const now = new Date();
     const stamp = formatDateTime(now);
-    // guardar nombre + fecha con hora en localStorage
+    const fecha_unix = Math.floor(now.getTime()/1000);
     try {
       localStorage.setItem(STORAGE_NAME, studentName.trim());
       localStorage.setItem(STORAGE_DATE, stamp);
     } catch {}
     setSavedAt(stamp);
     setError(null);
-    // opcional: trigger descarga JSON + imprimir
+    setSaving(true);
+    try {
+      const res = await fetch("/api/chaside/submit", {
+        method:"POST",
+        headers:{ "Content-Type":"application/json" },
+        body: JSON.stringify({
+          nombre_estudiante: studentName.trim(),
+          nombre_padre: extra.padre || null,
+          correo_estudiante: extra.correoEst || null,
+          correo_padre: extra.correoPadre || null,
+          cedula_estudiante: extra.cedulaEst || null,
+          cedula_representante: extra.cedulaRepr || null,
+          fecha_unix,
+          respuestas: answers,
+          version: 1,
+        }),
+      });
+      const j = await res.json();
+      if(!res.ok) throw new Error(j.error||"Error al guardar");
+      setSavedAt(stamp + ` · guardado DB ✓`);
+    } catch(e:any){
+      setError("Guardado local OK, pero DB falló: " + e.message);
+    } finally { setSaving(false); }
   };
 
   const handlePrint = () => {
@@ -133,6 +158,9 @@ export default function ChasideTest() {
       onReset={handleReset}
       onBack={() => setShowResult(false)}
       error={error}
+      extra={extra}
+      setExtra={setExtra}
+      saving={saving}
     />;
   }
 
@@ -255,6 +283,9 @@ function ResultadoView({
   onReset,
   onBack,
   error,
+  extra,
+  setExtra,
+  saving,
 }: {
   result: ReturnType<typeof calculateScores>;
   studentName: string;
@@ -266,6 +297,9 @@ function ResultadoView({
   onReset: () => void;
   onBack: () => void;
   error: string | null;
+  extra: { padre:string, correoEst:string, correoPadre:string, cedulaEst:string, cedulaRepr:string };
+  setExtra: Dispatch<SetStateAction<{ padre:string, correoEst:string, correoPadre:string, cedulaEst:string, cedulaRepr:string }>>;
+  saving: boolean;
 }) {
   const topI = result.topInteres;
   const secondI = result.segundoInteres;
@@ -275,28 +309,41 @@ function ResultadoView({
     <div className="min-h-screen bg-white">
       {/* Card guardar nombre/fecha hora */}
       <div className="bg-[#FFCC00]/20 border-y border-[#FFCC00]/30">
-        <div className="max-w-5xl mx-auto px-4 py-4 flex flex-col md:flex-row gap-3 items-start md:items-end">
-          <div className="flex-1 w-full">
-            <label className="text-xs font-extrabold uppercase tracking-wider text-[#0B1220]">Nombre del estudiante</label>
-            <input
-              value={studentName}
-              onChange={(e) => setStudentName(e.target.value)}
-              placeholder="Ej: Ana Pérez - 3ro BGU"
-              className="mt-1 w-full px-4 py-2.5 rounded-xl border-2 border-slate-300 focus:border-[#0052FF] outline-none font-medium"
-            />
-            {savedAt && <p className="text-xs text-slate-600 mt-1">Guardado: <span className="font-bold text-[#0B1220]">{studentName || "—"} · {savedAt}</span></p>}
-            {error && <p className="text-xs text-[#FF3B30] font-bold mt-1">{error}</p>}
+        <div className="max-w-5xl mx-auto px-4 py-4">
+          <div className="grid md:grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs font-extrabold uppercase tracking-wider text-[#0B1220]">Nombre del estudiante *</label>
+              <input value={studentName} onChange={(e) => setStudentName(e.target.value)} placeholder="Ej: Ana Pérez - 3ro BGU" className="mt-1 w-full px-4 py-2.5 rounded-xl border-2 border-slate-300 focus:border-[#0052FF] outline-none font-medium" />
+            </div>
+            <div>
+              <label className="text-xs font-bold uppercase tracking-wider text-slate-600">Nombre del padre / representante</label>
+              <input value={extra.padre} onChange={(e)=> setExtra(s=>({...s, padre:e.target.value}))} placeholder="Opcional" className="mt-1 w-full px-4 py-2.5 rounded-xl border-2 border-slate-200 focus:border-[#0052FF] outline-none text-sm" />
+            </div>
+            <div>
+              <label className="text-xs font-bold uppercase tracking-wider text-slate-600">Correo estudiante</label>
+              <input type="email" value={extra.correoEst} onChange={(e)=> setExtra(s=>({...s, correoEst:e.target.value}))} placeholder="opcional@correo.com" className="mt-1 w-full px-4 py-2 rounded-xl border-2 border-slate-200 focus:border-[#0052FF] outline-none text-sm" />
+            </div>
+            <div>
+              <label className="text-xs font-bold uppercase tracking-wider text-slate-600">Correo padre</label>
+              <input type="email" value={extra.correoPadre} onChange={(e)=> setExtra(s=>({...s, correoPadre:e.target.value}))} placeholder="opcional@correo.com" className="mt-1 w-full px-4 py-2 rounded-xl border-2 border-slate-200 focus:border-[#0052FF] outline-none text-sm" />
+            </div>
+            <div>
+              <label className="text-xs font-bold uppercase tracking-wider text-slate-600">Cédula estudiante (opcional)</label>
+              <input value={extra.cedulaEst} onChange={(e)=> setExtra(s=>({...s, cedulaEst:e.target.value.replace(/\D/g,"").slice(0,10)}))} placeholder="10 dígitos" className="mt-1 w-full px-4 py-2 rounded-xl border-2 border-slate-200 focus:border-[#0052FF] outline-none text-sm" />
+            </div>
+            <div>
+              <label className="text-xs font-bold uppercase tracking-wider text-slate-600">Cédula representante (opcional)</label>
+              <input value={extra.cedulaRepr} onChange={(e)=> setExtra(s=>({...s, cedulaRepr:e.target.value.replace(/\D/g,"").slice(0,10)}))} placeholder="10 dígitos" className="mt-1 w-full px-4 py-2 rounded-xl border-2 border-slate-200 focus:border-[#0052FF] outline-none text-sm" />
+            </div>
           </div>
-          <div className="flex gap-2 flex-wrap">
-            <button onClick={onSave} className="bg-[#0B1220] text-white font-bold px-5 py-2.5 rounded-full hover:bg-black transition text-sm">
-              💾 Guardar nombre y fecha
+          {savedAt && <p className="text-xs text-slate-600 mt-2">Guardado: <span className="font-bold text-[#0B1220]">{studentName || "—"} · {savedAt}</span></p>}
+          {error && <p className="text-xs text-[#FF3B30] font-bold mt-2">{error}</p>}
+          <div className="mt-3 flex gap-2 flex-wrap">
+            <button onClick={onSave} disabled={saving} className="bg-[#0B1220] text-white font-bold px-5 py-2.5 rounded-full hover:bg-black transition text-sm disabled:opacity-60">
+              {saving?"Guardando...":"💾 Guardar en BD (nombre + fecha UNIX)"}
             </button>
-            <button onClick={onPrint} className="bg-[#0052FF] text-white font-bold px-5 py-2.5 rounded-full hover:bg-[#0040CC] transition text-sm">
-              🖨️ Imprimir / PDF
-            </button>
-            <button onClick={onDownload} className="bg-white border-2 border-slate-300 font-bold px-5 py-2.5 rounded-full hover:border-slate-400 text-sm">
-              ⬇️ Descargar JSON
-            </button>
+            <button onClick={onPrint} className="bg-[#0052FF] text-white font-bold px-5 py-2.5 rounded-full hover:bg-[#0040CC] transition text-sm">🖨️ Imprimir / PDF</button>
+            <button onClick={onDownload} className="bg-white border-2 border-slate-300 font-bold px-5 py-2.5 rounded-full hover:border-slate-400 text-sm">⬇️ Descargar JSON</button>
           </div>
         </div>
       </div>

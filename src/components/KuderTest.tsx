@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { KUDER_DIADAS, KUDER_AREAS, KUDER_ORDER } from "../data/kuder";
 import { calculateKuder, type KuderAnswers } from "../data/kuderScoring";
 

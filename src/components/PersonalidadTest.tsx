@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { PERSONALITY_QUESTIONS, TYPES, ROLE_COLOR, type AnswerValue } from "../data/personalidad";
 import { calculatePersonality, type AnswersPers } from "../data/personalidadScoring";
 

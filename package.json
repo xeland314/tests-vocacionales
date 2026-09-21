@@ -13,15 +13,21 @@
   },
   "dependencies": {
     "@astrojs/react": "^6.0.6",
+    "@libsql/client": "^0.18.0",
     "@tailwindcss/vite": "^4.3.3",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "astro": "^7.3.3",
+    "bcryptjs": "^3.0.3",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "tailwindcss": "^4.3.3"
   },
   "allowScripts": {
     "esbuild": true
+  },
+  "devDependencies": {
+    "@astrojs/node": "^11.1.6",
+    "@types/bcryptjs": "^2.4.6"
   }
 }
