@@ -3,7 +3,7 @@ import { AREAS, AREA_ORDER } from "../data/chaside";
 import { TYPES } from "../data/personalidad";
 import { KUDER_AREAS, KUDER_ORDER } from "../data/kuder";
 import { LucideIcon } from "../lib/icons";
-import { BookOpen, Check, Minus, X } from "lucide-react";
+import { BookOpen, Check, Minus, X, UserPlus, Users } from "lucide-react";
 
 function PlotlyChart({ data, layout, style }: { data: any; layout: any; style?: any }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -88,16 +88,48 @@ export default function AdminGeneral() {
     const u = typeof window !== "undefined" ? localStorage.getItem("knox_user") : null;
     try { if (u) { const parsed=JSON.parse(u); setCurrentUser(parsed); setEditEmail(parsed.email||""); setEditFirst(parsed.first_name||""); setEditLast(parsed.last_name||""); } } catch {}
     setToken(t);
-    if (!t) { setNeedsLogin(true); setLoading(false); }
+    if (!t) { setNeedsLogin(true); setLoading(false); return; }
+    // Refresca rol desde servidor (evita stale knox_user sin role)
+    (async () => {
+      try {
+        const r = await fetch("/api/auth/me", { headers: { Authorization: `Token ${t}` } });
+        if (r.ok) {
+          const j = await r.json();
+          if (j.user) {
+            setCurrentUser(j.user);
+            localStorage.setItem("knox_user", JSON.stringify(j.user));
+            setEditEmail(j.user.email||"");
+            setEditFirst(j.user.first_name||"");
+            setEditLast(j.user.last_name||"");
+          }
+        } else if (r.status === 401) {
+          setNeedsLogin(true); setLoading(false);
+        }
+      } catch {}
+    })();
   }, []);
 
   const load = async () => {
     const t = token || (typeof window !== "undefined" ? localStorage.getItem("knox_token") : null);
     const hdr: any = t ? { Authorization: `Token ${t}` } : {};
-    // actualizar currentUser por si cambió rol
+    // actualizar currentUser desde servidor (fuente veraz para role)
     try {
-      const uRaw = typeof window !== "undefined" ? localStorage.getItem("knox_user") : null;
-      if (uRaw) setCurrentUser(JSON.parse(uRaw));
+      if (t) {
+        const me = await fetch("/api/auth/me", { headers: hdr });
+        if (me.ok) {
+          const j = await me.json();
+          if (j.user) {
+            setCurrentUser(j.user);
+            localStorage.setItem("knox_user", JSON.stringify(j.user));
+            setEditEmail(j.user.email||"");
+            setEditFirst(j.user.first_name||"");
+            setEditLast(j.user.last_name||"");
+          }
+        }
+      } else {
+        const uRaw = typeof window !== "undefined" ? localStorage.getItem("knox_user") : null;
+        if (uRaw) setCurrentUser(JSON.parse(uRaw));
+      }
     } catch {}
     setLoading(true); setError(null);
     try {
@@ -306,33 +338,42 @@ export default function AdminGeneral() {
         isAdmin ? (
         <div className="mt-6 space-y-4">
           <div className="bg-white border rounded-2xl p-5">
-            <h3 className="font-black text-sm">Usuarios — Admin crea múltiples</h3>
-            <p className="text-xs text-slate-500">Crea docentes o más admins. Usa email como usuario. Contraseña ≥8. Docente solo lectura de formularios.</p>
-            <div className="mt-3 space-y-2 max-h-80 overflow-auto">
-              {users.map((u: any) => (
-                <div key={u.id} className="flex justify-between items-center border-b py-2 text-sm gap-2">
-                  <span className="flex-1"><span className="font-bold">{u.email}</span> <span className={`ml-1 text-[10px] font-black px-2 py-0.5 rounded-full border ${u.role==='admin' ? 'bg-[#0B1220] text-white border-[#0B1220]' : 'bg-amber-100 text-amber-800 border-amber-200'}`}>{u.role}</span> <span className="text-xs text-slate-500">({[u.first_name,u.last_name].filter(Boolean).join(" ") || "—"})</span></span>
-                  <div className="flex gap-1 items-center">
-                    <select value={u.role} onChange={async e => { const newRole=e.target.value; if(!confirm(`Cambiar ${u.email} a ${newRole}?`)) return; const r=await fetch(`/api/users/${u.id}`,{method:"PATCH",headers:{"Content-Type":"application/json",Authorization:authHeader},body:JSON.stringify({role:newRole})}); if(!r.ok) alert((await r.json()).error); else load(); }} className="text-xs border rounded-full px-2 py-1 bg-white">
-                      <option value="admin">admin</option>
-                      <option value="docente">docente</option>
-                    </select>
-                    <button onClick={async () => { if (!confirm("Eliminar " + u.email + "?")) return; const r=await fetch(`/api/users/${u.id}`, { method: "DELETE", headers: { Authorization: authHeader } }); if(!r.ok) alert((await r.json()).error); else load(); }} className="text-red-600 text-xs font-bold">Eliminar</button>
-                  </div>
-                </div>
-              ))}
-              {users.length === 0 && <p className="text-xs text-slate-500">Sin usuarios</p>}
+            <h3 className="font-black text-sm flex items-center gap-2"><Users size={16} />Usuarios — Admin crea múltiples</h3>
+            <p className="text-xs text-slate-500 mt-1">Este es el <b>módulo de creación</b>. Crea docentes o más admins. Usa email como usuario. Contraseña ≥8.</p>
+            {/* Módulo crear - destacado */}
+            <div className="mt-4 bg-[#0052FF]/5 border-2 border-dashed border-[#0052FF]/30 rounded-2xl p-4">
+              <h4 className="font-black text-sm flex items-center gap-2"><UserPlus size={16} className="text-[#0052FF]" />Crear nuevo usuario</h4>
+              <p className="text-xs text-slate-500">Completa y pulsa Crear. El nuevo usuario podrá loguearse inmediatamente.</p>
+              <div className="mt-3 grid md:grid-cols-2 gap-2">
+                <input placeholder="email (usuario) *" value={newUser.email} onChange={e => setNewUser(s => ({ ...s, email: e.target.value }))} className="border rounded-lg px-3 py-2 text-sm" />
+                <input placeholder="contraseña ≥8 *" type="password" value={newUser.password} onChange={e => setNewUser(s => ({ ...s, password: e.target.value }))} className="border rounded-lg px-3 py-2 text-sm" />
+                <input placeholder="nombre" value={newUser.first_name} onChange={e => setNewUser(s => ({ ...s, first_name: e.target.value }))} className="border rounded-lg px-3 py-2 text-sm" />
+                <input placeholder="apellido" value={newUser.last_name} onChange={e => setNewUser(s => ({ ...s, last_name: e.target.value }))} className="border rounded-lg px-3 py-2 text-sm" />
+                <select value={newUser.role} onChange={e => setNewUser(s=>({...s, role:e.target.value as any}))} className="border rounded-lg px-3 py-2 text-sm bg-white">
+                  <option value="docente">docente — solo revisa formularios</option>
+                  <option value="admin">admin — gestiona usuarios y datos</option>
+                </select>
+                <button onClick={async () => { if(!newUser.email || !newUser.password) {alert("email y contraseña requeridos"); return;} const r = await fetch("/api/users", { method: "POST", headers: { "Content-Type": "application/json", Authorization: authHeader }, body: JSON.stringify(newUser) }); if (r.ok) { setNewUser({ email: "", password: "", first_name: "", last_name: "", role: "docente" }); load(); } else alert((await r.json()).error); }} className="bg-[#0B1220] text-white px-4 py-2 rounded-full text-sm font-bold inline-flex items-center justify-center gap-2"><UserPlus size={16} />Crear usuario</button>
+              </div>
+              <p className="text-[11px] text-slate-500 mt-2">* requerido. Tip: usa <code>docente.matematicas@colegio.edu.ec</code> + clave temporal.</p>
             </div>
-            <div className="mt-4 grid md:grid-cols-2 gap-2">
-              <input placeholder="email (usuario)" value={newUser.email} onChange={e => setNewUser(s => ({ ...s, email: e.target.value }))} className="border rounded-lg px-3 py-2 text-sm" />
-              <input placeholder="contraseña ≥8" type="password" value={newUser.password} onChange={e => setNewUser(s => ({ ...s, password: e.target.value }))} className="border rounded-lg px-3 py-2 text-sm" />
-              <input placeholder="nombre" value={newUser.first_name} onChange={e => setNewUser(s => ({ ...s, first_name: e.target.value }))} className="border rounded-lg px-3 py-2 text-sm" />
-              <input placeholder="apellido" value={newUser.last_name} onChange={e => setNewUser(s => ({ ...s, last_name: e.target.value }))} className="border rounded-lg px-3 py-2 text-sm" />
-              <select value={newUser.role} onChange={e => setNewUser(s=>({...s, role:e.target.value as any}))} className="border rounded-lg px-3 py-2 text-sm bg-white">
-                <option value="docente">docente — solo revisa formularios</option>
-                <option value="admin">admin — gestiona usuarios y datos</option>
-              </select>
-              <button onClick={async () => { if(!newUser.email || !newUser.password) {alert("email y contraseña requeridos"); return;} const r = await fetch("/api/users", { method: "POST", headers: { "Content-Type": "application/json", Authorization: authHeader }, body: JSON.stringify(newUser) }); if (r.ok) { setNewUser({ email: "", password: "", first_name: "", last_name: "", role: "docente" }); load(); } else alert((await r.json()).error); }} className="bg-[#0B1220] text-white px-4 py-2 rounded-full text-sm font-bold">Crear usuario</button>
+            <div className="mt-4">
+              <h4 className="font-black text-xs uppercase tracking-wider text-slate-500">Lista de usuarios ({users.length})</h4>
+              <div className="mt-2 space-y-2 max-h-80 overflow-auto">
+                {users.map((u: any) => (
+                  <div key={u.id} className="flex justify-between items-center border-b py-2 text-sm gap-2">
+                    <span className="flex-1"><span className="font-bold">{u.email}</span> <span className={`ml-1 text-[10px] font-black px-2 py-0.5 rounded-full border ${u.role==='admin' ? 'bg-[#0B1220] text-white border-[#0B1220]' : 'bg-amber-100 text-amber-800 border-amber-200'}`}>{u.role}</span> <span className="text-xs text-slate-500">({[u.first_name,u.last_name].filter(Boolean).join(" ") || "—"})</span></span>
+                    <div className="flex gap-1 items-center">
+                      <select value={u.role} onChange={async e => { const newRole=e.target.value; if(!confirm(`Cambiar ${u.email} a ${newRole}?`)) return; const r=await fetch(`/api/users/${u.id}`,{method:"PATCH",headers:{"Content-Type":"application/json",Authorization:authHeader},body:JSON.stringify({role:newRole})}); if(!r.ok) alert((await r.json()).error); else load(); }} className="text-xs border rounded-full px-2 py-1 bg-white">
+                        <option value="admin">admin</option>
+                        <option value="docente">docente</option>
+                      </select>
+                      <button onClick={async () => { if (!confirm("Eliminar " + u.email + "?")) return; const r=await fetch(`/api/users/${u.id}`, { method: "DELETE", headers: { Authorization: authHeader } }); if(!r.ok) alert((await r.json()).error); else load(); }} className="text-red-600 text-xs font-bold">Eliminar</button>
+                    </div>
+                  </div>
+                ))}
+                {users.length === 0 && <p className="text-xs text-slate-500">Sin usuarios</p>}
+              </div>
             </div>
             <div className="mt-3 bg-slate-50 border rounded-xl p-3 text-xs">
               <p className="font-black">Ideas para tu caso:</p>

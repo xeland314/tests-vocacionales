@@ -21,7 +21,7 @@ export const POST: APIRoute = async ({ request }) => {
     if (!ok) return new Response(JSON.stringify({ error: "credenciales inválidas" }), { status: 401 });
 
     const { token, instance } = await create_token(user.id);
-    const data = get_post_response_data(token, instance, { id: user.id, email: user.email, first_name: user.first_name, last_name: user.last_name });
+    const data = get_post_response_data(token, instance, { id: user.id, email: user.email, first_name: user.first_name, last_name: user.last_name, role: (user as any).role, is_active: (user as any).is_active });
     return new Response(JSON.stringify(data), { status: 200, headers: { "Content-Type": "application/json" } });
   } catch (e:any) {
     return new Response(JSON.stringify({ error: e.message }), { status: 500 });
