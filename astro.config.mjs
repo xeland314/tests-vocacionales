@@ -12,10 +12,8 @@ export default defineConfig({
   adapter: node({ mode: "standalone" }),
   vite: {
     plugins: [tailwindcss()],
-    oxc: {
-      jsx: {
-        development: false,
-      },
+    resolve: {
+      dedupe: ["react", "react-dom"],
     },
   },
 

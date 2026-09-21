@@ -31,16 +31,20 @@ export default function AdminGeneral() {
   const [users, setUsers] = useState<any[]>([]);
   const [newUser, setNewUser] = useState({ email: "", password: "", first_name: "" });
   const [pwOld, setPwOld] = useState(""); const [pwNew, setPwNew] = useState("");
-
-  const token = typeof window !== "undefined" ? localStorage.getItem("knox_token") : null;
+  const [token, setToken] = useState<string | null>(null);
   const authHeader = token ? `Token ${token}` : "";
 
-  useEffect(() => { if (!token) { setNeedsLogin(true); setLoading(false); } }, [token]);
+  useEffect(() => {
+    const t = typeof window !== "undefined" ? localStorage.getItem("knox_token") : null;
+    setToken(t);
+    if (!t) { setNeedsLogin(true); setLoading(false); }
+  }, []);
 
   const load = async () => {
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("knox_token") : null);
+    const hdr: any = t ? { Authorization: `Token ${t}` } : {};
     setLoading(true); setError(null);
     try {
-      const hdr: any = authHeader ? { Authorization: authHeader } : {};
       const [oRes, sRes, uRes] = await Promise.all([
         fetch("/api/admin/overview", { headers: hdr }),
         fetch("/api/admin/estudiantes", { headers: hdr }),
