@@ -1,7 +1,9 @@
 import { useEffect, useState, useMemo, type Dispatch, type SetStateAction } from "react";
 import { QUESTIONS, AREAS, AREA_ORDER, INTERESES_GRID, APTITUDES_GRID } from "../data/chaside";
 import { calculateScores, type Answers } from "../data/scoring";
-import { Zap, Rocket, Save, Printer, BookOpen, RotateCcw, Download, Check } from "lucide-react";
+import { Zap, Rocket, Save, Printer, BookOpen, RotateCcw, Download, Check, Phone, Mail } from "lucide-react";
+import { useAnonGate } from "../lib/anonGate";
+import { notifyMoodleCompletion } from "../lib/moodle";
 
 const STORAGE_KEY = "chaside_answers_v1";
 const STORAGE_NAME = "chaside_student_name";
@@ -22,6 +24,8 @@ export default function ChasideTest() {
   const [savedAt, setSavedAt] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
   const [printMode, setPrintMode] = useState(false);
+  const { moodleUserId, isMoodle, telefono: gateTelefono, setTelefono: setGateTelefono, email: gateEmail, setEmail: setGateEmail, nombre: gateNombre, setNombre: setGateNombre, gateReady, checked: gateChecked, saveGate } = useAnonGate("chaside");
+  const [gateError, setGateError] = useState<string | null>(null);
 
   // cargar persistencia
   useEffect(() => {
@@ -68,15 +72,21 @@ export default function ChasideTest() {
   const [extra, setExtra] = useState({ padre:"", correoEst:"", correoPadre:"", cedulaEst:"", cedulaRepr:"" });
 
   const handleSave = async () => {
-    if (!studentName.trim()) {
+    // nombre puede venir del gate anon o del input resultado
+    const nombreFinal = (studentName.trim() || gateNombre.trim() || gateEmail.split("@")[0] || (moodleUserId ? `moodle_${moodleUserId}` : "")).trim();
+    if (!nombreFinal) {
       setError("Debe ingresar el nombre del estudiante para guardar el resultado.");
+      return;
+    }
+    if (!moodleUserId && (!gateTelefono || !gateEmail)) {
+      setError("Falta teléfono/email del gate anónimo. Recarga y completa el formulario inicial.");
       return;
     }
     const now = new Date();
     const stamp = formatDateTime(now);
     const fecha_unix = Math.floor(now.getTime()/1000);
     try {
-      localStorage.setItem(STORAGE_NAME, studentName.trim());
+      localStorage.setItem(STORAGE_NAME, nombreFinal);
       localStorage.setItem(STORAGE_DATE, stamp);
     } catch {}
     setSavedAt(stamp);
@@ -87,12 +97,15 @@ export default function ChasideTest() {
         method:"POST",
         headers:{ "Content-Type":"application/json" },
         body: JSON.stringify({
-          nombre_estudiante: studentName.trim(),
+          nombre_estudiante: nombreFinal,
           nombre_padre: extra.padre || null,
           correo_estudiante: extra.correoEst || null,
           correo_padre: extra.correoPadre || null,
           cedula_estudiante: extra.cedulaEst || null,
           cedula_representante: extra.cedulaRepr || null,
+          telefono: isMoodle ? null : gateTelefono,
+          email: isMoodle ? null : gateEmail,
+          moodle_user_id: moodleUserId ?? null,
           fecha_unix,
           respuestas: answers,
           version: 1,
@@ -101,6 +114,8 @@ export default function ChasideTest() {
       const j = await res.json();
       if(!res.ok) throw new Error(j.error||"Error al guardar");
       setSavedAt(stamp + ` · guardado DB`);
+      // notifica a Moodle (para calificación/completion)
+      notifyMoodleCompletion({ test: "CHASIDE", moodleUserId, score: result.intereses, top: result.topInteres });
     } catch(e:any){
       setError("Guardado local OK, pero DB falló: " + e.message);
     } finally { setSaving(false); }
@@ -146,6 +161,29 @@ export default function ChasideTest() {
 
   // agrupación para progreso
   const progress = Math.round((total / 98) * 100);
+
+  // Gate: si es Moodle auto, si es anon pide telefono+email obligatorio
+  if (!gateChecked) {
+    return <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center p-8"><p className="text-sm text-slate-500">Detectando entorno...</p></div>;
+  }
+  if (!gateReady) {
+    return (
+      <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-white border rounded-2xl p-6">
+          <h2 className="text-xl font-black" style={{fontFamily:"Poppins"}}>Antes de iniciar — CHASIDE</h2>
+          <p className="text-sm text-slate-600 mt-1">Estás accediendo fuera de Moodle (anónimo). Por favor ingresa <b>teléfono real</b> y <b>correo electrónico</b> obligatorios para asociar tu resultado. Si estás dentro de Moodle vía iframe, este paso se omite automáticamente.</p>
+          <div className="mt-4 space-y-3">
+            <div><label className="text-xs font-bold uppercase flex items-center gap-1"><Mail size={12} />Correo electrónico *</label><input type="email" value={gateEmail} onChange={e=>setGateEmail(e.target.value)} placeholder="tu@correo.com" className="mt-1 w-full border rounded-lg px-3 py-2 text-sm" /></div>
+            <div><label className="text-xs font-bold uppercase flex items-center gap-1"><Phone size={12} />Teléfono *</label><input value={gateTelefono} onChange={e=>setGateTelefono(e.target.value.replace(/[^0-9+()\-\s]/g,"").slice(0,20))} placeholder="+593 99 123 4567" className="mt-1 w-full border rounded-lg px-3 py-2 text-sm" /></div>
+            <div><label className="text-xs font-bold uppercase">Nombre (opcional)</label><input value={gateNombre} onChange={e=>setGateNombre(e.target.value)} placeholder="Ana Pérez" className="mt-1 w-full border rounded-lg px-3 py-2 text-sm" /></div>
+            {gateError && <p className="text-xs text-red-600 font-bold">{gateError}</p>}
+            <button onClick={()=>{ if(!gateEmail || !gateTelefono){ setGateError("Teléfono y correo son obligatorios"); return; } if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(gateEmail)){ setGateError("Correo inválido"); return;} if(!/^[0-9+() \-]{7,20}$/.test(gateTelefono)){ setGateError("Teléfono inválido (7-20 dígitos)"); return;} setGateError(null); saveGate(); }} className="w-full bg-[#0B1220] text-white py-2.5 rounded-full font-bold">Continuar al test →</button>
+            <p className="text-[11px] text-slate-400 text-center">Dentro de Moodle este formulario no aparece (se usa tu ID Moodle).</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (showResult) {
     return <ResultadoView

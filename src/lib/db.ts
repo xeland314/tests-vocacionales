@@ -41,7 +41,7 @@ export async function initDb() {
   await db.execute(`INSERT OR IGNORE INTO test_versiones (codigo, version, vigencia_desde, activo) VALUES ('PERSONALIDAD', 1, strftime('%s','2026-01-01'), 1)`);
   await db.execute(`INSERT OR IGNORE INTO test_versiones (codigo, version, vigencia_desde, activo) VALUES ('KUDER', 1, strftime('%s','2026-01-01'), 1)`);
 
-  // Estudiantes = persona única
+  // Estudiantes = persona única (reducido: Moodle auto, anon requiere telefono+email)
   await db.execute(`
     CREATE TABLE IF NOT EXISTS estudiantes (
       id TEXT PRIMARY KEY,
@@ -51,10 +51,24 @@ export async function initDb() {
       correo_padre TEXT,
       cedula_estudiante TEXT CHECK (cedula_estudiante IS NULL OR length(cedula_estudiante)=10),
       cedula_representante TEXT CHECK (cedula_representante IS NULL OR length(cedula_representante)=10),
+      telefono TEXT,
+      email TEXT,
+      moodle_user_id INTEGER,
       created_at INTEGER DEFAULT (unixepoch())
     )
   `);
+  // Migraciones para DB existentes (añade columnas si faltan)
+  if (!(await hasColumn("estudiantes", "telefono"))) {
+    await db.execute(`ALTER TABLE estudiantes ADD COLUMN telefono TEXT`);
+  }
+  if (!(await hasColumn("estudiantes", "email"))) {
+    await db.execute(`ALTER TABLE estudiantes ADD COLUMN email TEXT`);
+  }
+  if (!(await hasColumn("estudiantes", "moodle_user_id"))) {
+    await db.execute(`ALTER TABLE estudiantes ADD COLUMN moodle_user_id INTEGER`);
+  }
   await db.execute(`CREATE INDEX IF NOT EXISTS idx_estudiantes_created ON estudiantes(created_at)`);
+  await db.execute(`CREATE INDEX IF NOT EXISTS idx_estudiantes_moodle ON estudiantes(moodle_user_id)`);
 
   await db.execute(`
     CREATE TABLE IF NOT EXISTS preguntas (

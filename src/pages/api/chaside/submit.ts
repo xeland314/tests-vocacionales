@@ -8,21 +8,37 @@ export const POST: APIRoute = async ({ request }) => {
   try {
     await initDb();
     const body = await request.json();
-    const { nombre_estudiante, nombre_padre, correo_estudiante, correo_padre, cedula_estudiante, cedula_representante, fecha_unix, respuestas, version = 1, estudiante_id } = body;
-    if (!nombre_estudiante || !respuestas) return new Response(JSON.stringify({ error: "nombre_estudiante y respuestas requeridos" }), { status: 400 });
+    const { nombre_estudiante, nombre_padre, correo_estudiante, correo_padre, cedula_estudiante, cedula_representante, telefono, email, moodle_user_id, fecha_unix, respuestas, version = 1, estudiante_id } = body;
+    if (!respuestas) return new Response(JSON.stringify({ error: "respuestas requeridas" }), { status: 400 });
     if (Object.keys(respuestas).length !== 98) return new Response(JSON.stringify({ error: "Se requieren 98 respuestas" }), { status: 400 });
+
+    // Validación reducida: Moodle -> moodle_user_id basta; Anónimo -> telefono+email obligatorios
+    const isMoodle = moodle_user_id != null && Number(moodle_user_id) > 0;
+    if (!isMoodle) {
+      if (!telefono || !email) return new Response(JSON.stringify({ error: "telefono y email son obligatorios para anon" }), { status: 400 });
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return new Response(JSON.stringify({ error: "email inválido" }), { status: 400 });
+      if (!/^[0-9+() \-]{7,20}$/.test(telefono)) return new Response(JSON.stringify({ error: "telefono inválido" }), { status: 400 });
+    }
+    const nombreFinal = (nombre_estudiante?.trim()) || (isMoodle ? `moodle_${moodle_user_id}` : email?.split("@")[0] || "anon");
+    if (!nombreFinal) return new Response(JSON.stringify({ error: "nombre_estudiante requerido" }), { status: 400 });
 
     const scores = calculateScores(respuestas as any);
     let estId = estudiante_id as string | undefined;
-    // si no viene id, crear estudiante persona
+    // si no viene id, crear estudiante persona (si es Moodle, reusar por moodle_user_id)
+    if (!estId && isMoodle) {
+      const existing = await db.execute({ sql: "SELECT id FROM estudiantes WHERE moodle_user_id=? LIMIT 1", args: [Number(moodle_user_id)] });
+      if (existing.rows.length > 0) estId = (existing.rows[0] as any).id as string;
+    }
     if (!estId) {
       estId = crypto.randomUUID();
-      await db.execute({ sql: `INSERT INTO estudiantes (id, nombre_estudiante, nombre_padre, correo_estudiante, correo_padre, cedula_estudiante, cedula_representante) VALUES (?,?,?,?,?,?,?)`, args: [estId, nombre_estudiante, nombre_padre ?? null, correo_estudiante ?? null, correo_padre ?? null, cedula_estudiante ?? null, cedula_representante ?? null] });
+      await db.execute({ sql: `INSERT INTO estudiantes (id, nombre_estudiante, nombre_padre, correo_estudiante, correo_padre, cedula_estudiante, cedula_representante, telefono, email, moodle_user_id) VALUES (?,?,?,?,?,?,?,?,?,?)`, args: [estId, nombreFinal, nombre_padre ?? null, correo_estudiante ?? null, correo_padre ?? null, cedula_estudiante ?? null, cedula_representante ?? null, telefono ?? null, email ?? null, isMoodle ? Number(moodle_user_id) : null] });
     } else {
       // upsert nombre si existe
       const exists = await db.execute({ sql: "SELECT id FROM estudiantes WHERE id=?", args: [estId] });
       if (exists.rows.length === 0) {
-        await db.execute({ sql: `INSERT INTO estudiantes (id, nombre_estudiante, nombre_padre, correo_estudiante, correo_padre, cedula_estudiante, cedula_representante) VALUES (?,?,?,?,?,?,?)`, args: [estId, nombre_estudiante, nombre_padre ?? null, correo_estudiante ?? null, correo_padre ?? null, cedula_estudiante ?? null, cedula_representante ?? null] });
+        await db.execute({ sql: `INSERT INTO estudiantes (id, nombre_estudiante, nombre_padre, correo_estudiante, correo_padre, cedula_estudiante, cedula_representante, telefono, email, moodle_user_id) VALUES (?,?,?,?,?,?,?,?,?,?)`, args: [estId, nombreFinal, nombre_padre ?? null, correo_estudiante ?? null, correo_padre ?? null, cedula_estudiante ?? null, cedula_representante ?? null, telefono ?? null, email ?? null, isMoodle ? Number(moodle_user_id) : null] });
+      } else if (isMoodle) {
+        await db.execute({ sql: `UPDATE estudiantes SET moodle_user_id=? WHERE id=?`, args: [Number(moodle_user_id), estId] });
       }
     }
 

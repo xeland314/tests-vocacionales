@@ -2,7 +2,9 @@ import { useEffect, useMemo, useState } from "react";
 import { KUDER_DIADAS, KUDER_AREAS, KUDER_ORDER } from "../data/kuder";
 import { calculateKuder, type KuderAnswers } from "../data/kuderScoring";
 import { LucideIcon } from "../lib/icons";
-import { BookOpen, Save, Printer, RotateCcw, Check } from "lucide-react";
+import { BookOpen, Save, Printer, RotateCcw, Check, Phone, Mail } from "lucide-react";
+import { useAnonGate } from "../lib/anonGate";
+import { notifyMoodleCompletion } from "../lib/moodle";
 
 const STORAGE = "kuder_answers_v1";
 const STORAGE_NAME = "kuder_student_name";
@@ -21,6 +23,8 @@ export default function KuderTest(){
   const [error,setError]=useState<string|null>(null);
   const [saving,setSaving]=useState(false);
   const [extra,setExtra]=useState({ padre:"", correoEst:"", correoPadre:"", cedulaEst:"", cedulaRepr:"" });
+  const { moodleUserId, isMoodle, telefono: gateTelefono, setTelefono: setGateTelefono, email: gateEmail, setEmail: setGateEmail, nombre: gateNombre, setNombre: setGateNombre, gateReady, checked: gateChecked, saveGate } = useAnonGate("kuder");
+  const [gateError, setGateError]=useState<string|null>(null);
 
   useEffect(()=>{
     try{
@@ -46,13 +50,16 @@ export default function KuderTest(){
     setShowResult(true); window.scrollTo({top:0,behavior:"smooth"});
   };
   const save=async()=>{
-    if(!name.trim()){ setError("Ingresa el nombre del estudiante para guardar."); return;}
+    const nombreFinal = (name.trim() || gateNombre.trim() || gateEmail.split("@")[0] || (moodleUserId ? `moodle_${moodleUserId}` : "")).trim();
+    if(!nombreFinal){ setError("Ingresa el nombre del estudiante para guardar."); return;}
+    if(!moodleUserId && (!gateTelefono || !gateEmail)){ setError("Falta teléfono/email del gate anónimo."); return; }
     const now=new Date(); const stamp=fmt(now); const fecha_unix=Math.floor(now.getTime()/1000);
-    try{ localStorage.setItem(STORAGE_NAME,name.trim()); localStorage.setItem(STORAGE_DATE,stamp);}catch{}
+    try{ localStorage.setItem(STORAGE_NAME,nombreFinal); localStorage.setItem(STORAGE_DATE,stamp);}catch{}
     setSavedAt(stamp); setError(null); setSaving(true);
     try{
-      const res=await fetch("/api/kuder/submit",{ method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify({ nombre_estudiante:name.trim(), nombre_padre:extra.padre||null, correo_estudiante:extra.correoEst||null, correo_padre:extra.correoPadre||null, cedula_estudiante:extra.cedulaEst||null, cedula_representante:extra.cedulaRepr||null, fecha_unix, respuestas:answers })});
+      const res=await fetch("/api/kuder/submit",{ method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify({ nombre_estudiante:nombreFinal, nombre_padre:extra.padre||null, correo_estudiante:extra.correoEst||null, correo_padre:extra.correoPadre||null, cedula_estudiante:extra.cedulaEst||null, cedula_representante:extra.cedulaRepr||null, telefono: isMoodle? null: gateTelefono, email: isMoodle? null: gateEmail, moodle_user_id: moodleUserId ?? null, fecha_unix, respuestas:answers })});
       const j=await res.json(); if(!res.ok) throw new Error(j.error||"Error"); setSavedAt(stamp+" · guardado DB");
+      notifyMoodleCompletion({ test: "KUDER", moodleUserId, score: result.scores, top: result.top });
     }catch(e:any){ setError("Guardado local OK, pero DB falló: "+e.message); } finally{ setSaving(false); }
   };
   const reset=()=>{ setAnswers({}); setShowResult(false); setError(null); try{localStorage.removeItem(STORAGE);}catch{}; window.scrollTo({top:0,behavior:"smooth"}); };
@@ -158,6 +165,27 @@ export default function KuderTest(){
             <button onClick={reset} className="bg-[#0B1220] text-white font-bold px-6 py-2.5 rounded-full">Repetir test</button>
           </div>
           <p className="text-xs text-slate-400 mt-4 text-center">Kuder Forma C · 60 diadas · Baremo percentiles. No sustituye orientación profesional.</p>
+        </div>
+      </div>
+    );
+  }
+
+  if(!gateChecked){
+    return <div className="min-h-screen bg-[#EFF6FF] flex items-center justify-center p-8"><p className="text-sm text-slate-500">Detectando entorno...</p></div>;
+  }
+  if(!gateReady){
+    return (
+      <div className="min-h-screen bg-[#EFF6FF] flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-white border rounded-2xl p-6">
+          <h2 className="text-xl font-black" style={{fontFamily:"Poppins"}}>Antes de iniciar — Kuder</h2>
+          <p className="text-sm text-slate-600 mt-1">Acceso anónimo: ingresa <b>teléfono</b> y <b>correo</b> obligatorios. Dentro de Moodle se omite.</p>
+          <div className="mt-4 space-y-3">
+            <div><label className="text-xs font-bold uppercase flex items-center gap-1"><Mail size={12} />Correo *</label><input type="email" value={gateEmail} onChange={e=>setGateEmail(e.target.value)} placeholder="tu@correo.com" className="mt-1 w-full border rounded-lg px-3 py-2 text-sm" /></div>
+            <div><label className="text-xs font-bold uppercase flex items-center gap-1"><Phone size={12} />Teléfono *</label><input value={gateTelefono} onChange={e=>setGateTelefono(e.target.value.replace(/[^0-9+()\-\s]/g,"").slice(0,20))} placeholder="+593 99 123 4567" className="mt-1 w-full border rounded-lg px-3 py-2 text-sm" /></div>
+            <div><label className="text-xs font-bold uppercase">Nombre (opcional)</label><input value={gateNombre} onChange={e=>setGateNombre(e.target.value)} placeholder="Tu nombre" className="mt-1 w-full border rounded-lg px-3 py-2 text-sm" /></div>
+            {gateError && <p className="text-xs text-red-600 font-bold">{gateError}</p>}
+            <button onClick={()=>{ if(!gateEmail||!gateTelefono){ setGateError("Teléfono y correo obligatorios"); return;} if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(gateEmail)){ setGateError("Correo inválido"); return;} if(!/^[0-9+() \-]{7,20}$/.test(gateTelefono)){ setGateError("Teléfono inválido"); return;} setGateError(null); saveGate(); }} className="w-full bg-[#2563EB] text-white py-2.5 rounded-full font-bold">Continuar al test →</button>
+          </div>
         </div>
       </div>
     );
