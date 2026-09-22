@@ -12,6 +12,11 @@ export default defineConfig({
   adapter: node({ mode: "standalone" }),
   vite: {
     plugins: [tailwindcss()],
+    server: {
+      allowedHosts: true,
+      // permite cualquier host (incluido *.trycloudflare.com para túneles)
+      // Alternativa estricta: allowedHosts: ["terrace-writer-dressed-roulette.trycloudflare.com", ".trycloudflare.com"]
+    },
     resolve: {
       dedupe: ["react", "react-dom"],
     },
