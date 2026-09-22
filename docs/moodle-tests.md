@@ -7,7 +7,7 @@
 > Alias MBTI: `src/pages/mbti.astro:1` → `/mbti` (misma que `/personalidad`)  
 > `vite.server.allowedHosts=true` `astro.config.mjs:15`
 
-`index.astro` queda intacto. Cada test es una URL solita (`/chaside`, `/kuder`, `/mbti`). `src/lib/moodle.ts:32` lee `?moodleUserId=` de la URL y `src/lib/anonGate.ts:7` omite gate teléfono+correo si viene de Moodle; fuera de Moodle pide `teléfono+correo` obligatorios `ChasideTest.tsx:68`. Nota se envía server-side vía `POST /api/moodle/grade` `src/lib/moodle.ts:95` → `core_grades_update_grades` 0-10.
+`index.astro` queda intacto. Cada test es una URL solita (`/chaside`, `/kuder`, `/mbti`). `src/lib/moodle.ts:32` lee `?moodleUserId=&moodleUserName=&moodleUserEmail=&courseId=` de la URL y `src/lib/anonGate.ts:7` omite gate teléfono+correo si viene de Moodle; fuera de Moodle pide `teléfono+correo` obligatorios `ChasideTest.tsx:68` antes de iniciar. **El formulario final de cada test fue removido** (`ChasideTest.tsx:276` ahora solo `Datos ya registrados al inicio` + `Guardar en BD`) — no se vuelve a pedir nada al final. Nota se envía server-side vía `POST /api/moodle/grade` `src/lib/moodle.ts:95` → `core_grades_update_grades` 0-10.
 
 Borra tu `Página id=8` actual (`view.php?id=8` con gate `telefono+correo`) — era el modo anónimo porque el `<script>` fue eliminado.
 
@@ -26,12 +26,17 @@ Borra tu `Página id=8` actual (`view.php?id=8` con gate `telefono+correo`) — 
 
 - `URL externa:` `https://terrace-writer-dressed-roulette.trycloudflare.com/chaside`
 - `Apariencia > Mostrar:` `Incrustar`
-- `Parámetros URL` > `Añadir` > `Nombre: moodleUserId` > `Variable: ID de usuario` (Moodle autocompleta `?moodleUserId=5`)
-- Guarda. Moodle genera `.../chaside?moodleUserId=5` y Astro lo lee sin JS.
+- `Parámetros URL` > `Añadir` 4 filas:
+  - `moodleUserId = ID de usuario`
+  - `moodleUserName = Nombre completo del usuario`
+  - `moodleUserEmail = Dirección de correo`
+  - `courseId = ID del curso` (para `moodle_course_id` estadística)
 
-No añadas `<script>` ni token. Astro guarda `estudiantes.moodle_user_id` `src/lib/db.ts:50` + `estudiantes.telefono/email` quedan `NULL` (reducido), y al `Guardar DB` notifica `CHASIDE 0-10 = score[top]` vía `POST /api/moodle/grade` server-side.
+Guarda. Moodle genera `.../chaside?moodleUserId=5&moodleUserName=Ana%20Perez&moodleUserEmail=ana@colegio.edu.ec&courseId=2` y Astro lo lee sin JS.
 
-**Verificación:** entra como estudiante → `URL CHASIDE` → no ves `Antes de iniciar — CHASIDE`, inicia directo. Revisa `SELECT moodle_user_id,email FROM estudiantes` y `Calificaciones` → `CHASIDE 7/10`.
+No añadas `<script>` ni token. Astro guarda `estudiantes.moodle_user_id / moodle_user_name / moodle_user_email / moodle_course_id` `src/lib/db.ts:50` + `telefono/email` quedan `NULL` (reducido).
+
+**Verificación:** entra como estudiante → `URL CHASIDE` → no ves `Antes de iniciar — CHASIDE`, inicia directo. Revisa `SELECT moodle_user_id,mood_le_user_name,email FROM estudiantes` y `Calificaciones` → `CHASIDE 7/10`.
 
 ---
 
@@ -40,7 +45,7 @@ No añadas `<script>` ni token. Astro guarda `estudiantes.moodle_user_id` `src/l
 Repite **URL**:
 
 - `URL externa:` `https://terrace-writer-dressed-roulette.trycloudflare.com/kuder`
-- `Parámetros URL:` `moodleUserId = ID de usuario`
+- `Parámetros URL:` mismos 4 (`moodleUserId`, `moodleUserName`, `moodleUserEmail`, `courseId`)
 
 Mismo gate `useAnonGate("kuder")` `src/components/KuderTest.tsx:23`, `submit.ts:15`. Nota `KUDER` = `Math.round((score[top]/60)*10)`.
 
@@ -51,18 +56,34 @@ Mismo gate `useAnonGate("kuder")` `src/components/KuderTest.tsx:23`, `submit.ts:
 Repite **URL**:
 
 - `URL externa:` `https://terrace-writer-dressed-roulette.trycloudflare.com/mbti`
-- `Parámetros URL:` `moodleUserId = ID de usuario`
+- `Parámetros URL:` mismos 4
 
-`PersonalidadTest.tsx:33` `useAnonGate("personalidad")`, `notify MBTI 10/10` (completado).
+`PersonalidadTest.tsx:33` `useAnonGate("personalidad")`, `notify MBTI 10/10`.
 
 ---
 
-## ¿Por qué no Página + `<script>`?
+## ¿Qué más de Moodle vale para estadísticas?
 
-Tu `view.php?id=8` usaba `Página` con `<iframe><script>postMessage M.cfg.userid</script>` — TinyMCE lo **elimina al guardar** y por `Cross-Origin` Astro no puede leer `window.parent.M.cfg` solo. El `postMessage` nunca llegaba y veías gate anónimo. Las alternativas `chaside.php` wrapper o `HTML adicional` funcionan pero requieren tocar `/var/www/html/moodle/` y no viajan en backup del curso.
+Ya tienes `moodleUserId + name + email + courseId`. Para segmentar `src/lib/admin.ts` añade:
 
-`URL + Parámetros` es nativo Moodle, viaja en `.mbz` al migrar, no expone `WS_TOKEN` y no necesita `postMessage`. Si aún quieres `Página`, usa el wrapper `docs/moodle-iframe.md:2.1` pero no es limpio para migrar.
+| Variable Moodle (Parámetros URL) | Campo DB | Uso |
+|---|---|---|
+| `ID de usuario` | `moodle_user_id` | PK, nota |
+| `Nombre completo` | `moodle_user_name` | Display |
+| `Correo` | `moodle_user_email` | Contacto |
+| `ID del curso` | `moodle_course_id` | Por curso 2 vs otros |
+| `Nombre de usuario` | `moodle_extra_json.username` | Auditoría |
+| `Institución` | `moodle_extra_json.institution` | Colegio/sede |
+| `Departamento` | `moodle_extra_json.department` | Paralelo |
+| `Ciudad`/`País` | `moodle_extra_json.city/country` | Geografía |
+| `Cohorte` | `moodle_extra_json.cohort` | Grupo docente |
 
-**Para completado:** añade `CMID` de cada URL (`mod/url/view.php?id=XXX`) en el body del `POST /api/moodle/grade` con `cmid` si quieres `core_completion_update_activity_completion_status_manually`, o deja `0` solo nota.
+**Recomendado mínimo:** `moodleUserId + name + email + courseId` ya cubre quién y de qué curso sin gate. Añade `institution`/`city` si quieres baremo por colegio. Configura en `URL > Parámetros` y `moodle.ts:32` + `submit` ya lo guardan en `moodle_extra_json`.
 
-**Prueba limpia:** fuera Moodle `https://terrace.../kuder` pide teléfono+correo; dentro `URL` con `?moodleUserId` no pide nada.
+---
+
+## Notas
+
+- **Token en cliente:** ya no, va `POST /api/moodle/grade` server-side con `MOODLE_WS_TOKEN` en `.env`.
+- **CMID:** tras crear cada URL, copia su `id` (`mod/url/view.php?id=XXX`) y ponlo en `const CMID=XXX` si usas `Pagina` legacy con `postMessage`; con `URL` deja `0` solo nota.
+- **Prueba limpia:** fuera Moodle `https://terrace.../kuder` pide teléfono+correo; dentro `URL` con `?moodleUserId` no pide nada.

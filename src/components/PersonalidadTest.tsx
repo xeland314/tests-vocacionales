@@ -32,7 +32,7 @@ export default function PersonalidadTest() {
   const [error, setError] = useState<string|null>(null);
   const [saving, setSaving] = useState(false);
   const [extra, setExtra] = useState({ padre:"", correoEst:"", correoPadre:"", cedulaEst:"", cedulaRepr:"" });
-  const { moodleUserId, isMoodle, telefono: gateTelefono, setTelefono: setGateTelefono, email: gateEmail, setEmail: setGateEmail, nombre: gateNombre, setNombre: setGateNombre, gateReady, checked: gateChecked, saveGate } = useAnonGate("personalidad");
+  const { moodleUserId, moodleUserName, moodleUserEmail, isMoodle, telefono: gateTelefono, setTelefono: setGateTelefono, email: gateEmail, setEmail: setGateEmail, nombre: gateNombre, setNombre: setGateNombre, gateReady, checked: gateChecked, saveGate } = useAnonGate("personalidad");
   const [gateError, setGateError]=useState<string|null>(null);
 
   useEffect(()=>{
@@ -65,7 +65,7 @@ export default function PersonalidadTest() {
     try{ localStorage.setItem(STORAGE_NAME,nombreFinal); localStorage.setItem(STORAGE_DATE,stamp);}catch{}
     setSavedAt(stamp); setError(null); setSaving(true);
     try{
-      const res=await fetch("/api/personalidad/submit",{ method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify({ nombre_estudiante:nombreFinal, nombre_padre:extra.padre||null, correo_estudiante:extra.correoEst||null, correo_padre:extra.correoPadre||null, cedula_estudiante:extra.cedulaEst||null, cedula_representante:extra.cedulaRepr||null, telefono: isMoodle? null: gateTelefono, email: isMoodle? null: gateEmail, moodle_user_id: moodleUserId ?? null, fecha_unix, respuestas:answers })});
+      const res=await fetch("/api/personalidad/submit",{ method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify({ nombre_estudiante:nombreFinal, nombre_padre:null, correo_estudiante:null, correo_padre:null, cedula_estudiante:null, cedula_representante:null, telefono: isMoodle? null: gateTelefono, email: isMoodle? moodleUserEmail ?? gateEmail : gateEmail, moodle_user_id: moodleUserId ?? null, moodle_user_name: moodleUserName ?? null, moodle_user_email: moodleUserEmail ?? null, moodle_course_id: new URLSearchParams(window.location.search).get("courseId") ? Number(new URLSearchParams(window.location.search).get("courseId")) : null, fecha_unix, respuestas:answers })});
       const j=await res.json(); if(!res.ok) throw new Error(j.error||"Error"); setSavedAt(stamp+" · guardado DB");
       notifyMoodleCompletion({ test: "MBTI", moodleUserId, score: result.dimensions, top: result.type });
     }catch(e:any){ setError("Guardado local OK, pero DB falló: "+e.message); } finally{ setSaving(false); }
@@ -89,19 +89,12 @@ export default function PersonalidadTest() {
         </div>
 
         <div className="max-w-4xl mx-auto px-4 py-6">
-          {/* Guardar */}
-          <div className="bg-[#7C3AED]/10 border border-[#7C3AED]/20 rounded-2xl p-4">
-            <div className="grid md:grid-cols-2 gap-3">
-              <div><label className="text-xs font-black uppercase">Nombre estudiante *</label><input value={name} onChange={e=>setName(e.target.value)} placeholder="Ej: Carlos Ruiz - 3ro BGU" className="mt-1 w-full px-4 py-2.5 rounded-xl border-2 border-slate-300 focus:border-[#7C3AED] outline-none" /></div>
-              <div><label className="text-xs font-bold uppercase text-slate-600">Padre / representante</label><input value={extra.padre} onChange={e=>setExtra(s=>({...s,padre:e.target.value}))} placeholder="Opcional" className="mt-1 w-full px-4 py-2.5 rounded-xl border-2 border-slate-200 outline-none text-sm" /></div>
-              <div><label className="text-xs font-bold uppercase text-slate-600">Correo estudiante</label><input value={extra.correoEst} onChange={e=>setExtra(s=>({...s,correoEst:e.target.value}))} placeholder="opcional@correo.com" className="mt-1 w-full px-4 py-2 rounded-xl border-2 border-slate-200 outline-none text-sm" /></div>
-              <div><label className="text-xs font-bold uppercase text-slate-600">Correo padre</label><input value={extra.correoPadre} onChange={e=>setExtra(s=>({...s,correoPadre:e.target.value}))} placeholder="opcional@correo.com" className="mt-1 w-full px-4 py-2 rounded-xl border-2 border-slate-200 outline-none text-sm" /></div>
-              <div><label className="text-xs font-bold uppercase text-slate-600">Cédula estudiante</label><input value={extra.cedulaEst} onChange={e=>setExtra(s=>({...s,cedulaEst:e.target.value.replace(/\D/g,"").slice(0,10)}))} placeholder="10 dígitos" className="mt-1 w-full px-4 py-2 rounded-xl border-2 border-slate-200 outline-none text-sm" /></div>
-              <div><label className="text-xs font-bold uppercase text-slate-600">Cédula representante</label><input value={extra.cedulaRepr} onChange={e=>setExtra(s=>({...s,cedulaRepr:e.target.value.replace(/\D/g,"").slice(0,10)}))} placeholder="10 dígitos" className="mt-1 w-full px-4 py-2 rounded-xl border-2 border-slate-200 outline-none text-sm" /></div>
-            </div>
-            {savedAt && <p className="text-xs text-slate-600 mt-2 flex items-center gap-1">{savedAt.includes("guardado") && <Check size={14} className="text-green-600" />}Guardado: <b>{name||"—"} · {savedAt}</b></p>}
+          <div className="bg-white border rounded-2xl p-4">
+            <p className="text-xs font-black uppercase flex items-center gap-1"><Check size={14} className="text-green-600" />Datos ya registrados al inicio</p>
+            <p className="text-sm text-slate-600 mt-1">No se vuelve a pedir. Moodle: <b>nombre+email</b> por URL; anónimo: <b>teléfono+correo</b> del gate. Solo guarda.</p>
+            {savedAt && <p className="text-xs text-slate-600 mt-2 flex items-center gap-1"><Check size={14} className="text-green-600" />Guardado: <b>{savedAt}</b></p>}
             {error && <p className="text-xs text-red-600 font-bold mt-2">{error}</p>}
-            <button onClick={save} disabled={saving} className="mt-3 bg-[#7C3AED] text-white font-bold px-6 py-2.5 rounded-full disabled:opacity-60 inline-flex items-center gap-2"><Save size={16} />{saving?"Guardando...":"Guardar en BD (nombre + fecha UNIX)"}</button>
+            <button onClick={save} disabled={saving} className="mt-3 bg-[#7C3AED] text-white font-bold px-6 py-2.5 rounded-full disabled:opacity-60 inline-flex items-center gap-2"><Save size={16} />{saving?"Guardando...":"Guardar en BD"}</button>
           </div>
 
           {/* Hero tipo - estilo 16personalities */}

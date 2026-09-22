@@ -54,6 +54,10 @@ export async function initDb() {
       telefono TEXT,
       email TEXT,
       moodle_user_id INTEGER,
+      moodle_user_name TEXT,
+      moodle_user_email TEXT,
+      moodle_course_id INTEGER,
+      moodle_extra_json TEXT,
       created_at INTEGER DEFAULT (unixepoch())
     )
   `);
@@ -66,6 +70,18 @@ export async function initDb() {
   }
   if (!(await hasColumn("estudiantes", "moodle_user_id"))) {
     await db.execute(`ALTER TABLE estudiantes ADD COLUMN moodle_user_id INTEGER`);
+  }
+  if (!(await hasColumn("estudiantes", "moodle_user_name"))) {
+    await db.execute(`ALTER TABLE estudiantes ADD COLUMN moodle_user_name TEXT`);
+  }
+  if (!(await hasColumn("estudiantes", "moodle_user_email"))) {
+    await db.execute(`ALTER TABLE estudiantes ADD COLUMN moodle_user_email TEXT`);
+  }
+  if (!(await hasColumn("estudiantes", "moodle_course_id"))) {
+    await db.execute(`ALTER TABLE estudiantes ADD COLUMN moodle_course_id INTEGER`);
+  }
+  if (!(await hasColumn("estudiantes", "moodle_extra_json"))) {
+    await db.execute(`ALTER TABLE estudiantes ADD COLUMN moodle_extra_json TEXT`);
   }
   await db.execute(`CREATE INDEX IF NOT EXISTS idx_estudiantes_created ON estudiantes(created_at)`);
   await db.execute(`CREATE INDEX IF NOT EXISTS idx_estudiantes_moodle ON estudiantes(moodle_user_id)`);

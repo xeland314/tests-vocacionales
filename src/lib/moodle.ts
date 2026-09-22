@@ -8,6 +8,8 @@ import { useEffect, useState } from "react";
 
 export type MoodleInfo = {
   moodleUserId: number | null;
+  moodleUserName: string | null;
+  moodleUserEmail: string | null;
   isMoodle: boolean;
   origin: string | null;
 };
@@ -18,6 +20,8 @@ const ALLOWED_MOODLE_ORIGINS: string[] = [
 ];
 
 let _moodleUserId: number | null = null;
+let _moodleUserName: string | null = null;
+let _moodleUserEmail: string | null = null;
 let _moodleOrigin: string | null = null;
 let _listeners: Array<(id: number | null, origin: string | null) => void> = [];
 let _readySent = false;
@@ -28,19 +32,26 @@ function isAllowedOrigin(origin: string): boolean {
 }
 
 if (typeof window !== "undefined") {
-  // 1) Detecta moodleUserId por URL ?moodleUserId= (para wrapper PHP sin postMessage / TinyMCE bloquea script)
+  // 1) Detecta moodleUserId por URL ?moodleUserId= (para URL con Parámetros sin postMessage / TinyMCE bloquea script)
   try {
     const params = new URLSearchParams(window.location.search);
     const idFromUrl = params.get("moodleUserId");
+    const nameFromUrl = params.get("moodleUserName") || params.get("name");
+    const emailFromUrl = params.get("moodleUserEmail") || params.get("email");
     if (idFromUrl) {
       const id = Number(idFromUrl);
       if (Number.isFinite(id) && id > 0) {
         _moodleUserId = id;
+        _moodleUserName = nameFromUrl ? decodeURIComponent(nameFromUrl) : null;
+        _moodleUserEmail = emailFromUrl ? decodeURIComponent(emailFromUrl) : null;
         _moodleOrigin = window.location.origin;
         // notifica a listeners en próximo tick
         setTimeout(() => _listeners.forEach(fn => fn(_moodleUserId, _moodleOrigin)), 0);
       }
     }
+    // si no vino id pero vino name/email solos (fallback), igual guarda
+    if (!_moodleUserId && nameFromUrl) _moodleUserName = decodeURIComponent(nameFromUrl);
+    if (!_moodleUserEmail && emailFromUrl) _moodleUserEmail = decodeURIComponent(emailFromUrl);
   } catch {}
 
   window.addEventListener("message", (event: MessageEvent) => {
@@ -56,6 +67,10 @@ if (typeof window !== "undefined") {
       if (!Number.isFinite(id) || id <= 0) return;
       _moodleUserId = id;
       _moodleOrigin = event.origin;
+      if (data.moodleUserName) _moodleUserName = String(data.moodleUserName);
+      else if (data.moodleUser?.fullname) _moodleUserName = String(data.moodleUser.fullname);
+      if (data.moodleUserEmail) _moodleUserEmail = String(data.moodleUserEmail);
+      else if (data.moodleUser?.email) _moodleUserEmail = String(data.moodleUser.email);
       // también puede venir moodleUser con más datos
       _listeners.forEach(fn => fn(_moodleUserId, _moodleOrigin));
     }
@@ -79,6 +94,8 @@ if (typeof window !== "undefined") {
 export function getMoodleUserId(): number | null {
   return _moodleUserId;
 }
+export function getMoodleUserName(): string | null { return _moodleUserName; }
+export function getMoodleUserEmail(): string | null { return _moodleUserEmail; }
 
 export function isMoodleEmbedded(): boolean {
   if (typeof window === "undefined") return false;
@@ -97,12 +114,14 @@ export function onMoodleUser(cb: (id: number | null, origin: string | null) => v
 export function useMoodleBridge() {
   const [info, setInfo] = useState<MoodleInfo>({
     moodleUserId: _moodleUserId,
+    moodleUserName: _moodleUserName,
+    moodleUserEmail: _moodleUserEmail,
     isMoodle: isMoodleEmbedded(),
     origin: _moodleOrigin,
   });
   useEffect(() => {
-    setInfo({ moodleUserId: _moodleUserId, isMoodle: isMoodleEmbedded(), origin: _moodleOrigin });
-    return onMoodleUser((id, origin) => setInfo({ moodleUserId: id, isMoodle: true, origin }));
+    setInfo({ moodleUserId: _moodleUserId, moodleUserName: _moodleUserName, moodleUserEmail: _moodleUserEmail, isMoodle: isMoodleEmbedded(), origin: _moodleOrigin });
+    return onMoodleUser((id, origin) => setInfo({ moodleUserId: _moodleUserId, moodleUserName: _moodleUserName, moodleUserEmail: _moodleUserEmail, isMoodle: true, origin }));
   }, []);
   return info;
 }

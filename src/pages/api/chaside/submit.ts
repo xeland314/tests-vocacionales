@@ -8,7 +8,7 @@ export const POST: APIRoute = async ({ request }) => {
   try {
     await initDb();
     const body = await request.json();
-    const { nombre_estudiante, nombre_padre, correo_estudiante, correo_padre, cedula_estudiante, cedula_representante, telefono, email, moodle_user_id, fecha_unix, respuestas, version = 1, estudiante_id } = body;
+    const { nombre_estudiante, nombre_padre, correo_estudiante, correo_padre, cedula_estudiante, cedula_representante, telefono, email, moodle_user_id, moodle_user_name, moodle_user_email, moodle_course_id, moodle_extra, fecha_unix, respuestas, version = 1, estudiante_id } = body;
     if (!respuestas) return new Response(JSON.stringify({ error: "respuestas requeridas" }), { status: 400 });
     if (Object.keys(respuestas).length !== 98) return new Response(JSON.stringify({ error: "Se requieren 98 respuestas" }), { status: 400 });
 
@@ -31,14 +31,14 @@ export const POST: APIRoute = async ({ request }) => {
     }
     if (!estId) {
       estId = crypto.randomUUID();
-      await db.execute({ sql: `INSERT INTO estudiantes (id, nombre_estudiante, nombre_padre, correo_estudiante, correo_padre, cedula_estudiante, cedula_representante, telefono, email, moodle_user_id) VALUES (?,?,?,?,?,?,?,?,?,?)`, args: [estId, nombreFinal, nombre_padre ?? null, correo_estudiante ?? null, correo_padre ?? null, cedula_estudiante ?? null, cedula_representante ?? null, telefono ?? null, email ?? null, isMoodle ? Number(moodle_user_id) : null] });
+      await db.execute({ sql: `INSERT INTO estudiantes (id, nombre_estudiante, nombre_padre, correo_estudiante, correo_padre, cedula_estudiante, cedula_representante, telefono, email, moodle_user_id, moodle_user_name, moodle_user_email, moodle_course_id, moodle_extra_json) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)`, args: [estId, nombreFinal, nombre_padre ?? null, correo_estudiante ?? null, correo_padre ?? null, cedula_estudiante ?? null, cedula_representante ?? null, telefono ?? null, email ?? null, isMoodle ? Number(moodle_user_id) : null, moodle_user_name ?? null, moodle_user_email ?? null, moodle_course_id ? Number(moodle_course_id) : null, moodle_extra ? JSON.stringify(moodle_extra) : null] });
     } else {
       // upsert nombre si existe
       const exists = await db.execute({ sql: "SELECT id FROM estudiantes WHERE id=?", args: [estId] });
       if (exists.rows.length === 0) {
-        await db.execute({ sql: `INSERT INTO estudiantes (id, nombre_estudiante, nombre_padre, correo_estudiante, correo_padre, cedula_estudiante, cedula_representante, telefono, email, moodle_user_id) VALUES (?,?,?,?,?,?,?,?,?,?)`, args: [estId, nombreFinal, nombre_padre ?? null, correo_estudiante ?? null, correo_padre ?? null, cedula_estudiante ?? null, cedula_representante ?? null, telefono ?? null, email ?? null, isMoodle ? Number(moodle_user_id) : null] });
+        await db.execute({ sql: `INSERT INTO estudiantes (id, nombre_estudiante, nombre_padre, correo_estudiante, correo_padre, cedula_estudiante, cedula_representante, telefono, email, moodle_user_id, moodle_user_name, moodle_user_email, moodle_course_id, moodle_extra_json) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)`, args: [estId, nombreFinal, nombre_padre ?? null, correo_estudiante ?? null, correo_padre ?? null, cedula_estudiante ?? null, cedula_representante ?? null, telefono ?? null, email ?? null, isMoodle ? Number(moodle_user_id) : null, moodle_user_name ?? null, moodle_user_email ?? null, moodle_course_id ? Number(moodle_course_id) : null, moodle_extra ? JSON.stringify(moodle_extra) : null] });
       } else if (isMoodle) {
-        await db.execute({ sql: `UPDATE estudiantes SET moodle_user_id=? WHERE id=?`, args: [Number(moodle_user_id), estId] });
+        await db.execute({ sql: `UPDATE estudiantes SET moodle_user_id=?, moodle_user_name=?, moodle_user_email=?, moodle_course_id=?, moodle_extra_json=? WHERE id=?`, args: [Number(moodle_user_id), moodle_user_name ?? null, moodle_user_email ?? null, moodle_course_id ? Number(moodle_course_id) : null, moodle_extra ? JSON.stringify(moodle_extra) : null, estId] });
       }
     }
 

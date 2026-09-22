@@ -4,7 +4,7 @@ import { useMoodleBridge } from "./moodle";
 const STORAGE_PREFIX = "anon_contact_";
 
 export function useAnonGate(testKey: string) {
-  const { moodleUserId, isMoodle } = useMoodleBridge();
+  const { moodleUserId, moodleUserName, moodleUserEmail, isMoodle } = useMoodleBridge();
   const storageKey = `${STORAGE_PREFIX}${testKey}`;
   const [telefono, setTelefono] = useState("");
   const [email, setEmail] = useState("");
@@ -55,6 +55,8 @@ export function useAnonGate(testKey: string) {
 
   return {
     moodleUserId,
+    moodleUserName,
+    moodleUserEmail,
     isMoodle: !!moodleUserId,
     telefono,
     setTelefono,

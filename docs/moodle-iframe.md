@@ -122,13 +122,16 @@ El editor **TinyMCE borra `<script>` al guardar** por seguridad. Astro entonces 
 <?php
 require_once(__DIR__ . '/config.php');
 require_login();
-global $USER;
-$astro = "https://terrace-writer-dressed-roulette.trycloudflare.com/chaside?moodleUserId=".$USER->id;
+global $USER, $COURSE;
+$astro = "https://terrace-writer-dressed-roulette.trycloudflare.com/chaside?moodleUserId=".$USER->id
+  ."&moodleUserName=".urlencode($USER->firstname." ".$USER->lastname)
+  ."&moodleUserEmail=".urlencode($USER->email)
+  ."&courseId=".$COURSE->id;
 ?>
 <!DOCTYPE html><html><head><meta charset="UTF-8"><style>html,body{margin:0;height:100vh;overflow:hidden}</style></head>
 <body><iframe src="<?php echo $astro; ?>" width="100%" height="100%" style="border:none;" allow="fullscreen"></iframe></body></html>
 ```
-En Moodle añade actividad **URL** → `http://192.168.1.16/chaside.php` (o tu dominio) → Astro lee `?moodleUserId=` vía `src/lib/moodle.ts:32` `URLSearchParams` sin necesidad de `postMessage`.
+En Moodle añade actividad **URL** → `http://192.168.1.16/chaside.php` (o tu dominio) → Astro lee `?moodleUserId=&moodleUserName=&moodleUserEmail=` vía `src/lib/moodle.ts:32` `URLSearchParams` sin necesidad de `postMessage`.
 
 **Opción B — HTML adicional global:** deja en la Página solo el `<iframe>` y pega el `postMessage` en `Administración → Apariencia → HTML adicional → Antes de cerrar BODY`:
 
@@ -162,12 +165,32 @@ Astro guardar resultado
 - Siempre validar `e.origin === astroOrigin` en Moodle y `e.origin` contiene `moodle` en Astro (ver `src/lib/moodle.ts:10`).
 - No usar `'*'` como targetOrigin al enviar (usa `astroOrigin` / `moodleOrigin`).
 
-## 4. Datos reducidos
+## 4. Datos reducidos (gate al inicio, no al final)
 
-- **Si `moodleUserId` existe (iframe):** Astro **no pide formulario**. Guarda `estudiantes.moodle_user_id = moodleUserId` + `telefono/email` opcionales. Inicia test automáticamente.
-- **Si no hay moodle (anónimo / acceso directo):** Astro muestra **gate obligatorio** antes del test pidiendo **teléfono real + correo electrónico** (validados, ver `src/components/ChasideTest.tsx:68`). Sin esos dos no deja `Ver resultado`. Reduce el formulario viejo (padre, cédulas, etc. ahora opcionales en resultado, no en gate).
+- **Antes pedía** al final del test `nombre_padre / correo_padre / cédulas` (6 campos). **Ahora** el formulario final de `ChasideTest.tsx:276`/`KuderTest.tsx:93`/`PersonalidadTest.tsx:92` fue removido — solo muestra `Datos ya registrados al inicio` + `Guardar en BD`. No se vuelve a pedir nada al final.
+- **Si `moodleUserId` existe (iframe):** Astro **no pide formulario**. Via URL ya trae `moodleUserId + name (fullname) + email` (ver `src/lib/moodle.ts:32` `URLSearchParams` + `URL` con Parámetros). Guarda `estudiantes.moodle_user_id / moodle_user_name / moodle_user_email / moodle_course_id` + `telefono/email` quedan `NULL`. Inicia test automáticamente.
+- **Si no hay moodle (anónimo / acceso directo `index` → test):** muestra **gate obligatorio** antes del test pidiendo **solo teléfono real + correo electrónico** (+ nombre opcional, ver `src/components/ChasideTest.tsx:68` + `useAnonGate.ts:7`). Sin esos dos no deja `Ver resultado` ni `Guardar`. Padre/cédulas se eliminaron del flujo (siguen en DB como `NULL` para compat).
 
-Ver `src/lib/db.ts:46` esquema: `telefono TEXT`, `email TEXT`, `moodle_user_id INTEGER`, índices.
+Ver `src/lib/db.ts:46` esquema reducido: `telefono TEXT, email TEXT, moodle_user_id INTEGER, moodle_user_name TEXT, moodle_user_email TEXT, moodle_course_id INTEGER, moodle_extra_json TEXT` + índices.
+
+### 4.1 ¿Qué más de Moodle vale para estadísticas?
+
+Ya tienes por URL `moodleUserId + name (fullname) + email`. Para segmentar resultados CHASIDE/KUDER/MBTI en `src/lib/admin.ts` (por colegio/curso/ciudad) añade como **Parámetros URL** en la actividad `URL` (recomendado limpio):
+
+| Variable Moodle (Parámetros URL) | Campo DB `estudiantes` | Uso estadístico |
+|---|---|---|
+| `ID de usuario` → `moodleUserId` | `moodle_user_id` | PK, evita duplicados, nota |
+| `Nombre completo` → `moodleUserName` | `moodle_user_name` | Display, sin gate |
+| `Correo` → `moodleUserEmail` | `moodle_user_email` | Contacto, sin gate |
+| `ID del curso` → `courseId` | `moodle_course_id` | Agrupa por `course=2` vs otros cursos, cohorte 2026 |
+| `Nombre de usuario` → `username` | `moodle_extra_json.username` | Login, auditoría |
+| `Institución` / `Departamento` | `moodle_extra_json.institution/department` | Colegio/sede, segmenta por institución |
+| `Ciudad` / `País` | `moodle_extra_json.city/country` | Geografía, baremo regional |
+| `Cohorte` / `Grupo` | `moodle_extra_json.cohort` | Paralelo A/B, docente |
+
+**Cómo añadirlo:** en `URL` > `Parámetros` añade filas: `moodleUserName = Nombre completo del usuario`, `moodleUserEmail = Dirección de correo`, `courseId = ID del curso`, etc. Moodle los anexa `?moodleUserId=5&moodleUserName=Ana%20Perez&moodleUserEmail=...&courseId=2`. `src/lib/moodle.ts:32` ya los lee y `src/pages/api/*/submit.ts:15` los guarda. En `src/lib/admin.ts` puedes luego hacer `GROUP BY moodle_course_id / moodle_extra_json` para dashboards.
+
+**Mínimo recomendado para tu caso:** `moodleUserId + moodleUserName + moodleUserEmail + courseId`. Con eso ya tienes `quién`, `de qué curso` y `contacto` sin pedir teléfono (Moodle) vs anónimo `teléfono+correo`. Si quieres granularidad, añade `institution` (colegio) y `city`.
 
 ## 5. Notificar calificación en Moodle
 
