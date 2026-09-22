@@ -55,20 +55,51 @@ Usa URLs distintas por actividad Moodle para calificación separada.
       }
     }
 
-    // 2) Astro notifica completado -> marca actividad / nota
+    // 2) Astro notifica completado -> marca actividad / nota (COMPLETO)
     if(e.data && e.data.testCompleted){
       console.log("Test completado", e.data);
-      // Opción A: marcar completado manual (si actividad tiene rastreo)
-      // Opción B: WS grades (ver §5)
-      // Ej. disparar evento Moodle:
-      if(typeof M !== 'undefined' && M.util && M.util.js_pending) {
-        // tu lógica de completado
-      }
-      // Feedback visual
+      const test = e.data.testCompleted; // "CHASIDE" | "KUDER" | "MBTI"
+      const score = e.data.score;
+      const top = e.data.top;
+      const moodleUserId = e.data.moodleUserId;
+
+      // Feedback visual inmediato
       const msg = document.createElement('div');
-      msg.textContent = "✓ " + e.data.testCompleted + " completado (" + e.data.score + ")";
+      msg.textContent = "✓ " + test + " completado — top " + top;
       msg.style.cssText = "background:#dcfce7;border:1px solid #86efac;padding:8px;border-radius:8px;margin-top:8px;font-size:13px";
       iframe.insertAdjacentElement('afterend', msg);
+
+      // --- Calificación real vía WS (requiere ítems CHASIDE/KUDER/MBTI) ---
+      // Crea 3 ítems manuales en Calificaciones > Añadir ítem (0-10)
+      // Genera token en Administración > Servicios web > Gestionar tokens (usuario con core/grades:edit)
+      const WS_TOKEN = "PEGA_AQUI_TOKEN_MOODLE"; // <-- CAMBIA
+      const MOODLE_URL = "https://tu-moodle.com"; // sin barra final
+      // Normaliza 0-10
+      let grade10 = 5;
+      if(test === "CHASIDE") grade10 = Math.round((score[top]||0)); // 0-10
+      if(test === "KUDER") grade10 = Math.round(((score[top]||0)/60)*10); // 0-60 -> 0-10
+      if(test === "MBTI" || test === "PERSONALIDAD") grade10 = 10; // completado = 10, o calcula %
+
+      if(WS_TOKEN !== "PEGA_AQUI_TOKEN_MOODLE" && moodleUserId){
+        fetch(`${MOODLE_URL}/webservice/rest/server.php?wstoken=${WS_TOKEN}&wsfunction=core_grades_update_grades&moodlewsrestformat=json`,{
+          method:"POST",
+          headers:{"Content-Type":"application/json"},
+          body: JSON.stringify({ grades:[{ studentid: moodleUserId, grade: grade10, itemname: test==="MBTI"?"MBTI":test, courseid: (M.cfg && M.cfg.courseId)||0 }] })
+        }).then(r=>r.json()).then(j=>{
+          console.log("Nota enviada", j);
+          msg.textContent += " — nota "+grade10+"/10 guardada";
+        }).catch(err=>{ console.error(err); msg.textContent += " — error nota (WS)"; });
+      }
+
+      // --- Marcar actividad completada (si Página tiene Rastreo=Manual) ---
+      const CMID = 0; // <-- pon el ID del módulo Página (URL mod/page/view.php?id=123 -> 123), 0 desactiva
+      if(CMID && WS_TOKEN !== "PEGA_AQUI_TOKEN_MOODLE" && moodleUserId){
+        fetch(`${MOODLE_URL}/webservice/rest/server.php?wstoken=${WS_TOKEN}&wsfunction=core_completion_update_activity_completion_status_manually&moodlewsrestformat=json`,{
+          method:"POST",
+          headers:{"Content-Type":"application/x-www-form-urlencoded"},
+          body: new URLSearchParams({ cmid: CMID, completed: 1, userid: moodleUserId })
+        }).catch(()=>{});
+      }
     }
   });
 })();
@@ -103,18 +134,20 @@ Ver `src/lib/db.ts:46` esquema: `telefono TEXT`, `email TEXT`, `moodle_user_id I
 
 ## 5. Notificar calificación en Moodle
 
-Crea en Moodle **3 ítems de calificación** `CHASIDE`, `KUDER`, `MBTI` en `Calificaciones → Configuración → Añadir ítem`.
+Crea en Moodle **3 ítems de calificación** `CHASIDE`, `KUDER`, `MBTI` en `Calificaciones → Configuración → Añadir ítem` (0-10).
 
-**Opción simple (solo completado visual):** el `postMessage` de §2 ya muestra “completado”. No escribe nota.
+**Opción A — Solo visual (sin nota):** el `postMessage` de §2 ya muestra “✓ completado”. No escribe en libro. Útil si solo quieres que docente vea que terminó.
 
-**Opción nota real (WS):** en `src/pages/api/*/submit.ts` tras `db.execute`, llama Moodle WS:
+**Opción B — Nota real vía WS (recomendada):** el bloque `// 2)` de §2 ya hace `fetch core_grades_update_grades` + `core_completion_update_activity_completion_status_manually`. Requiere:
 
-```
-POST https://tu-moodle/webservice/rest/server.php?wstoken=TOKEN&wsfunction=core_grades_update_grades&moodlewsrestformat=json
-body: { grades: [{ studentid: moodleUserId, grade: scoreNormalizado, itemname: "CHASIDE" }] }
-```
+1. Moodle: `Administración → Servicios web → Habilitar`
+2. `Crear servicio externo` con funciones `core_grades_update_grades` + `core_completion_update_activity_completion_status_manually` + `core_user_get_users` (opcional), asignar a usuario con `moodle/grade:edit`, `moodle/course:markcomplete`
+3. `Gestionar tokens` → genera `WS_TOKEN` y pégalo en el script
+4. Ajusta `MOODLE_URL` y `CMID` (id de la Página, para marcar completado). Si dejas `WS_TOKEN` como placeholder no envía nota (solo visual).
 
-Requiere en Moodle: `Servicios web → Token` y `Habilitar WS`. Alternativa LTI 1.3 `mod_lti` hace lo mismo sin token si publicas Astro como Tool.
+Alternativa sin token: publica Astro como **Tool LTI 1.3** (`mod_lti`) y usa `LTI Advantage Grade Service` — no necesita WS manual.
+
+Si usas `src/pages/api/*/submit.ts` desde servidor Astro, puedes llamar el WS desde Astro en vez de desde navegador (más seguro, token no expuesto). Añade `MOODLE_WS_TOKEN` en `.env` y `fetch` server-side tras `db.execute`.
 
 ## 6. Pruebas
 
