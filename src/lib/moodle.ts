@@ -28,6 +28,21 @@ function isAllowedOrigin(origin: string): boolean {
 }
 
 if (typeof window !== "undefined") {
+  // 1) Detecta moodleUserId por URL ?moodleUserId= (para wrapper PHP sin postMessage / TinyMCE bloquea script)
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const idFromUrl = params.get("moodleUserId");
+    if (idFromUrl) {
+      const id = Number(idFromUrl);
+      if (Number.isFinite(id) && id > 0) {
+        _moodleUserId = id;
+        _moodleOrigin = window.location.origin;
+        // notifica a listeners en próximo tick
+        setTimeout(() => _listeners.forEach(fn => fn(_moodleUserId, _moodleOrigin)), 0);
+      }
+    }
+  } catch {}
+
   window.addEventListener("message", (event: MessageEvent) => {
     const data = event.data as any;
     if (!data) return;
@@ -93,6 +108,7 @@ export function useMoodleBridge() {
 }
 
 // Notifica a Moodle que el test completado (para calificación/completion)
+// Usa servidor Astro como proxy para no exponer WS_TOKEN
 export function notifyMoodleCompletion(payload: {
   test: "CHASIDE" | "KUDER" | "MBTI" | "PERSONALIDAD";
   moodleUserId: number | null;
@@ -100,12 +116,26 @@ export function notifyMoodleCompletion(payload: {
   top?: string;
 }) {
   if (typeof window === "undefined") return;
+  // 1) postMessage al parent (feedback visual)
   try {
     window.parent?.postMessage(
       { testCompleted: payload.test, moodleUserId: payload.moodleUserId, score: payload.score, top: payload.top, at: Date.now() },
       "*"
     );
   } catch {}
-  // también disparar evento local por si se quiere WS grade
   window.dispatchEvent(new CustomEvent("moodle:testCompleted", { detail: payload }));
+  // 2) llamada segura server-side (WS_TOKEN nunca sale al navegador)
+  if (!payload.moodleUserId) return;
+  // Normaliza 0-10 según test
+  let grade10 = 5;
+  const score = payload.score as any;
+  const top = payload.top as string;
+  if (payload.test === "CHASIDE") grade10 = Math.round((score?.[top] ?? 0)); // 0-10
+  else if (payload.test === "KUDER") grade10 = Math.round(((score?.[top] ?? 0) / 60) * 10); // 0-60 -> 0-10
+  else grade10 = 10; // MBTI completado
+  fetch("/api/moodle/grade", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ moodleUserId: payload.moodleUserId, score: grade10, testType: payload.test, courseId: 2 }),
+  }).catch(() => {});
 }

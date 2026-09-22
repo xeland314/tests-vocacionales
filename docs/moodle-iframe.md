@@ -108,7 +108,44 @@ Usa URLs distintas por actividad Moodle para calificación separada.
 
 4. **Filtros Moodle**: `Administración → Plugins → Filtros → Désactiva filtro que escape JS` o permite `<script>` via `HTML purificado` raw. Si no tienes permiso para `<script>` en Página, usa un `bloque HTML` con `script` o plugin `mod_page` con `Allow EMBED`.
 
-5. **CORS/iframe**: Astro ya tiene `vite.server.allowedHosts=true` (`astro.config.mjs:15`) para `*.trycloudflare.com`. Asegura que Astro **no** envíe `X-Frame-Options: DENY` (Astro no lo envía por defecto). Si usas Cloudflare Tunnel, el iframe ya es accesible. Prueba `curl -I https://tu-astro/ chaside` — no debe haber `X-Frame-Options`.
+5. **CORS/iframe**: Astro ya tiene `vite.server.allowedHosts=true` (`astro.config.mjs:15`) para `*.trycloudflare.com`. Asegura que Astro **no** envíe `X-Frame-Options: DENY` (Astro no lo envía por defecto). Si usas Cloudflare Tunnel, el iframe ya es accesible. Prueba `curl -I https://tu-astro/chaside` — no debe haber `X-Frame-Options`.
+
+### 2.1 TinyMCE elimina `<script>` — soluciones sin exponer `WS_TOKEN`
+
+El editor **TinyMCE borra `<script>` al guardar** por seguridad. Astro entonces nunca recibe `moodleUserId` y activa gate anónimo. Además por `Cross-Origin` Astro no puede leer `window.parent.M.cfg` solo.
+
+**Solución desacoplada (recomendada): mover WS_TOKEN al servidor Astro** `src/pages/api/moodle/grade.ts:1` y pasar `moodleUserId` sin JS en la Página:
+
+**Opción A — Wrapper PHP (más confiable, tu caso Debian):** crea `/var/www/html/moodle/chaside.php` (y `kuder.php`/`mbti.php` cambiando `src`):
+
+```php
+<?php
+require_once(__DIR__ . '/config.php');
+require_login();
+global $USER;
+$astro = "https://terrace-writer-dressed-roulette.trycloudflare.com/chaside?moodleUserId=".$USER->id;
+?>
+<!DOCTYPE html><html><head><meta charset="UTF-8"><style>html,body{margin:0;height:100vh;overflow:hidden}</style></head>
+<body><iframe src="<?php echo $astro; ?>" width="100%" height="100%" style="border:none;" allow="fullscreen"></iframe></body></html>
+```
+En Moodle añade actividad **URL** → `http://192.168.1.16/chaside.php` (o tu dominio) → Astro lee `?moodleUserId=` vía `src/lib/moodle.ts:32` `URLSearchParams` sin necesidad de `postMessage`.
+
+**Opción B — HTML adicional global:** deja en la Página solo el `<iframe>` y pega el `postMessage` en `Administración → Apariencia → HTML adicional → Antes de cerrar BODY`:
+
+```html
+<script>
+document.addEventListener('DOMContentLoaded',()=>{
+  const iframe=document.getElementById('astroIframe');
+  if(iframe && typeof M!=='undefined' && M.cfg){
+    const uid=M.cfg.userid||M.cfg.user;
+    iframe.onload=()=> iframe.contentWindow.postMessage({moodleUserId:uid}, 'https://terrace-writer-dressed-roulette.trycloudflare.com');
+  }
+});
+</script>
+```
+Así TinyMCE no lo borra.
+
+**Servidor seguro:** Astro ya no hace `fetch` directo a Moodle desde el navegador. `src/lib/moodle.ts:95` `notifyMoodleCompletion` hace `POST /api/moodle/grade` (proxy server-side `src/pages/api/moodle/grade.ts:13` lee `MOODLE_URL`/`MOODLE_WS_TOKEN` de `.env` sin prefijo `PUBLIC_`). Configura en `.env` `MOODLE_URL=https://auckland-off-inventory-springfield.trycloudflare.com` + `MOODLE_WS_TOKEN=b29c...` (ver `.env.example:8`). El token nunca llega al HTML de Moodle. Asegura `astro.config.mjs:11` `output: "server"` (ya lo tienes).
 
 ## 3. Flujo postMessage seguro
 
