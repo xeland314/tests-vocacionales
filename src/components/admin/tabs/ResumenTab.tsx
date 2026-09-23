@@ -1,8 +1,31 @@
-import React from 'react';
-import { Check, Minus } from "lucide-react";
+import React, { useMemo, useState } from 'react';
+import { Check, Filter, Minus, X, ArrowUpDown } from "lucide-react";
 import { PlotlyChart } from "../PlotlyChart";
 
 export function ResumenTab({ overview, students }: { overview: any; students: any[] }) {
+  const [fEst, setFEst] = useState("");
+  const [fFaltan, setFFaltan] = useState("all");
+  const [sort, setSort] = useState<"est" | "faltan">("est");
+  const [dir, setDir] = useState<"asc" | "desc">("asc");
+  const filt = useMemo(() => {
+    let out = students.filter((s: any) => {
+      const n = (s.moodle_user_name || s.nombre_estudiante || "").toLowerCase();
+      if (fEst && !n.includes(fEst.toLowerCase())) return false;
+      const faltan = String(3 - (s.completados ?? 0));
+      if (fFaltan !== "all" && faltan !== fFaltan) return false;
+      return true;
+    });
+    out = [...out].sort((a: any, b: any) => {
+      let va: any, vb: any;
+      if (sort === "est") { va = (a.moodle_user_name || "").toLowerCase(); vb = (b.moodle_user_name || "").toLowerCase(); }
+      else { va = 3 - (a.completados ?? 0); vb = 3 - (b.completados ?? 0); }
+      if (va < vb) return dir === "asc" ? -1 : 1;
+      if (va > vb) return dir === "asc" ? 1 : -1;
+      return 0;
+    });
+    return out.slice(0, 20);
+  }, [students, fEst, fFaltan, sort, dir]);
+  const hasF = fEst || fFaltan !== "all";
   if (!overview) return null;
   return (
     <div className="mt-6 space-y-4">
@@ -23,11 +46,22 @@ export function ResumenTab({ overview, students }: { overview: any; students: an
         </div>
       </div>
       <div className="bg-white border rounded-2xl p-4">
-        <h3 className="font-black text-sm">Faltantes por estudiante (20)</h3>
+        <div className="flex items-center gap-2">
+          <h3 className="font-black text-sm">Faltantes por estudiante (20)</h3>
+          <span className="text-xs text-slate-500">{filt.length} / {Math.min(students.length, 20)}</span>
+          <Filter size={14} className="text-[#001d62] ml-1" />
+          {hasF && <button onClick={() => { setFEst(""); setFFaltan("all"); }} className="ml-auto text-xs bg-slate-100 border px-2 py-1 rounded-full inline-flex items-center gap-1"><X size={12} />Limpiar</button>}
+        </div>
+        <div className="flex gap-2 mt-3">
+          <input value={fEst} onChange={e => setFEst(e.target.value)} placeholder="Filtrar estudiante..." className="border rounded-lg px-2 py-1.5 text-xs flex-1" />
+          <select value={fFaltan} onChange={e => setFFaltan(e.target.value)} className="border rounded-lg px-2 py-1.5 text-xs bg-white">
+            <option value="all">Faltan: Todos</option><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option>
+          </select>
+        </div>
         <div className="overflow-x-auto mt-3">
           <table className="w-full text-xs">
-            <thead className="bg-slate-50"><tr><th className="px-2 py-2 text-left">Estudiante</th><th className="px-2 py-2">C</th><th className="px-2 py-2">P</th><th className="px-2 py-2">K</th><th className="px-2 py-2">Faltan</th></tr></thead>
-            <tbody>{students.slice(0, 20).map((s: any) => <tr key={s.id} className="border-t"><td className="px-2 py-2 font-bold">{s.moodle_user_name || s.nombre_estudiante || "—"}</td><td className="px-2 py-2 text-center">{s.hasChaside ? <Check size={14} className="inline text-green-600" /> : <Minus size={14} className="inline text-slate-400" />}</td><td className="px-2 py-2 text-center">{s.hasPersonalidad ? <Check size={14} className="inline text-green-600" /> : <Minus size={14} className="inline text-slate-400" />}</td><td className="px-2 py-2 text-center">{s.hasKuder ? <Check size={14} className="inline text-green-600" /> : <Minus size={14} className="inline text-slate-400" />}</td><td className="px-2 py-2 text-center font-bold text-red-600">{3 - s.completados}</td></tr>)}</tbody>
+            <thead className="bg-slate-50"><tr><th className="px-2 py-2 text-left cursor-pointer select-none" onClick={() => { if (sort === "est") setDir(d => d === "asc" ? "desc" : "asc"); else { setSort("est"); setDir("asc"); } }}>Estudiante <ArrowUpDown size={12} className="inline ml-1 opacity-50" /></th><th className="px-2 py-2">C</th><th className="px-2 py-2">P</th><th className="px-2 py-2">K</th><th className="px-2 py-2 cursor-pointer select-none" onClick={() => { if (sort === "faltan") setDir(d => d === "asc" ? "desc" : "asc"); else { setSort("faltan"); setDir("asc"); } }}>Faltan <ArrowUpDown size={12} className="inline ml-1 opacity-50" /></th></tr></thead>
+            <tbody>{filt.map((s: any) => <tr key={s.id} className="border-t"><td className="px-2 py-2 font-bold">{s.moodle_user_name || s.nombre_estudiante || "—"}</td><td className="px-2 py-2 text-center">{s.hasChaside ? <Check size={14} className="inline text-green-600" /> : <Minus size={14} className="inline text-slate-400" />}</td><td className="px-2 py-2 text-center">{s.hasPersonalidad ? <Check size={14} className="inline text-green-600" /> : <Minus size={14} className="inline text-slate-400" />}</td><td className="px-2 py-2 text-center">{s.hasKuder ? <Check size={14} className="inline text-green-600" /> : <Minus size={14} className="inline text-slate-400" />}</td><td className="px-2 py-2 text-center font-bold text-red-600">{3 - s.completados}</td></tr>)}{filt.length === 0 && <tr><td colSpan={5} className="px-4 py-6 text-center text-slate-500">Sin resultados. <button onClick={() => { setFEst(""); setFFaltan("all"); }} className="underline">Limpiar filtros</button></td></tr>}</tbody>
           </table>
         </div>
       </div>
