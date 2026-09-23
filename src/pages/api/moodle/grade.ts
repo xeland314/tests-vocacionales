@@ -43,28 +43,7 @@ export const POST: APIRoute = async ({ request }) => {
       });
     }
 
-    // Moodle WS: core_grades_update_grades
-    const wsUrl = `${MOODLE_URL.replace(/\/$/, "")}/webservice/rest/server.php?wstoken=${WS_TOKEN}&wsfunction=core_grades_update_grades&moodlewsrestformat=json`;
-
-    const moodleRes = await fetch(wsUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        grades: [
-          {
-            studentid: Number(moodleUserId),
-            grade: Number(score),
-            itemname: testType === "MBTI" || testType === "PERSONALIDAD" ? "MBTI" : testType,
-            courseid: Number(courseId),
-          },
-        ],
-      }),
-    });
-
-    const moodleData = await moodleRes.json().catch(async () => ({ raw: await moodleRes.text() }));
-    const ok = moodleRes.ok && !(moodleData as any)?.exception;
-
-    // Marcar completado automáticamente — SÓLO cmid y completed (la función solo acepta 2 params, marca para el usuario del token/estudiante en contexto del cmid)
+    // Moodle WS: core_grades_update_grades — con iteminstance=cmid para que la nota quede asociada a la actividad URL y dispare el completado automático si la actividad está en "Show activity as complete when conditions are met" + "Student must receive a grade"
     let cmid = (body as any).cmid as number | undefined;
     if (!cmid) {
       try {
@@ -75,31 +54,30 @@ export const POST: APIRoute = async ({ request }) => {
         cmid = fallback[String(testType || "").toUpperCase()] as any;
       }
     }
-    let completion: any = null;
-    if (cmid) {
-      const compUrl = `${MOODLE_URL.replace(/\/$/, "")}/webservice/rest/server.php?wstoken=${WS_TOKEN}&wsfunction=core_completion_update_activity_completion_status_manually&moodlewsrestformat=json`;
-      try {
-        const compRes = await fetch(compUrl, {
-          method: "POST",
-          headers: { "Content-Type": "application/x-www-form-urlencoded" },
-          body: new URLSearchParams({ cmid: String(cmid), completed: "1" }),
-        });
-        const rawText = await compRes.text();
-        let compData: any;
-        try { compData = JSON.parse(rawText); } catch { compData = { raw: rawText, status: compRes.status }; }
-        completion = compData;
-        if ((compData as any)?.exception) {
-          console.warn(`[moodle] completion cmid=${cmid} userid=${moodleUserId} courseId=${courseId} exception:`, (compData as any).exception, (compData as any).errorcode, (compData as any).message, (compData as any).debuginfo || "", compData);
-          if ((compData as any).errorcode === 'invalidparameter') {
-            const dbg = (compData as any).debuginfo || "";
-            console.warn(`[moodle] verifica: 1) cmid ${cmid} existe y es mod/url/view.php?id=${cmid} en curso ${courseId} (actual: ${MOODLE_URL}/mod/url/view.php?id=${cmid}), 2) Actividad > Completion tracking = Students can manually mark the activity as completed (no Disabled), 3) Usuario ${moodleUserId} está matriculado como Student en curso ${courseId} (revisa Participants → Jeanine → Student, no solo Teacher), 4) Token WS tiene core_completion_update_activity_completion_status_manually y moodle/course:markcomplete, 5) Prueba con Jeanine real (no 2/Admin ni 3/fake). debuginfo:`, dbg);
-          }
-        }
-      } catch (e) {
-        console.warn(`[moodle] completion cmid=${cmid} fetch error:`, e);
-        completion = { error: String(e) };
-      }
-    }
+    const wsUrl = `${MOODLE_URL.replace(/\/$/, "")}/webservice/rest/server.php`;
+    const gradeParams = new URLSearchParams({
+      wstoken: WS_TOKEN,
+      wsfunction: "core_grades_update_grades",
+      moodlewsrestformat: "json",
+      source: "astro_test",
+      courseid: String(courseId),
+      itemtype: "mod",
+      itemmodule: "url",
+      iteminstance: String(cmid || 0),
+      itemnumber: "0",
+      "grades[0][studentid]": String(moodleUserId),
+      "grades[0][grade]": String(score),
+    });
+    const moodleRes = await fetch(wsUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: gradeParams,
+    });
+
+    const moodleData = await moodleRes.json().catch(async () => ({ raw: await moodleRes.text() }));
+    const ok = moodleRes.ok && !(moodleData as any)?.exception;
+    // Con Solución 1 (Show as complete when conditions are met + must receive a grade), Moodle marca Done automáticamente al recibir la nota — no hace falta llamar a core_completion_update_activity_completion_status_manually
+    let completion: any = { auto: "grade triggers completion if activity is set to Show as complete when conditions are met + must receive a grade", cmid };
 
     if (!ok) {
       // No propagar 502 al navegador — Moodle puede estar en trycloudflare con WS deshabilitado, pero completion ya intentado
