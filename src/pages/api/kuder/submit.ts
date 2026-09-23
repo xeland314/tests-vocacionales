@@ -8,8 +8,14 @@ export const POST: APIRoute = async ({ request }) => {
   try {
     await initDb();
     const body = await request.json();
-    const { moodle_user_id, moodle_user_name, moodle_user_email, moodle_course_id, moodle_extra, fecha_unix, respuestas, version = 1, estudiante_id } = body;
-    if (!respuestas) return new Response(JSON.stringify({ error: "respuestas requeridas" }), { status: 400 });
+    const { moodle_user_id, moodle_user_name, moodle_user_email, moodle_course_id, moodle_extra, fecha_unix, respuestas: respuestasRaw, version = 1, estudiante_id } = body;
+    if (!respuestasRaw) return new Response(JSON.stringify({ error: "respuestas requeridas" }), { status: 400 });
+    // normaliza 60→45 (migración banco Excel) — filtra solo 1..45 con a/b
+    const respuestas: Record<string, string> = {};
+    for (let i = 1; i <= 45; i++) {
+      const v = (respuestasRaw as any)[i] ?? (respuestasRaw as any)[String(i)];
+      if (v === "a" || v === "b") respuestas[String(i)] = v;
+    }
     if (Object.keys(respuestas).length !== 45) return new Response(JSON.stringify({ error: "Se requieren 45 respuestas (diadas) — banco Excel Test_Kuder_Completo.xlsx" }), { status: 400 });
 
     const isMoodle = moodle_user_id != null && Number(moodle_user_id) > 0;
