@@ -84,10 +84,16 @@ export const POST: APIRoute = async ({ request }) => {
           headers: { "Content-Type": "application/x-www-form-urlencoded" },
           body: new URLSearchParams({ cmid: String(cmid), completed: "1", userid: String(moodleUserId) }),
         });
-        const compData = await compRes.json().catch(async () => ({ raw: await compRes.text() }));
+        const rawText = await compRes.text();
+        let compData: any;
+        try { compData = JSON.parse(rawText); } catch { compData = { raw: rawText, status: compRes.status }; }
         completion = compData;
         if ((compData as any)?.exception) {
-          console.warn(`[moodle] completion cmid=${cmid} exception:`, (compData as any).exception, compData);
+          console.warn(`[moodle] completion cmid=${cmid} userid=${moodleUserId} courseId=${courseId} exception:`, (compData as any).exception, (compData as any).errorcode, (compData as any).message, compData);
+          // Si es invalid_parameter, suele ser cmid no existe en ese curso, o userid no matriculado, o Completion tracking no es "Students must manually mark"
+          if ((compData as any).errorcode === 'invalidparameter') {
+            console.warn(`[moodle] verifica: 1) cmid ${cmid} existe y es mod/url/view.php?id=${cmid} en curso ${courseId}, 2) Actividad > Completion tracking = Students must manually mark the activity as done, 3) Usuario ${moodleUserId} está matriculado como Student (no solo Teacher), 4) Token tiene moodle/course:markcomplete`);
+          }
         }
       } catch (e) {
         console.warn(`[moodle] completion cmid=${cmid} fetch error:`, e);
