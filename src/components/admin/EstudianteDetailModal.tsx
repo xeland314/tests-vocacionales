@@ -48,15 +48,31 @@ export function EstudianteDetailModal({ selected, setSelected, authHeader, load,
               <p className="text-xs text-[#0f2b6b] mt-2 leading-relaxed">Aptitudes: {(AREAS as any)[selected.chaside.topAptitud]?.aptitudesTraits}.</p>
               <p className="text-xs mt-2"><b>Carreras:</b> {(AREAS as any)[selected.chaside.topAptitud]?.carreras}</p>
             </div>
-            <div className="mt-3 overflow-x-auto border border-[#001d62]/20 rounded-xl">
-              <table className="w-full text-xs text-center border-collapse">
-                <thead><tr className="bg-[#001d62] text-white">{AREA_ORDER.map((k: any) => <th key={k} className="px-2 py-1.5 font-black">{k}</th>)}</tr></thead>
-                <tbody>
-                  <tr className="bg-white">{AREA_ORDER.map((k: any) => <td key={k} className="px-2 py-1.5 border border-[#001d62]/10 font-bold">{selected.chaside.intereses[k]}</td>)}</tr>
-                  <tr className="bg-[#fcfcfc]">{AREA_ORDER.map((k: any) => <td key={k} className="px-2 py-1.5 border border-[#001d62]/10">{selected.chaside.aptitudes[k]}</td>)}</tr>
-                </tbody>
-              </table>
-              <p className="text-[10px] text-slate-500 px-2 py-1">Fila 1: Intereses 0–10 · Fila 2: Aptitudes 0–4 · Rosado=destacado estudiante</p>
+            <div className="mt-3 space-y-3">
+              <div>
+                <p className="text-xs font-black uppercase tracking-wider text-[#001d62]">Test CHASIDE Intereses — como ve el estudiante</p>
+                <div className="overflow-x-auto mt-1 border border-[#001d62]/20 rounded-xl">
+                  <table className="w-full text-xs text-center border-collapse">
+                    <thead><tr className="bg-[#001d62] text-white">{AREA_ORDER.map((k: any) => <th key={k} className="px-2 py-1.5 font-black">{k}</th>)}</tr></thead>
+                    <tbody>
+                      {INTERESES_GRID.map((row: any, i: number) => <tr key={i} className={i % 2 === 0 ? "bg-white" : "bg-[#fcfcfc]"}>{row.map((n: number, j: number) => <td key={j} className="px-2 py-1.5 border border-[#001d62]/10 text-[#001d62]">{n}</td>)}</tr>)}
+                      <tr className="bg-[#d8215d] text-white font-black">{AREA_ORDER.map((k: any) => <td key={k} className="px-2 py-1.5 border border-[#001d62]/10">{selected.chaside.intereses[k]}</td>)}</tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div>
+                <p className="text-xs font-black uppercase tracking-wider text-[#001d62]">Test CHASIDE Aptitudes — como ve el estudiante</p>
+                <div className="overflow-x-auto mt-1 border border-[#001d62]/20 rounded-xl">
+                  <table className="w-full text-xs text-center border-collapse">
+                    <thead><tr className="bg-[#001d62] text-white">{AREA_ORDER.map((k: any) => <th key={k} className="px-2 py-1.5 font-black">{k}</th>)}</tr></thead>
+                    <tbody>
+                      {APTITUDES_GRID.map((row: any, i: number) => <tr key={i} className={i % 2 === 0 ? "bg-white" : "bg-[#fcfcfc]"}>{row.map((n: number) => <td key={n} className="px-2 py-1.5 border border-[#001d62]/10 text-[#001d62]">{n}</td>)}</tr>)}
+                      <tr className="bg-[#d8215d] text-white font-black">{AREA_ORDER.map((k: any) => <td key={k} className="px-2 py-1.5 border border-[#001d62]/10">{selected.chaside.aptitudes[k]}</td>)}</tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </div>
             <p className="text-xs text-slate-500 mt-2">{new Date(selected.chaside.fecha_unix * 1000).toLocaleString()} · Top {selected.chaside.topInteres} · 2do {selected.chaside.segundoInteres || "—"} · Apt {selected.chaside.topAptitud}</p>
           </> : <p className="text-xs text-slate-600 mt-2">Pendiente de rendir (98 SÍ/NO).</p>}
