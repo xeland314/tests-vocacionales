@@ -1,14 +1,30 @@
 import { db, initDb } from "./db";
 import { calculateScores } from "../data/scoring";
 
+async function withInitRetry<T>(fn: () => Promise<T>): Promise<T> {
+  try {
+    return await fn();
+  } catch (e: any) {
+    const msg = String(e?.message || "");
+    if (msg.includes("no such table") || msg.includes("SQLITE_ERROR")) {
+      await initDb();
+      return await fn();
+    }
+    throw e;
+  }
+}
+
 export async function getEstudiantes(limit = 200) {
   await initDb();
-  const r = await db.execute({ sql: "SELECT id, moodle_user_id, moodle_user_name, moodle_user_email, moodle_course_id, moodle_extra_json, created_at, moodle_user_name as nombre_estudiante, moodle_user_email as correo_estudiante, NULL as nombre_padre, NULL as correo_padre, NULL as cedula_estudiante, NULL as cedula_representante FROM estudiantes ORDER BY created_at DESC LIMIT ?", args: [limit] });
-  return r.rows as any[];
+  return withInitRetry(async () => {
+    const r = await db.execute({ sql: "SELECT id, moodle_user_id, moodle_user_name, moodle_user_email, moodle_course_id, moodle_extra_json, created_at, moodle_user_name as nombre_estudiante, moodle_user_email as correo_estudiante, NULL as nombre_padre, NULL as correo_padre, NULL as cedula_estudiante, NULL as cedula_representante FROM estudiantes ORDER BY created_at DESC LIMIT ?", args: [limit] });
+    return r.rows as any[];
+  });
 }
 
 export async function getOverview() {
   await initDb();
+  return withInitRetry(async () => {
   const totalEst = await db.execute("SELECT COUNT(*) as c FROM estudiantes");
   const totalCh = await db.execute("SELECT COUNT(*) as c FROM chaside_resultados");
   const totalPers = await db.execute("SELECT COUNT(*) as c FROM personalidad_resultados");
@@ -51,10 +67,12 @@ export async function getOverview() {
     persIds: persIds.size,
     kuderIds: kuderIds.size,
   };
+  });
 }
 
 export async function getChasideStats() {
   await initDb();
+  return withInitRetry(async () => {
   const total = await db.execute("SELECT COUNT(*) as c FROM chaside_resultados");
   const rows = await db.execute("SELECT intereses_json, aptitudes_json, top_interes, top_aptitud FROM chaside_resultados");
   const areaCounts: Record<string, number> = { C:0,H:0,A:0,S:0,I:0,D:0,E:0 };
@@ -71,10 +89,12 @@ export async function getChasideStats() {
   }
   for(const k of Object.keys(avgInt)) { avgInt[k] = n ? Math.round((avgInt[k]/n)*10)/10 : 0; avgApt[k] = n ? Math.round((avgApt[k]/n)*10)/10 : 0; }
   return { total: Number((total.rows[0] as any).c), topIntereses: areaCounts, topAptitudes: aptCounts, promediosIntereses: avgInt, promediosAptitudes: avgApt };
+  });
 }
 
 export async function getPersonalidadStats(){
   await initDb();
+  return withInitRetry(async () => {
   const total = await db.execute("SELECT COUNT(*) as c FROM personalidad_resultados");
   const rows = await db.execute("SELECT tipo, dimensiones_json, percentages_json FROM personalidad_resultados");
   const byType: Record<string, number> = {};
@@ -91,10 +111,12 @@ export async function getPersonalidadStats(){
   }
   for(const k of Object.keys(dimAvg)) dimAvg[k]= n ? Math.round(dimAvg[k]/n) : 50;
   return { total: Number((total.rows[0] as any).c), byType, byRole, dimAvg };
+  });
 }
 
 export async function getKuderStats(){
   await initDb();
+  return withInitRetry(async () => {
   const total = await db.execute("SELECT COUNT(*) as c FROM kuder_resultados");
   const rows = await db.execute("SELECT top, scores_json FROM kuder_resultados");
   const byTop: Record<string, number> = { EXT:0,MEC:0,CAL:0,CIE:0,PER:0,ART:0,LIT:0,MUS:0,SOC:0,OFI:0 };
@@ -107,10 +129,12 @@ export async function getKuderStats(){
   }
   for(const k of Object.keys(avgScores)) avgScores[k]= n ? Math.round((avgScores[k]/n)*10)/10 : 0;
   return { total: Number((total.rows[0] as any).c), byTop, avgScores };
+  });
 }
 
 export async function getEstudiantesWithStatus(limit=200){
   await initDb();
+  return withInitRetry(async () => {
   const students = await getEstudiantes(limit);
   const ch = new Map<string, any>((await db.execute("SELECT estudiante_id, fecha_unix, top_interes, segundo_interes FROM chaside_resultados")).rows.map((r:any)=>[r.estudiante_id, r]));
   const pers = new Map<string, any>((await db.execute("SELECT estudiante_id, fecha_unix, tipo FROM personalidad_resultados")).rows.map((r:any)=>[r.estudiante_id, r]));
@@ -125,10 +149,12 @@ export async function getEstudiantesWithStatus(limit=200){
     kuder: kuder.get(s.id) || null,
     completados: (ch.has(s.id)?1:0)+(pers.has(s.id)?1:0)+(kuder.has(s.id)?1:0),
   }));
+  });
 }
 
 export async function getStudentDetail(id:string){
   await initDb();
+  return withInitRetry(async () => {
   const s = await db.execute({ sql:"SELECT * FROM estudiantes WHERE id=?", args:[id] });
   if(s.rows.length===0) return null;
   const est = s.rows[0] as any;
@@ -151,6 +177,7 @@ export async function getStudentDetail(id:string){
     kudData = { top: r.top, ranking: JSON.parse(r.ranking_json), scores: JSON.parse(r.scores_json), respuestas: JSON.parse(r.respuestas_json), verificacion: r.verificacion, fecha_unix: r.fecha_unix };
   }
   return { estudiante: est, chaside: chScores, personalidad: persData, kuder: kudData };
+  });
 }
 
 // legacy for old API

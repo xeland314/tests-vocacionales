@@ -8,13 +8,21 @@ const url = process.env.TURSO_DATABASE_URL || `file:${process.cwd().replace(/\\/
 export const db = createClient({ url, authToken: process.env.TURSO_AUTH_TOKEN });
 
 async function hasColumn(table: string, column: string): Promise<boolean> {
-  const r = await db.execute({ sql: `SELECT sql FROM sqlite_master WHERE type='table' AND name=?`, args: [table] });
-  if (r.rows.length === 0) return false;
-  const sql = (r.rows[0] as any).sql as string;
-  return sql.includes(column);
+  try {
+    const r = await db.execute({ sql: `SELECT sql FROM sqlite_master WHERE type='table' AND name=?`, args: [table] });
+    if (r.rows.length === 0) return false;
+    const sql = (r.rows[0] as any).sql as string;
+    return sql.includes(column);
+  } catch {
+    return false;
+  }
 }
 
+let _initLock: Promise<void> | null = null;
 export async function initDb() {
+  if (_initLock) return _initLock;
+  _initLock = (async () => {
+  try {
   await db.execute("PRAGMA journal_mode=WAL");
   await db.execute("PRAGMA foreign_keys=ON");
 
@@ -206,4 +214,11 @@ export async function initDb() {
   `);
   await db.execute(`CREATE INDEX IF NOT EXISTS idx_knox_user ON knox_authtoken(user_id)`);
   await db.execute(`CREATE INDEX IF NOT EXISTS idx_knox_expiry ON knox_authtoken(expiry)`);
+  } catch (e) {
+    _initLock = null;
+    throw e;
+  }
+  })();
+  _initLock.catch(() => { _initLock = null; });
+  return _initLock;
 }
