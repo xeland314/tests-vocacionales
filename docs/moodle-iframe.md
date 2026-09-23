@@ -148,7 +148,7 @@ document.addEventListener('DOMContentLoaded',()=>{
 ```
 Así TinyMCE no lo borra.
 
-**Servidor seguro:** Astro ya no hace `fetch` directo a Moodle desde el navegador. `src/lib/moodle.ts:95` `notifyMoodleCompletion` hace `POST /api/moodle/grade` (proxy server-side `src/pages/api/moodle/grade.ts:13` lee `MOODLE_URL`/`MOODLE_WS_TOKEN` de `.env` sin prefijo `PUBLIC_`). Configura en `.env` `MOODLE_URL=https://auckland-off-inventory-springfield.trycloudflare.com` + `MOODLE_WS_TOKEN=b29c...` (ver `.env.example:8`). El token nunca llega al HTML de Moodle. Asegura `astro.config.mjs:11` `output: "server"` (ya lo tienes).
+**Servidor seguro:** Astro ya no hace `fetch` directo a Moodle desde el navegador. `src/lib/moodle.ts:95` `notifyMoodleCompletion` hace `POST /api/moodle/grade` (proxy server-side `src/pages/api/moodle/grade.ts:13` lee `MOODLE_URL`/`MOODLE_WS_TOKEN` de `.env` sin prefijo `PUBLIC_`). Configura en `.env` `MOODLE_URL=https://symbols-companion-duplicate-audit.trycloudflare.com` + `MOODLE_WS_TOKEN=b29c...` (ver `.env.example:8`). El token nunca llega al HTML de Moodle. Asegura `astro.config.mjs:11` `output: "server"` (ya lo tienes).
 
 ## 3. Flujo postMessage seguro
 

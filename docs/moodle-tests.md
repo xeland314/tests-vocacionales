@@ -1,7 +1,7 @@
 # Moodle — 3 Tests Limpios (sin tocar servidor)
 
 > **Método recomendado para migrar sin cambios manuales:** `Actividad URL` con `Parámetros` (no `Página` con `<script>` — TinyMCE lo borra).  
-> Moodle: `https://auckland-off-inventory-springfield.trycloudflare.com` (course=2)  
+> Moodle: `https://symbols-companion-duplicate-audit.trycloudflare.com` (course=2)  
 > Astro: `https://terrace-writer-dressed-roulette.trycloudflare.com`  
 > WS Token solo en servidor Astro: `MOODLE_WS_TOKEN=b29c308be39b358504766e482dd740f5` en `.env` (`src/pages/api/moodle/grade.ts:13` proxy, nunca en HTML)  
 > Alias MBTI: `src/pages/mbti.astro:1` → `/mbti` (misma que `/personalidad`)  
