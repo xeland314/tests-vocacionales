@@ -1,6 +1,5 @@
-export * from "./pdf/chaside";
-export * from "./pdf/mbti";
-export * from "./pdf/kuder";
+// Re-export dinámico para no incluir satori/pdf-lib en el chunk inicial de hidratación (evita process is not defined en ChasideTest)
+// Usar import() en handlePrint: const { generateChasideStudentPdf } = await import("./pdf/chaside");
 
 /**
  * Genera PDF nítido usando html2pdf.js (html2canvas + jsPDF) — fallback legacy

@@ -3,7 +3,6 @@ import { calculateKuder, type KuderAnswers } from "../../data/kuderScoring";
 import { useAnonGate } from "../../lib/anonGate";
 import { notifyMoodleCompletion } from "../../lib/moodle";
 import { KUDER_ORDER } from "../../data/kuder";
-import { generateKuderStudentPdf } from "../../lib/pdf";
 
 const STORAGE = "kuder_answers_v1";
 const STORAGE_NAME = "kuder_student_name";
@@ -95,6 +94,7 @@ export function useKuder() {
     try {
       const date = savedAt || fmt(new Date());
       const name = (moodleUserName?.trim() || "resultado").trim();
+      const { generateKuderStudentPdf } = await import("../../lib/pdf/kuder");
       await generateKuderStudentPdf(result as any, name, date);
     } catch {
       window.print();

@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 import { calculatePersonality, type AnswersPers } from "../../data/personalidadScoring";
 import { useAnonGate } from "../../lib/anonGate";
 import { notifyMoodleCompletion } from "../../lib/moodle";
-import { generateMbtiStudentPdf } from "../../lib/pdf";
 
 const STORAGE = "pers_answers_v1";
 const STORAGE_NAME = "pers_student_name";
@@ -92,6 +91,7 @@ export function usePersonalidad() {
     try {
       const date = savedAt || fmt(new Date());
       const name = (moodleUserName?.trim() || "resultado").trim();
+      const { generateMbtiStudentPdf } = await import("../../lib/pdf/mbti");
       await generateMbtiStudentPdf(result as any, name, date);
     } catch { window.print(); }
   };
