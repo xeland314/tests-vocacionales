@@ -5,6 +5,7 @@ import { PersonalidadTab } from "./admin/tabs/PersonalidadTab";
 import { KuderTab } from "./admin/tabs/KuderTab";
 import { EstudiantesTab } from "./admin/tabs/EstudiantesTab";
 import { UsuariosTab } from "./admin/tabs/UsuariosTab";
+import { MoodleTab } from "./admin/tabs/MoodleTab";
 import { CuentaTab } from "./admin/tabs/CuentaTab";
 import { EstudianteDetailModal } from "./admin/EstudianteDetailModal";
 
@@ -46,7 +47,7 @@ export default function AdminGeneral() {
           ["personalidad", "Personalidad"],
           ["kuder", "Kuder"],
           ["estudiantes", "Estudiantes"],
-          ...(isAdmin ? [["usuarios", "Usuarios"] as const] : []),
+          ...(isAdmin ? [["usuarios", "Usuarios"] as const, ["moodle", "Moodle"] as const] : []),
           ["cuenta", "Mi cuenta"],
         ] as const).map(([k, label]) => (
           <button key={k} onClick={() => setTab(k as any)} className={`px-5 py-2.5 rounded-full font-black text-sm whitespace-nowrap border-2 ${tab === k ? "bg-[#001d62] text-white border-[#001d62]" : "bg-white border-slate-200 hover:border-slate-300"}`}>{label}</button>
@@ -60,6 +61,7 @@ export default function AdminGeneral() {
       {tab === "kuder" && <KuderTab kuder={kuder} />}
       {tab === "estudiantes" && <EstudiantesTab students={students} openDetail={openDetail} />}
       {tab === "usuarios" && <UsuariosTab users={users} newUser={newUser} setNewUser={setNewUser} authHeader={authHeader} load={load} isAdmin={isAdmin} />}
+      {tab === "moodle" && <MoodleTab authHeader={authHeader} isAdmin={isAdmin} />}
       {tab === "cuenta" && <CuentaTab currentUser={currentUser} isAdmin={isAdmin} editEmail={editEmail} setEditEmail={setEditEmail} editFirst={editFirst} setEditFirst={setEditFirst} editLast={editLast} setEditLast={setEditLast} editSaving={editSaving} setEditSaving={setEditSaving} editMsg={editMsg} setEditMsg={setEditMsg} pwOld={pwOld} setPwOld={setPwOld} pwNew={pwNew} setPwNew={setPwNew} authHeader={authHeader} load={load} setCurrentUser={setCurrentUser} />}
 
       <EstudianteDetailModal selected={selected} setSelected={setSelected} authHeader={authHeader} load={load} isAdmin={isAdmin} />

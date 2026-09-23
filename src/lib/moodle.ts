@@ -128,8 +128,8 @@ export function useMoodleBridge() {
   return info;
 }
 
-// Mapeo cmid por test (configurado en Moodle mod/url/view.php?id=...)
-const CMID_MAP: Record<string, number> = {
+// Mapeo cmid por test — fallback si no hay config en BD (admin puede cambiar en /admin)
+const FALLBACK_CMID_MAP: Record<string, number> = {
   CHASIDE: 9,
   KUDER: 11,
   MBTI: 10,
@@ -162,7 +162,8 @@ export function notifyMoodleCompletion(payload: {
   if (payload.test === "CHASIDE") grade10 = Math.round((score?.[top] ?? 0)); // 0-10
   else if (payload.test === "KUDER") grade10 = Math.round(((score?.[top] ?? 0) / 60) * 10); // 0-60 -> 0-10
   else grade10 = 10; // MBTI completado
-  const cmid = CMID_MAP[payload.test] ?? CMID_MAP[payload.test.toUpperCase()] ?? null;
+  // cmid lo resuelve el servidor desde moodle_config (admin), enviamos solo testType para que el backend lo mapee
+  const cmid = FALLBACK_CMID_MAP[payload.test] ?? FALLBACK_CMID_MAP[payload.test.toUpperCase()] ?? null;
   fetch("/api/moodle/grade", {
     method: "POST",
     headers: { "Content-Type": "application/json" },

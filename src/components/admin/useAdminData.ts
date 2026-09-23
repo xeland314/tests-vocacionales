@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-export type Tab = "resumen" | "chaside" | "personalidad" | "kuder" | "estudiantes" | "usuarios" | "cuenta";
+export type Tab = "resumen" | "chaside" | "personalidad" | "kuder" | "estudiantes" | "usuarios" | "moodle" | "cuenta";
 
 export function useAdminData() {
   const [tab, setTab] = useState<Tab>("resumen");

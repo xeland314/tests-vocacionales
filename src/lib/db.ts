@@ -214,6 +214,20 @@ export async function initDb() {
   `);
   await db.execute(`CREATE INDEX IF NOT EXISTS idx_knox_user ON knox_authtoken(user_id)`);
   await db.execute(`CREATE INDEX IF NOT EXISTS idx_knox_expiry ON knox_authtoken(expiry)`);
+
+  // Moodle config — IDs de módulos para marcado automático de completado
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS moodle_config (
+      id INTEGER PRIMARY KEY CHECK (id = 1),
+      chaside_cmid INTEGER,
+      mbti_cmid INTEGER,
+      kuder_cmid INTEGER,
+      course_id INTEGER,
+      updated_at INTEGER DEFAULT (unixepoch())
+    )
+  `);
+  // Seed con valores actuales (9/10/11) si no existe
+  await db.execute(`INSERT OR IGNORE INTO moodle_config (id, chaside_cmid, mbti_cmid, kuder_cmid, course_id) VALUES (1, 9, 10, 11, 2)`);
   } catch (e) {
     _initLock = null;
     throw e;

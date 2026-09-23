@@ -1,4 +1,5 @@
 import type { APIRoute } from "astro";
+import { getMoodleConfig, getCmidForTest } from "../../../lib/moodleConfig";
 
 export const prerender = false;
 
@@ -10,12 +11,20 @@ export const prerender = false;
 export const POST: APIRoute = async ({ request }) => {
   try {
     const body = await request.json().catch(() => ({}));
-    const { moodleUserId, score, testType, courseId = 2 } = body as {
+    const { moodleUserId, score, testType } = body as {
       moodleUserId?: number;
       score?: number;
       testType?: string;
       courseId?: number;
     };
+    let { courseId } = body as { courseId?: number };
+    // Si no se envía courseId, usa el configurado en BD
+    if (!courseId) {
+      try {
+        const cfg = await getMoodleConfig();
+        courseId = cfg.course_id ?? 2;
+      } catch { courseId = 2; }
+    }
 
     if (!moodleUserId || score === undefined || !testType) {
       return new Response(JSON.stringify({ error: "Faltan parámetros: moodleUserId, score, testType" }), {
@@ -55,12 +64,16 @@ export const POST: APIRoute = async ({ request }) => {
     const moodleData = await moodleRes.json().catch(async () => ({ raw: await moodleRes.text() }));
     const ok = moodleRes.ok && !(moodleData as any)?.exception;
 
-    // Marcar completado automáticamente (cmid mapeado por testType si no se envía) — independiente de nota
-    const CMID_MAP: Record<string, number> = { CHASIDE: 9, KUDER: 11, MBTI: 10, PERSONALIDAD: 10 };
+    // Marcar completado automáticamente — usa config BD (admin) si no se envía cmid
     let cmid = (body as any).cmid as number | undefined;
     if (!cmid) {
-      const key = String(testType || "").toUpperCase();
-      cmid = CMID_MAP[key] ?? (null as any);
+      try {
+        const cfg = await getMoodleConfig();
+        cmid = getCmidForTest(String(testType || ""), cfg) ?? undefined;
+      } catch {
+        const fallback: Record<string, number> = { CHASIDE: 9, KUDER: 11, MBTI: 10, PERSONALIDAD: 10 };
+        cmid = fallback[String(testType || "").toUpperCase()] as any;
+      }
     }
     let completion: any = null;
     if (cmid) {
