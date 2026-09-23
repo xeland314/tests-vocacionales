@@ -1,3 +1,4 @@
+import React from 'react';
 import { UserPlus, Users } from "lucide-react";
 
 export function UsuariosTab({ users, newUser, setNewUser, authHeader, load, isAdmin }: any) {

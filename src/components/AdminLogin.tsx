@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import React, { useState, type FormEvent } from "react";
 
 export default function AdminLogin({ onLogin }: { onLogin?: () => void }){
   const [email,setEmail]=useState("");

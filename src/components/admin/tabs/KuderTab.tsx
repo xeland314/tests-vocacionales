@@ -1,3 +1,4 @@
+import React from 'react';
 import { BookOpen } from "lucide-react";
 import { KUDER_AREAS, KUDER_ORDER } from "../../../data/kuder";
 import { LucideIcon } from "../../../lib/icons";

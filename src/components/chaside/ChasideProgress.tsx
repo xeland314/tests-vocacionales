@@ -1,3 +1,4 @@
+import React from 'react';
 type Props = { total: number; progress: number; siCount: number; onSubmit: () => void; error: string | null };
 
 export function ChasideProgress({ total, progress, siCount, onSubmit, error }: Props) {

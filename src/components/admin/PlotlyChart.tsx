@@ -1,3 +1,4 @@
+import React from 'react';
 import { useEffect, useRef } from "react";
 
 export function PlotlyChart({ data, layout, style }: { data: any; layout: any; style?: any }) {

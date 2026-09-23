@@ -1,3 +1,4 @@
+import React from 'react';
 import { Rocket } from "lucide-react";
 import { QUESTIONS } from "../../data/chaside";
 import type { Answers } from "../../data/scoring";

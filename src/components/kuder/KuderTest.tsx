@@ -1,3 +1,4 @@
+import React from 'react';
 import { useKuder } from "./useKuder";
 import { KUDER_DIADAS, KUDER_AREAS } from "../../data/kuder";
 import { LucideIcon } from "../../lib/icons";

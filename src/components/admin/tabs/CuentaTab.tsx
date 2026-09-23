@@ -1,3 +1,4 @@
+import React from 'react';
 export function CuentaTab({ currentUser, isAdmin, editEmail, setEditEmail, editFirst, setEditFirst, editLast, setEditLast, editSaving, setEditSaving, editMsg, setEditMsg, pwOld, setPwOld, pwNew, setPwNew, authHeader, load, setCurrentUser }: any) {
   return (
     <div className="mt-6 grid md:grid-cols-2 gap-4">

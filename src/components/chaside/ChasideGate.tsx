@@ -1,3 +1,4 @@
+import React from 'react';
 export function ChasideGate({ gateChecked, isMoodle, moodleUserId }: { gateChecked: boolean; isMoodle: boolean; moodleUserId: number | null }) {
   if (!gateChecked) {
     return <div className="min-h-screen bg-[#ffffff] flex items-center justify-center p-8"><p className="text-sm text-[#0f2b6b]">Detectando entorno...</p></div>;

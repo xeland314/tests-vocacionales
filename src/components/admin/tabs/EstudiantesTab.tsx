@@ -1,3 +1,4 @@
+import React from 'react';
 import { Check, Minus } from "lucide-react";
 
 export function EstudiantesTab({ students, openDetail }: { students: any[]; openDetail: (id: string) => void }) {

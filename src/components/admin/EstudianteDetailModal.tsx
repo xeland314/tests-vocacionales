@@ -1,3 +1,4 @@
+import React from 'react';
 import { BookOpen, Check, Minus, X } from "lucide-react";
 import { AREAS, AREA_ORDER, INTERESES_GRID, APTITUDES_GRID } from "../../data/chaside";
 import { TYPES } from "../../data/personalidad";

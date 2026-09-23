@@ -1,3 +1,4 @@
+import React from "react";
 import { useAdminData } from "./admin/useAdminData";
 import { ResumenTab } from "./admin/tabs/ResumenTab";
 import { ChasideTab } from "./admin/tabs/ChasideTab";

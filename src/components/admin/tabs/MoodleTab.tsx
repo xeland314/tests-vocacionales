@@ -1,3 +1,4 @@
+import React from 'react';
 import { useEffect, useState } from "react";
 
 export function MoodleTab({ authHeader, isAdmin }: { authHeader: string; isAdmin: boolean }) {

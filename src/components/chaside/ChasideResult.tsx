@@ -1,3 +1,4 @@
+import React from 'react';
 import type { Dispatch, SetStateAction } from "react";
 import { AREAS, AREA_ORDER, INTERESES_GRID, APTITUDES_GRID } from "../../data/chaside";
 import type { calculateScores } from "../../data/scoring";

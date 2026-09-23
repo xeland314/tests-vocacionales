@@ -1,3 +1,4 @@
+import React from 'react';
 import { useChaside } from "./useChaside";
 import { ChasideGate } from "./ChasideGate";
 import { ChasideHero } from "./ChasideHero";

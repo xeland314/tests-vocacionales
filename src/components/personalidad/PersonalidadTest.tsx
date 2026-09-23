@@ -1,3 +1,4 @@
+import React from 'react';
 import { usePersonalidad } from "./usePersonalidad";
 import { TYPES } from "../../data/personalidad";
 import { PERSONALITY_QUESTIONS } from "../../data/personalidad";

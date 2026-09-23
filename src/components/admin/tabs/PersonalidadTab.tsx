@@ -1,3 +1,4 @@
+import React from 'react';
 import { BookOpen } from "lucide-react";
 import { PlotlyChart } from "../PlotlyChart";
 
