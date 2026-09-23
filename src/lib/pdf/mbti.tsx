@@ -13,14 +13,14 @@ function MbtiDoc({ result, studentName, date, logo, isTeacher }: { result: Resul
     <div style={{ width: '794px', minHeight: '1123px', backgroundColor: '#ffffff', fontFamily: 'Inter, sans-serif', padding: 24, display: 'flex', flexDirection: 'column' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #e2e8f0', paddingBottom: 12 }}>
         <img src={logo} width={120} height={32} style={{ objectFit: 'contain' }} />
-        <div style={{ textAlign: 'right', fontSize: 10, color: '#0f2b6b' }}>
+        <div style={{ textAlign: 'right', fontSize: 10, color: '#0f2b6b', display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
           <div style={{ fontWeight: 700 }}>TEAM GGM</div>
           <div>Test de Personalidad · 16 tipos</div>
           <div>{date}</div>
         </div>
       </div>
 
-      <div style={{ marginTop: 16, textAlign: 'center', backgroundColor: '#fcfcfc', border: '1px solid #e2e8f0', borderRadius: 12, padding: 16 }}>
+      <div style={{ marginTop: 16, textAlign: 'center', backgroundColor: '#fcfcfc', border: '1px solid #e2e8f0', borderRadius: 12, padding: 16, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: 1, color: '#64748b' }}>{info.role.toUpperCase()}</div>
         <div style={{ fontSize: 28, fontWeight: 800, color: info.color, marginTop: 4 }}>{result.type} — {info.name}</div>
         <div style={{ fontSize: 10, color: '#0f2b6b', marginTop: 4 }}>{info.tagline}</div>
@@ -39,7 +39,7 @@ function MbtiDoc({ result, studentName, date, logo, isTeacher }: { result: Resul
           const left = d === "EI" ? "I Introvertido" : d === "SN" ? "N Intuitivo" : d === "TF" ? "F Sentimiento" : "P Prospección";
           const right = d === "EI" ? "E Extravertido" : d === "SN" ? "S Observador" : d === "TF" ? "T Pensamiento" : "J Juzgador";
           return (
-            <div key={d} style={{ backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 8, padding: 8 }}>
+              <div key={d} style={{ backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 8, padding: 8, display: 'flex', flexDirection: 'column' }}>
               <div style={{ fontSize: 8, fontWeight: 800, display: 'flex', justifyContent: 'space-between' }}>
                 <span>{label}: {sc.letter} {sc.percent}%</span>
                 <span>{sc.raw > 0 ? `+${sc.raw}` : sc.raw}/45</span>
@@ -57,7 +57,7 @@ function MbtiDoc({ result, studentName, date, logo, isTeacher }: { result: Resul
       </div>
 
       {isTeacher && (
-        <div style={{ marginTop: 12, backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: 8, padding: 8 }}>
+        <div style={{ marginTop: 12, backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: 8, padding: 8, display: 'flex', flexDirection: 'column' }}>
           <div style={{ fontSize: 8, fontWeight: 800, color: '#001d62' }}>Leyenda MBTI — docente</div>
           <div style={{ fontSize: 7, color: '#475569', marginTop: 4 }}>
             E Extravertido (energía con gente) vs I Introvertido (a solas) · S Observador vs N Intuitivo · T Pensamiento vs F Sentimiento · J Juzgador vs P Prospección · 50% neutral, &gt;60% ligera, &gt;75% marcada
@@ -66,7 +66,7 @@ function MbtiDoc({ result, studentName, date, logo, isTeacher }: { result: Resul
       )}
 
       <div style={{ marginTop: 'auto', paddingTop: 12, borderTop: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', fontSize: 8, color: '#64748b' }}>
-        <div>Estudiante: <span style={{ fontWeight: 700, color: '#001d62' }}>{studentName}</span> · {date}</div>
+        <div style={{ display: 'flex', flexDirection: 'row' }}><span>Estudiante: </span><span style={{ fontWeight: 700, color: '#001d62', marginLeft: 2, marginRight: 2 }}>{studentName}</span><span> · {date}</span></div>
         <div>TEAM GGM</div>
       </div>
     </div>
@@ -74,11 +74,19 @@ function MbtiDoc({ result, studentName, date, logo, isTeacher }: { result: Resul
 }
 
 async function renderPdf(element: React.ReactElement, filename: string) {
+  try {
   const fonts = await getSatoriFonts();
   if (!fonts.length) throw new Error("Satori fonts not loaded — fallback to html2pdf");
   const logo = await getLogoDataUrl();
   const withLogo = React.cloneElement(element as any, { logo });
-  const svg = await satori(withLogo as any, { width: 794, height: 1123, fonts });
+  let svg: string;
+  try {
+    svg = await satori(withLogo as any, { width: 794, height: 1123, fonts });
+  } catch (e) {
+    console.warn("satori failed, fallback to print", e);
+    window.print();
+    return;
+  }
   const pdf = await PDFDocument.create();
   const page = pdf.addPage([794, 1123]);
   const svgBlob = new Blob([svg], { type: 'image/svg+xml' });
@@ -98,6 +106,10 @@ async function renderPdf(element: React.ReactElement, filename: string) {
   const blob = new Blob([bytes as any], { type: 'application/pdf' });
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = filename; a.click();
   URL.revokeObjectURL(url);
+  } catch (err) {
+    console.warn("renderPdf failed, fallback print", err);
+    window.print();
+  }
 }
 
 export async function generateMbtiStudentPdf(result: Result, studentName: string, date: string) {

@@ -14,22 +14,22 @@ function KuderDoc({ result, studentName, date, logo, isTeacher }: { result: Resu
     <div style={{ width: '794px', minHeight: '1123px', backgroundColor: '#ffffff', fontFamily: 'Inter, sans-serif', padding: 24, display: 'flex', flexDirection: 'column' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #e2e8f0', paddingBottom: 12 }}>
         <img src={logo} width={120} height={32} style={{ objectFit: 'contain' }} />
-        <div style={{ textAlign: 'right', fontSize: 10, color: '#0f2b6b' }}>
+        <div style={{ textAlign: 'right', fontSize: 10, color: '#0f2b6b', display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
           <div style={{ fontWeight: 700 }}>TEAM GGM</div>
           <div>Test Kuder — 10 áreas</div>
           <div>{date}</div>
         </div>
       </div>
 
-      <div style={{ marginTop: 16, backgroundColor: topInfo.color, color: '#ffffff', borderRadius: 12, padding: 16, textAlign: 'center' }}>
+      <div style={{ marginTop: 16, backgroundColor: topInfo.color, color: '#ffffff', borderRadius: 12, padding: 16, textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: 1, opacity: 0.9 }}>{topInfo.key} · {topInfo.nombreCorto.toUpperCase()}</div>
         <div style={{ fontSize: 22, fontWeight: 800, marginTop: 4 }}>{topInfo.nombre}</div>
         <div style={{ fontSize: 9, marginTop: 6, lineHeight: 1.4 }}>{topInfo.descripcion}</div>
-        <div style={{ fontSize: 8, marginTop: 8, backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 6, padding: '4px 8px', display: 'inline-block' }}>Carreras: {topInfo.carreras}</div>
+        <div style={{ fontSize: 8, marginTop: 8, backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 6, padding: '4px 8px', display: 'flex' }}>Carreras: {topInfo.carreras}</div>
         <div style={{ fontSize: 10, fontWeight: 800, marginTop: 8 }}>{(result.scores as any)[result.top]}/45</div>
       </div>
 
-      <div style={{ marginTop: 16 }}>
+      <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column' }}>
         <div style={{ fontSize: 10, fontWeight: 800, color: '#001d62', letterSpacing: 0.5 }}>RANKING 10 ÁREAS</div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 8 }}>
           {result.ranking.map(k => {
@@ -53,7 +53,7 @@ function KuderDoc({ result, studentName, date, logo, isTeacher }: { result: Resu
             const info = (KUDER_AREAS as any)[k];
             const isTop = k === result.top;
             return (
-              <div key={k} style={{ width: 72, border: `1px solid ${isTop ? '#001d62' : '#e2e8f0'}`, borderRadius: 8, padding: 6, backgroundColor: isTop ? '#001d62' : '#fcfcfc', color: isTop ? '#ffffff' : '#001d62', textAlign: 'center' }}>
+              <div key={k} style={{ width: 72, border: `1px solid ${isTop ? '#001d62' : '#e2e8f0'}`, borderRadius: 8, padding: 6, backgroundColor: isTop ? '#001d62' : '#fcfcfc', color: isTop ? '#ffffff' : '#001d62', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                 <div style={{ fontSize: 9, fontWeight: 800 }}>{k}</div>
                 <div style={{ fontSize: 7, fontWeight: 700 }}>{info.nombre}</div>
                 <div style={{ fontSize: 10, fontWeight: 800, marginTop: 2 }}>{(result.scores as any)[k]}</div>
@@ -64,7 +64,7 @@ function KuderDoc({ result, studentName, date, logo, isTeacher }: { result: Resu
       )}
 
       <div style={{ marginTop: 'auto', paddingTop: 12, borderTop: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', fontSize: 8, color: '#64748b' }}>
-        <div>Estudiante: <span style={{ fontWeight: 700, color: '#001d62' }}>{studentName}</span> · {date}</div>
+        <div style={{ display: 'flex', flexDirection: 'row' }}><span>Estudiante: </span><span style={{ fontWeight: 700, color: '#001d62', marginLeft: 2, marginRight: 2 }}>{studentName}</span><span> · {date}</span></div>
         <div>TEAM GGM · Verif: {result.verificacion}</div>
       </div>
     </div>
@@ -72,11 +72,19 @@ function KuderDoc({ result, studentName, date, logo, isTeacher }: { result: Resu
 }
 
 async function renderPdf(element: React.ReactElement, filename: string) {
+  try {
   const fonts = await getSatoriFonts();
   if (!fonts.length) throw new Error("Satori fonts not loaded — fallback to html2pdf");
   const logo = await getLogoDataUrl();
   const withLogo = React.cloneElement(element as any, { logo });
-  const svg = await satori(withLogo as any, { width: 794, height: 1123, fonts });
+  let svg: string;
+  try {
+    svg = await satori(withLogo as any, { width: 794, height: 1123, fonts });
+  } catch (e) {
+    console.warn("satori failed, fallback to print", e);
+    window.print();
+    return;
+  }
   const pdf = await PDFDocument.create();
   const page = pdf.addPage([794, 1123]);
   const svgBlob = new Blob([svg], { type: 'image/svg+xml' });
@@ -96,6 +104,10 @@ async function renderPdf(element: React.ReactElement, filename: string) {
   const blob = new Blob([bytes as any], { type: 'application/pdf' });
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = filename; a.click();
   URL.revokeObjectURL(url);
+  } catch (err) {
+    console.warn("renderPdf failed, fallback print", err);
+    window.print();
+  }
 }
 
 export async function generateKuderStudentPdf(result: Result, studentName: string, date: string) {
