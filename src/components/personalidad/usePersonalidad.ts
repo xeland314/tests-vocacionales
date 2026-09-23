@@ -57,17 +57,24 @@ export function usePersonalidad() {
   const progress = Math.round((total / 60) * 100);
   const missing = useMemo(() => { const m: number[] = []; for (let i = 1; i <= 60; i++) if (answers[i] === undefined) m.push(i); return m; }, [answers]);
   const result = useMemo(() => calculatePersonality(answers), [answers]);
+  const getCourseId = () => {
+    try {
+      const p = new URLSearchParams(window.location.search);
+      const raw = p.get("courseId") || p.get("course_id") || p.get("cid") || p.get("course") || p.get("moodle_course_id");
+      return raw ? Number(raw) : null;
+    } catch { return null; }
+  };
   const handle = (id: number, v: any) => { setAnswers((p) => ({ ...p, [id]: v })); setError(null); };
   const submit = async () => {
     if (missing.length) { setError(`Falta responder la pregunta ${missing[0]}.`); document.getElementById(`q-${missing[0]}`)?.scrollIntoView({ behavior: "smooth", block: "center" }); return; }
-    if (!moodleUserId) { setError("Solo Moodle puede guardar."); return; }
+    if (!moodleUserId) { setError("Solo Moodle puede guardar. Accede desde Moodle (?moodleUserId=...)"); return; }
     setShowResult(true); window.scrollTo({ top: 0, behavior: "smooth" });
     const now = new Date(); const stamp = fmt(now); const fecha_unix = Math.floor(now.getTime() / 1000);
     try { localStorage.setItem(STORAGE_NAME, moodleUserName ?? `moodle_${moodleUserId}`); localStorage.setItem(STORAGE_DATE, stamp); } catch {}
     setSavedAt(stamp); setError(null); setSaving(true);
     try {
-      const res = await fetch("/api/personalidad/submit", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ moodle_user_id: moodleUserId, moodle_user_name: moodleUserName ?? null, moodle_user_email: moodleUserEmail ?? null, moodle_course_id: new URLSearchParams(window.location.search).get("courseId") ? Number(new URLSearchParams(window.location.search).get("courseId")) : null, fecha_unix, respuestas: answers }) });
-      const j = await res.json(); if (!res.ok) throw new Error(j.error || "Error"); setSavedAt(j.fecha_unix ? new Date(j.fecha_unix * 1000).toLocaleString() : stamp); notifyMoodleCompletion({ test: "MBTI", moodleUserId, score: result.dimensions, top: result.type });
+      const res = await fetch("/api/personalidad/submit", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ moodle_user_id: moodleUserId, moodle_user_name: moodleUserName ?? null, moodle_user_email: moodleUserEmail ?? null, moodle_course_id: getCourseId(), fecha_unix, respuestas: answers }) });
+      const j = await res.json().catch(() => ({})); if (!res.ok) throw new Error(j.error || `Error ${res.status} al guardar`); setSavedAt(j.fecha_unix ? new Date(j.fecha_unix * 1000).toLocaleString() : stamp); notifyMoodleCompletion({ test: "MBTI", moodleUserId, score: result.dimensions, top: result.type });
     } catch (e: any) { setError(e.message); } finally { setSaving(false); }
   };
   const save = async () => {
@@ -76,8 +83,8 @@ export function usePersonalidad() {
     try { localStorage.setItem(STORAGE_NAME, moodleUserName ?? `moodle_${moodleUserId}`); localStorage.setItem(STORAGE_DATE, stamp); } catch {}
     setSavedAt(stamp); setSaving(true);
     try {
-      const res = await fetch("/api/personalidad/submit", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ moodle_user_id: moodleUserId, moodle_user_name: moodleUserName ?? null, moodle_user_email: moodleUserEmail ?? null, moodle_course_id: new URLSearchParams(window.location.search).get("courseId") ? Number(new URLSearchParams(window.location.search).get("courseId")) : null, fecha_unix, respuestas: answers }) });
-      const j = await res.json(); if (!res.ok) throw new Error(j.error || "Error"); setSavedAt("Tus respuestas se Guardaron correctamente."); notifyMoodleCompletion({ test: "MBTI", moodleUserId, score: result.dimensions, top: result.type });
+      const res = await fetch("/api/personalidad/submit", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ moodle_user_id: moodleUserId, moodle_user_name: moodleUserName ?? null, moodle_user_email: moodleUserEmail ?? null, moodle_course_id: getCourseId(), fecha_unix, respuestas: answers }) });
+      const j = await res.json().catch(() => ({})); if (!res.ok) throw new Error(j.error || `Error ${res.status} al guardar`); setSavedAt("Tus respuestas se Guardaron correctamente."); notifyMoodleCompletion({ test: "MBTI", moodleUserId, score: result.dimensions, top: result.type });
     } catch (e: any) { setError(e.message); } finally { setSaving(false); }
   };
   const reset = () => { setAnswers({}); setShowResult(false); setAlreadyCompleted(false); setError(null); try { localStorage.removeItem(STORAGE); } catch {} window.scrollTo({ top: 0, behavior: "smooth" }); };

@@ -81,6 +81,14 @@ export function useChaside() {
     setError(null);
   };
 
+  const getCourseId = () => {
+    try {
+      const p = new URLSearchParams(window.location.search);
+      const raw = p.get("courseId") || p.get("course_id") || p.get("cid") || p.get("course") || p.get("moodle_course_id");
+      return raw ? Number(raw) : null;
+    } catch { return null; }
+  };
+
   const handleSubmit = async () => {
     if (missing.length > 0) {
       setError(`Falta responder la pregunta ${missing[0]}. Debe responder todas las preguntas para que el test sea válido`);
@@ -88,7 +96,7 @@ export function useChaside() {
       return;
     }
     if (!moodleUserId) {
-      setError("Solo usuarios de Moodle pueden guardar. Accede desde Moodle (iframe con moodleUserId).");
+      setError("Solo usuarios de Moodle pueden guardar. Accede desde Moodle (iframe con ?moodleUserId= tu ID). Prueba con ?moodleUserId=123&moodleUserName=Test&moodleUserEmail=test@test.com");
       return;
     }
     setShowResult(true);
@@ -108,14 +116,14 @@ export function useChaside() {
           moodle_user_id: moodleUserId,
           moodle_user_name: moodleUserName ?? null,
           moodle_user_email: moodleUserEmail ?? null,
-          moodle_course_id: new URLSearchParams(window.location.search).get("courseId") ? Number(new URLSearchParams(window.location.search).get("courseId")) : null,
+          moodle_course_id: getCourseId(),
           fecha_unix,
           respuestas: answers,
           version: 1,
         }),
       });
-      const j = await res.json();
-      if (!res.ok) throw new Error(j.error || "Error al guardar");
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(j.error || `Error ${res.status} al guardar`);
       setSavedAt(stamp + " · ya guardado");
       notifyMoodleCompletion({ test: "CHASIDE", moodleUserId, score: result.intereses, top: result.topInteres });
     } catch (e: any) {
@@ -146,14 +154,14 @@ export function useChaside() {
           moodle_user_id: moodleUserId,
           moodle_user_name: moodleUserName ?? null,
           moodle_user_email: moodleUserEmail ?? null,
-          moodle_course_id: new URLSearchParams(window.location.search).get("courseId") ? Number(new URLSearchParams(window.location.search).get("courseId")) : null,
+          moodle_course_id: getCourseId(),
           fecha_unix,
           respuestas: answers,
           version: 1,
         }),
       });
-      const j = await res.json();
-      if (!res.ok) throw new Error(j.error || "Error al guardar");
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(j.error || `Error ${res.status} al guardar`);
       setSavedAt(stamp + " · ya guardado");
       notifyMoodleCompletion({ test: "CHASIDE", moodleUserId, score: result.intereses, top: result.topInteres });
     } catch (e: any) {

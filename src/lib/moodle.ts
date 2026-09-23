@@ -33,11 +33,12 @@ function isAllowedOrigin(origin: string): boolean {
 
 if (typeof window !== "undefined") {
   // 1) Detecta moodleUserId por URL ?moodleUserId= (para URL con Parámetros sin postMessage / TinyMCE bloquea script)
+  // Soporta camelCase y snake_case para compatibilidad Moodle/URL manual
   try {
     const params = new URLSearchParams(window.location.search);
-    const idFromUrl = params.get("moodleUserId");
-    const nameFromUrl = params.get("moodleUserName") || params.get("name");
-    const emailFromUrl = params.get("moodleUserEmail") || params.get("email");
+    const idFromUrl = params.get("moodleUserId") || params.get("moodle_user_id") || params.get("userId") || params.get("uid") || params.get("id");
+    const nameFromUrl = params.get("moodleUserName") || params.get("moodle_user_name") || params.get("name") || params.get("fullname");
+    const emailFromUrl = params.get("moodleUserEmail") || params.get("moodle_user_email") || params.get("email");
     if (idFromUrl) {
       const id = Number(idFromUrl);
       if (Number.isFinite(id) && id > 0) {
@@ -116,12 +117,13 @@ export function useMoodleBridge() {
     moodleUserId: _moodleUserId,
     moodleUserName: _moodleUserName,
     moodleUserEmail: _moodleUserEmail,
-    isMoodle: isMoodleEmbedded(),
+    isMoodle: !!_moodleUserId || isMoodleEmbedded(),
     origin: _moodleOrigin,
   });
   useEffect(() => {
-    setInfo({ moodleUserId: _moodleUserId, moodleUserName: _moodleUserName, moodleUserEmail: _moodleUserEmail, isMoodle: isMoodleEmbedded(), origin: _moodleOrigin });
-    return onMoodleUser((id, origin) => setInfo({ moodleUserId: _moodleUserId, moodleUserName: _moodleUserName, moodleUserEmail: _moodleUserEmail, isMoodle: true, origin }));
+    // Sincroniza estado inicial por si _moodleUserId se seteo tras el primer render (postMessage tardío)
+    setInfo({ moodleUserId: _moodleUserId, moodleUserName: _moodleUserName, moodleUserEmail: _moodleUserEmail, isMoodle: !!_moodleUserId || isMoodleEmbedded(), origin: _moodleOrigin });
+    return onMoodleUser((_id, origin) => setInfo({ moodleUserId: _moodleUserId, moodleUserName: _moodleUserName, moodleUserEmail: _moodleUserEmail, isMoodle: !!_moodleUserId || true, origin }));
   }, []);
   return info;
 }
