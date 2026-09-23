@@ -36,7 +36,7 @@ export const AREAS: Record<AreaKey, AreaInfo> = {
     key: "C",
     nombre: "Administrativas y Contables",
     nombreCorto: "Administrativa",
-    color: "#0052FF",
+    color: "#1f3875",
     interesesDesc:
       "Es una persona que se interesa por actividades afines a la supervisión, el orden, organización, análisis y síntesis, colaboración y cálculo.",
     aptitudesDesc:

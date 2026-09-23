@@ -3,7 +3,7 @@ import { QUESTIONS } from "../data/chaside";
 import { PERSONALITY_QUESTIONS } from "../data/personalidad";
 import { KUDER_DIADAS } from "../data/kuder";
 
-const url = process.env.TURSO_DATABASE_URL || "file:data/chaside.db";
+const url = process.env.TURSO_DATABASE_URL || `file:${process.cwd()}/data/chaside.db`;
 
 export const db = createClient({ url, authToken: process.env.TURSO_AUTH_TOKEN });
 
@@ -41,19 +41,32 @@ export async function initDb() {
   await db.execute(`INSERT OR IGNORE INTO test_versiones (codigo, version, vigencia_desde, activo) VALUES ('PERSONALIDAD', 1, strftime('%s','2026-01-01'), 1)`);
   await db.execute(`INSERT OR IGNORE INTO test_versiones (codigo, version, vigencia_desde, activo) VALUES ('KUDER', 1, strftime('%s','2026-01-01'), 1)`);
 
-  // Estudiantes = persona única (reducido: Moodle auto, anon requiere telefono+email)
+  // Estudiantes = solo Moodle (sin datos anon) — guarda únicamente datos de Moodle
+  // Detecta esquema legacy con columnas anon (nombre_estudiante, telefono, etc.)
+  const hasLegacyEstudiantes = (await hasColumn("estudiantes", "nombre_estudiante")) || (await hasColumn("estudiantes", "telefono")) || (await hasColumn("estudiantes", "email")) || (await hasColumn("estudiantes", "nombre_padre"));
+  if (hasLegacyEstudiantes) {
+    // Borra datos anon: recrea tabla solo con campos moodle y migra solo registros con moodle_user_id
+    await db.execute(`
+      CREATE TABLE IF NOT EXISTS estudiantes_new (
+        id TEXT PRIMARY KEY,
+        moodle_user_id INTEGER NOT NULL UNIQUE,
+        moodle_user_name TEXT,
+        moodle_user_email TEXT,
+        moodle_course_id INTEGER,
+        moodle_extra_json TEXT,
+        created_at INTEGER DEFAULT (unixepoch())
+      )
+    `);
+    // Copia solo registros moodle válidos
+    await db.execute(`INSERT OR IGNORE INTO estudiantes_new (id, moodle_user_id, moodle_user_name, moodle_user_email, moodle_course_id, moodle_extra_json, created_at)
+      SELECT id, moodle_user_id, moodle_user_name, moodle_user_email, moodle_course_id, moodle_extra_json, created_at FROM estudiantes WHERE moodle_user_id IS NOT NULL`);
+    await db.execute(`DROP TABLE estudiantes`);
+    await db.execute(`ALTER TABLE estudiantes_new RENAME TO estudiantes`);
+  }
   await db.execute(`
     CREATE TABLE IF NOT EXISTS estudiantes (
       id TEXT PRIMARY KEY,
-      nombre_estudiante TEXT NOT NULL,
-      nombre_padre TEXT,
-      correo_estudiante TEXT,
-      correo_padre TEXT,
-      cedula_estudiante TEXT CHECK (cedula_estudiante IS NULL OR length(cedula_estudiante)=10),
-      cedula_representante TEXT CHECK (cedula_representante IS NULL OR length(cedula_representante)=10),
-      telefono TEXT,
-      email TEXT,
-      moodle_user_id INTEGER,
+      moodle_user_id INTEGER NOT NULL UNIQUE,
       moodle_user_name TEXT,
       moodle_user_email TEXT,
       moodle_course_id INTEGER,
@@ -61,28 +74,8 @@ export async function initDb() {
       created_at INTEGER DEFAULT (unixepoch())
     )
   `);
-  // Migraciones para DB existentes (añade columnas si faltan)
-  if (!(await hasColumn("estudiantes", "telefono"))) {
-    await db.execute(`ALTER TABLE estudiantes ADD COLUMN telefono TEXT`);
-  }
-  if (!(await hasColumn("estudiantes", "email"))) {
-    await db.execute(`ALTER TABLE estudiantes ADD COLUMN email TEXT`);
-  }
-  if (!(await hasColumn("estudiantes", "moodle_user_id"))) {
-    await db.execute(`ALTER TABLE estudiantes ADD COLUMN moodle_user_id INTEGER`);
-  }
-  if (!(await hasColumn("estudiantes", "moodle_user_name"))) {
-    await db.execute(`ALTER TABLE estudiantes ADD COLUMN moodle_user_name TEXT`);
-  }
-  if (!(await hasColumn("estudiantes", "moodle_user_email"))) {
-    await db.execute(`ALTER TABLE estudiantes ADD COLUMN moodle_user_email TEXT`);
-  }
-  if (!(await hasColumn("estudiantes", "moodle_course_id"))) {
-    await db.execute(`ALTER TABLE estudiantes ADD COLUMN moodle_course_id INTEGER`);
-  }
-  if (!(await hasColumn("estudiantes", "moodle_extra_json"))) {
-    await db.execute(`ALTER TABLE estudiantes ADD COLUMN moodle_extra_json TEXT`);
-  }
+  // Limpia cualquier registro anon huérfano (si existe tabla)
+  try { await db.execute(`DELETE FROM estudiantes WHERE moodle_user_id IS NULL`); } catch {}
   await db.execute(`CREATE INDEX IF NOT EXISTS idx_estudiantes_created ON estudiantes(created_at)`);
   await db.execute(`CREATE INDEX IF NOT EXISTS idx_estudiantes_moodle ON estudiantes(moodle_user_id)`);
 

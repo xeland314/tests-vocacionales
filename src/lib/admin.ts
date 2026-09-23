@@ -3,7 +3,7 @@ import { calculateScores } from "../data/scoring";
 
 export async function getEstudiantes(limit = 200) {
   await initDb();
-  const r = await db.execute({ sql: "SELECT id, nombre_estudiante, nombre_padre, correo_estudiante, correo_padre, cedula_estudiante, cedula_representante, created_at FROM estudiantes ORDER BY created_at DESC LIMIT ?", args: [limit] });
+  const r = await db.execute({ sql: "SELECT id, moodle_user_id, moodle_user_name, moodle_user_email, moodle_course_id, moodle_extra_json, created_at, moodle_user_name as nombre_estudiante, moodle_user_email as correo_estudiante, NULL as nombre_padre, NULL as correo_padre, NULL as cedula_estudiante, NULL as cedula_representante FROM estudiantes ORDER BY created_at DESC LIMIT ?", args: [limit] });
   return r.rows as any[];
 }
 

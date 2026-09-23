@@ -161,7 +161,7 @@ export default function AdminGeneral() {
   const logout = async () => { await fetch("/api/auth/logout", { method: "POST", headers: { Authorization: authHeader } }); localStorage.removeItem("knox_token"); localStorage.removeItem("knox_user"); localStorage.removeItem("knox_expiry"); window.location.href = "/admin/login"; };
   const logoutAll = async () => { await fetch("/api/auth/logoutall", { method: "POST", headers: { Authorization: authHeader } }); localStorage.removeItem("knox_token"); localStorage.removeItem("knox_user"); localStorage.removeItem("knox_expiry"); window.location.href = "/admin/login"; };
 
-  if (needsLogin) return <div className="max-w-md mx-auto mt-12 bg-white border rounded-2xl p-6 text-center"><p className="font-bold">Sesión requerida</p><p className="text-sm text-slate-500 mt-1">Debes iniciar sesión (Knox token).</p><a href="/admin/login" className="mt-4 inline-block bg-[#0B1220] text-white px-6 py-2 rounded-full font-bold">Ir a Login</a></div>;
+  if (needsLogin) return <div className="max-w-md mx-auto mt-12 bg-white border rounded-2xl p-6 text-center"><p className="font-bold">Sesión requerida</p><p className="text-sm text-slate-500 mt-1">Debes iniciar sesión (Knox token).</p><a href="/admin/login" className="mt-4 inline-block bg-[#001d62] text-white px-6 py-2 rounded-full font-bold">Ir a Login</a></div>;
   if (loading) return <div className="p-8 text-center text-slate-600">Cargando panel general libsql + plotly...</div>;
   if (error) return <div className="p-8 text-center text-red-600">Error: {error} <button onClick={load} className="ml-2 underline">Reintentar</button> <a href="/admin/login" className="ml-2 underline">Login</a></div>;
 
@@ -169,14 +169,14 @@ export default function AdminGeneral() {
     <div className="max-w-7xl mx-auto px-4 py-6">
       <div className="flex items-center gap-3 mb-4 flex-wrap">
         <h1 className="text-2xl font-black" style={{ fontFamily: "Poppins" }}>Panel {isDocente ? "Docente" : "Admin"} — General</h1>
-        {currentUser && <span className={`text-xs font-bold px-3 py-1 rounded-full border ${isAdmin ? "bg-[#0B1220] text-white border-[#0B1220]" : "bg-amber-100 text-amber-800 border-amber-200"}`}>{currentUser.email} · {currentUser.role}</span>}
-        <span className="bg-[#0B1220] text-white text-xs font-bold px-3 py-1 rounded-full">{students.length} estudiantes</span>
-        <span className="bg-[#0052FF] text-white text-xs font-bold px-3 py-1 rounded-full">CHASIDE {overview?.totalChaside ?? 0}</span>
+        {currentUser && <span className={`text-xs font-bold px-3 py-1 rounded-full border ${isAdmin ? "bg-[#001d62] text-white border-[#001d62]" : "bg-amber-100 text-amber-800 border-amber-200"}`}>{currentUser.email} · {currentUser.role}</span>}
+        <span className="bg-[#001d62] text-white text-xs font-bold px-3 py-1 rounded-full">{students.length} estudiantes</span>
+        <span className="bg-[#1f3875] text-white text-xs font-bold px-3 py-1 rounded-full">CHASIDE {overview?.totalChaside ?? 0}</span>
         <span className="bg-[#7C3AED] text-white text-xs font-bold px-3 py-1 rounded-full">Personalidad {overview?.totalPersonalidad ?? 0}</span>
         <span className="bg-[#2563EB] text-white text-xs font-bold px-3 py-1 rounded-full">Kuder {overview?.totalKuder ?? 0}</span>
         <div className="ml-auto flex gap-2 flex-wrap">
           <a href="/" className="bg-white border-2 border-slate-300 font-bold px-4 py-2 rounded-full text-sm">← Menú</a>
-          <button onClick={load} className="bg-[#0052FF] text-white font-bold px-4 py-2 rounded-full text-sm">↻ Actualizar</button>
+          <button onClick={load} className="bg-[#1f3875] text-white font-bold px-4 py-2 rounded-full text-sm">↻ Actualizar</button>
           {isAdmin && <button onClick={async () => { await fetch("/api/chaside/init", { headers: { Authorization: authHeader } }); load(); }} className="bg-slate-100 border font-bold px-4 py-2 rounded-full text-sm">Init DB</button>}
           <button onClick={logout} className="bg-white border font-bold px-4 py-2 rounded-full text-sm">Logout</button>
           <button onClick={logoutAll} className="bg-red-50 border border-red-200 text-red-700 font-bold px-4 py-2 rounded-full text-sm">Logout All</button>
@@ -194,7 +194,7 @@ export default function AdminGeneral() {
           ...(isAdmin ? [["usuarios", "Usuarios"] as const] : []),
           ["cuenta", "Mi cuenta"],
         ] as const).map(([k, label]) => (
-          <button key={k} onClick={() => setTab(k as Tab)} className={`px-5 py-2.5 rounded-full font-black text-sm whitespace-nowrap border-2 ${tab === k ? "bg-[#0B1220] text-white border-[#0B1220]" : "bg-white border-slate-200 hover:border-slate-300"}`}>{label}</button>
+          <button key={k} onClick={() => setTab(k as Tab)} className={`px-5 py-2.5 rounded-full font-black text-sm whitespace-nowrap border-2 ${tab === k ? "bg-[#001d62] text-white border-[#001d62]" : "bg-white border-slate-200 hover:border-slate-300"}`}>{label}</button>
         ))}
       </div>
       {isDocente && <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 mt-2">Rol <b>docente</b>: solo lectura de formularios y resultados. La gestión de usuarios es exclusiva de <b>admin</b>. Cambia tu usuario/contraseña en <b>Mi cuenta</b>.</p>}
@@ -203,7 +203,7 @@ export default function AdminGeneral() {
         <div className="mt-6 space-y-4">
           <div className="grid md:grid-cols-4 gap-4">
             <div className="bg-white border rounded-2xl p-5"><p className="text-xs font-black uppercase text-slate-500">Total estudiantes</p><p className="text-3xl font-black mt-1">{overview.totalEstudiantes}</p><p className="text-xs text-slate-500 mt-1">{overview.completos} con 3 tests · {overview.solo2} con 2 · {overview.solo1} con 1 · {overview.ninguno} sin tests</p></div>
-            <div className="bg-white border rounded-2xl p-5"><p className="text-xs font-black uppercase text-slate-500">Completitud</p><p className="text-2xl font-black mt-1">{overview.totalEstudiantes ? Math.round(overview.completos / overview.totalEstudiantes * 100) : 0}% completos</p><div className="mt-2 h-2 bg-slate-200 rounded-full overflow-hidden flex"><div className="bg-[#0B1220] h-full" style={{ width: `${overview.totalEstudiantes ? (overview.completos / overview.totalEstudiantes * 100) : 0}%` }} /><div className="bg-[#0052FF] h-full" style={{ width: `${overview.totalEstudiantes ? (overview.solo2 / overview.totalEstudiantes * 100) : 0}%` }} /><div className="bg-amber-400 h-full" style={{ width: `${overview.totalEstudiantes ? (overview.solo1 / overview.totalEstudiantes * 100) : 0}%` }} /></div><p className="text-[10px] mt-1 text-slate-500">Negro 3 tests · Azul 2 · Amarillo 1</p></div>
+            <div className="bg-white border rounded-2xl p-5"><p className="text-xs font-black uppercase text-slate-500">Completitud</p><p className="text-2xl font-black mt-1">{overview.totalEstudiantes ? Math.round(overview.completos / overview.totalEstudiantes * 100) : 0}% completos</p><div className="mt-2 h-2 bg-slate-200 rounded-full overflow-hidden flex"><div className="bg-[#001d62] h-full" style={{ width: `${overview.totalEstudiantes ? (overview.completos / overview.totalEstudiantes * 100) : 0}%` }} /><div className="bg-[#1f3875] h-full" style={{ width: `${overview.totalEstudiantes ? (overview.solo2 / overview.totalEstudiantes * 100) : 0}%` }} /><div className="bg-amber-400 h-full" style={{ width: `${overview.totalEstudiantes ? (overview.solo1 / overview.totalEstudiantes * 100) : 0}%` }} /></div><p className="text-[10px] mt-1 text-slate-500">Negro 3 tests · Azul 2 · Amarillo 1</p></div>
             <div className="bg-white border rounded-2xl p-5"><p className="text-xs font-black uppercase text-slate-500">Aplicaciones por test</p><div className="mt-2 space-y-1 text-sm"><div className="flex justify-between"><span className="font-bold">CHASIDE</span><span>{overview.totalChaside}</span></div><div className="flex justify-between"><span className="font-bold">Personalidad</span><span>{overview.totalPersonalidad}</span></div><div className="flex justify-between"><span className="font-bold">Kuder</span><span>{overview.totalKuder}</span></div></div></div>
             <div className="bg-white border rounded-2xl p-5"><p className="text-xs font-black uppercase text-slate-500">Faltantes (muestra)</p><p className="text-xs mt-2 text-slate-600">{overview.faltantes.slice(0, 5).map((f: any) => `${f.id.slice(0, 6)}:${[f.hasC ? "C" : "–", f.hasP ? "P" : "–", f.hasK ? "K" : "–"].join("")}`).join(" · ") || "—"}</p><p className="text-xs text-slate-400 mt-2">{overview.ninguno} estudiantes sin ningún test.</p></div>
           </div>
@@ -211,11 +211,11 @@ export default function AdminGeneral() {
           <div className="grid md:grid-cols-2 gap-4">
             <div className="bg-white border rounded-2xl p-4">
               <h3 className="font-black text-sm">Plotly — Aplicaciones por test</h3>
-              <PlotlyChart data={[{ x: ["CHASIDE", "Personalidad", "Kuder"], y: [overview.totalChaside, overview.totalPersonalidad, overview.totalKuder], type: "bar", marker: { color: ["#0052FF", "#7C3AED", "#2563EB"] } }]} layout={{ title: "" }} />
+              <PlotlyChart data={[{ x: ["CHASIDE", "Personalidad", "Kuder"], y: [overview.totalChaside, overview.totalPersonalidad, overview.totalKuder], type: "bar", marker: { color: ["#1f3875", "#7C3AED", "#2563EB"] } }]} layout={{ title: "" }} />
             </div>
             <div className="bg-white border rounded-2xl p-4">
               <h3 className="font-black text-sm">Plotly — Completitud (pie)</h3>
-              <PlotlyChart data={[{ values: [overview.completos, overview.solo2, overview.solo1, overview.ninguno], labels: ["3 tests", "2 tests", "1 test", "0 tests"], type: "pie", marker: { colors: ["#0B1220", "#0052FF", "#FFCC00", "#E5E7EB"] }, hole: 0.4 }]} layout={{ showlegend: true }} />
+              <PlotlyChart data={[{ values: [overview.completos, overview.solo2, overview.solo1, overview.ninguno], labels: ["3 tests", "2 tests", "1 test", "0 tests"], type: "pie", marker: { colors: ["#001d62", "#1f3875", "#d8215d", "#E5E7EB"] }, hole: 0.4 }]} layout={{ showlegend: true }} />
             </div>
           </div>
 
@@ -246,10 +246,10 @@ export default function AdminGeneral() {
             <div className="bg-white border rounded-2xl p-5"><p className="text-xs font-black uppercase text-slate-500">Promedios intereses (0-10)</p><div className="mt-2 grid grid-cols-7 gap-1 text-xs text-center">{Object.entries(chaside.promediosIntereses).map(([k, v]: any) => <div key={k} className="bg-slate-50 border rounded-lg p-2"><p className="font-black">{k}</p><p>{v}</p></div>)}</div></div>
           </div>
           <div className="grid md:grid-cols-2 gap-4">
-            <div className="bg-white border rounded-2xl p-4"><h3 className="font-black text-sm">Plotly — Top intereses CHASIDE</h3><PlotlyChart data={[{ x: Object.keys(chaside.topIntereses), y: Object.values(chaside.topIntereses), type: "bar", marker: { color: "#0052FF" } }]} layout={{ yaxis: { title: "Estudiantes" } }} /></div>
-            <div className="bg-white border rounded-2xl p-4"><h3 className="font-black text-sm">Plotly — Promedio aptitudes (0-4)</h3><PlotlyChart data={[{ x: Object.keys(chaside.promediosAptitudes), y: Object.values(chaside.promediosAptitudes), type: "bar", marker: { color: "#FF3B30" } }]} layout={{ yaxis: { title: "Promedio" } }} /></div>
+            <div className="bg-white border rounded-2xl p-4"><h3 className="font-black text-sm">Plotly — Top intereses CHASIDE</h3><PlotlyChart data={[{ x: Object.keys(chaside.topIntereses), y: Object.values(chaside.topIntereses), type: "bar", marker: { color: "#1f3875" } }]} layout={{ yaxis: { title: "Estudiantes" } }} /></div>
+            <div className="bg-white border rounded-2xl p-4"><h3 className="font-black text-sm">Plotly — Promedio aptitudes (0-4)</h3><PlotlyChart data={[{ x: Object.keys(chaside.promediosAptitudes), y: Object.values(chaside.promediosAptitudes), type: "bar", marker: { color: "#d8215d" } }]} layout={{ yaxis: { title: "Promedio" } }} /></div>
           </div>
-          <div className="bg-white border rounded-2xl p-4"><h3 className="font-black text-sm">Plotly — Radar promedios intereses</h3><PlotlyChart data={[{ type: "scatterpolar", r: [...Object.values(chaside.promediosIntereses) as number[], (Object.values(chaside.promediosIntereses) as number[])[0]], theta: [...Object.keys(chaside.promediosIntereses), Object.keys(chaside.promediosIntereses)[0]], fill: "toself", marker: { color: "#0052FF" } }]} layout={{ polar: { radialaxis: { visible: true, range: [0, 10] } } }} style={{ width: "100%", height: "400px" }} /></div>
+          <div className="bg-white border rounded-2xl p-4"><h3 className="font-black text-sm">Plotly — Radar promedios intereses</h3><PlotlyChart data={[{ type: "scatterpolar", r: [...Object.values(chaside.promediosIntereses) as number[], (Object.values(chaside.promediosIntereses) as number[])[0]], theta: [...Object.keys(chaside.promediosIntereses), Object.keys(chaside.promediosIntereses)[0]], fill: "toself", marker: { color: "#1f3875" } }]} layout={{ polar: { radialaxis: { visible: true, range: [0, 10] } } }} style={{ width: "100%", height: "400px" }} /></div>
         </div>
       )}
 
@@ -311,19 +311,19 @@ export default function AdminGeneral() {
           <div className="bg-white border rounded-2xl overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead className="bg-[#0B1220] text-white text-xs uppercase"><tr><th className="px-3 py-2 text-left">Estudiante</th><th className="px-3 py-2">Padre</th><th className="px-3 py-2">Correos</th><th className="px-3 py-2">Cédulas</th><th className="px-3 py-2">C</th><th className="px-3 py-2">P</th><th className="px-3 py-2">K</th><th className="px-3 py-2">Faltan</th><th className="px-3 py-2">Acción</th></tr></thead>
+                <thead className="bg-[#001d62] text-white text-xs uppercase"><tr><th className="px-3 py-2 text-left">Moodle Nombre</th><th className="px-3 py-2">Moodle ID</th><th className="px-3 py-2">Email Moodle</th><th className="px-3 py-2">Curso</th><th className="px-3 py-2">C</th><th className="px-3 py-2">P</th><th className="px-3 py-2">K</th><th className="px-3 py-2">Faltan</th><th className="px-3 py-2">Acción</th></tr></thead>
                 <tbody>
                   {students.map((s: any) => (
                     <tr key={s.id} className="border-t hover:bg-slate-50">
-                      <td className="px-3 py-2 font-bold">{s.nombre_estudiante}</td>
-                      <td className="px-3 py-2">{s.nombre_padre || "—"}</td>
-                      <td className="px-3 py-2 text-xs">{[s.correo_estudiante, s.correo_padre].filter(Boolean).join(" / ") || "—"}</td>
-                      <td className="px-3 py-2 text-xs">{[s.cedula_estudiante, s.cedula_representante].filter(Boolean).join(" / ") || "—"}</td>
+                      <td className="px-3 py-2 font-bold">{s.moodle_user_name || s.nombre_estudiante || "—"}</td>
+                      <td className="px-3 py-2 text-center text-xs font-mono">{s.moodle_user_id ?? "—"}</td>
+                      <td className="px-3 py-2 text-xs">{s.moodle_user_email || s.correo_estudiante || "—"}</td>
+                      <td className="px-3 py-2 text-xs text-center">{s.moodle_course_id ?? "—"}</td>
                       <td className="px-3 py-2 text-center">{s.hasChaside ? <span className="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs font-bold inline-flex items-center gap-1"><Check size={12} />{s.chaside?.top_interes}</span> : <span className="bg-red-100 text-red-600 px-2 py-1 rounded-full text-xs inline-flex items-center gap-1"><Minus size={12} /></span>}</td>
                       <td className="px-3 py-2 text-center">{s.hasPersonalidad ? <span className="bg-purple-100 text-purple-700 px-2 py-1 rounded-full text-xs font-bold">{s.personalidad?.tipo}</span> : <span className="bg-red-100 text-red-600 px-2 py-1 rounded-full text-xs inline-flex items-center gap-1"><Minus size={12} /></span>}</td>
                       <td className="px-3 py-2 text-center">{s.hasKuder ? <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded-full text-xs font-bold">{s.kuder?.top}</span> : <span className="bg-red-100 text-red-600 px-2 py-1 rounded-full text-xs inline-flex items-center gap-1"><Minus size={12} /></span>}</td>
                       <td className="px-3 py-2 text-center font-black text-red-600">{3 - s.completados}</td>
-                      <td className="px-3 py-2"><button onClick={() => openDetail(s.id)} className="bg-[#0B1220] text-white px-3 py-1 rounded-full text-xs font-bold">Ver</button></td>
+                      <td className="px-3 py-2"><button onClick={() => openDetail(s.id)} className="bg-[#001d62] text-white px-3 py-1 rounded-full text-xs font-bold">Ver</button></td>
                     </tr>
                   ))}
                   {students.length === 0 && <tr><td colSpan={9} className="px-4 py-8 text-center text-slate-500">Sin datos. Simula con npm run seed o rinde tests.</td></tr>}
@@ -341,8 +341,8 @@ export default function AdminGeneral() {
             <h3 className="font-black text-sm flex items-center gap-2"><Users size={16} />Usuarios — Admin crea múltiples</h3>
             <p className="text-xs text-slate-500 mt-1">Este es el <b>módulo de creación</b>. Crea docentes o más admins. Usa email como usuario. Contraseña ≥8.</p>
             {/* Módulo crear - destacado */}
-            <div className="mt-4 bg-[#0052FF]/5 border-2 border-dashed border-[#0052FF]/30 rounded-2xl p-4">
-              <h4 className="font-black text-sm flex items-center gap-2"><UserPlus size={16} className="text-[#0052FF]" />Crear nuevo usuario</h4>
+            <div className="mt-4 bg-[#1f3875]/5 border-2 border-dashed border-[#1f3875]/30 rounded-2xl p-4">
+              <h4 className="font-black text-sm flex items-center gap-2"><UserPlus size={16} className="text-[#1f3875]" />Crear nuevo usuario</h4>
               <p className="text-xs text-slate-500">Completa y pulsa Crear. El nuevo usuario podrá loguearse inmediatamente.</p>
               <div className="mt-3 grid md:grid-cols-2 gap-2">
                 <input placeholder="email (usuario) *" value={newUser.email} onChange={e => setNewUser(s => ({ ...s, email: e.target.value }))} className="border rounded-lg px-3 py-2 text-sm" />
@@ -353,7 +353,7 @@ export default function AdminGeneral() {
                   <option value="docente">docente — solo revisa formularios</option>
                   <option value="admin">admin — gestiona usuarios y datos</option>
                 </select>
-                <button onClick={async () => { if(!newUser.email || !newUser.password) {alert("email y contraseña requeridos"); return;} const r = await fetch("/api/users", { method: "POST", headers: { "Content-Type": "application/json", Authorization: authHeader }, body: JSON.stringify(newUser) }); if (r.ok) { setNewUser({ email: "", password: "", first_name: "", last_name: "", role: "docente" }); load(); } else alert((await r.json()).error); }} className="bg-[#0B1220] text-white px-4 py-2 rounded-full text-sm font-bold inline-flex items-center justify-center gap-2"><UserPlus size={16} />Crear usuario</button>
+                <button onClick={async () => { if(!newUser.email || !newUser.password) {alert("email y contraseña requeridos"); return;} const r = await fetch("/api/users", { method: "POST", headers: { "Content-Type": "application/json", Authorization: authHeader }, body: JSON.stringify(newUser) }); if (r.ok) { setNewUser({ email: "", password: "", first_name: "", last_name: "", role: "docente" }); load(); } else alert((await r.json()).error); }} className="bg-[#001d62] text-white px-4 py-2 rounded-full text-sm font-bold inline-flex items-center justify-center gap-2"><UserPlus size={16} />Crear usuario</button>
               </div>
               <p className="text-[11px] text-slate-500 mt-2">* requerido. Tip: usa <code>docente.matematicas@colegio.edu.ec</code> + clave temporal.</p>
             </div>
@@ -362,7 +362,7 @@ export default function AdminGeneral() {
               <div className="mt-2 space-y-2 max-h-80 overflow-auto">
                 {users.map((u: any) => (
                   <div key={u.id} className="flex justify-between items-center border-b py-2 text-sm gap-2">
-                    <span className="flex-1"><span className="font-bold">{u.email}</span> <span className={`ml-1 text-[10px] font-black px-2 py-0.5 rounded-full border ${u.role==='admin' ? 'bg-[#0B1220] text-white border-[#0B1220]' : 'bg-amber-100 text-amber-800 border-amber-200'}`}>{u.role}</span> <span className="text-xs text-slate-500">({[u.first_name,u.last_name].filter(Boolean).join(" ") || "—"})</span></span>
+                    <span className="flex-1"><span className="font-bold">{u.email}</span> <span className={`ml-1 text-[10px] font-black px-2 py-0.5 rounded-full border ${u.role==='admin' ? 'bg-[#001d62] text-white border-[#001d62]' : 'bg-amber-100 text-amber-800 border-amber-200'}`}>{u.role}</span> <span className="text-xs text-slate-500">({[u.first_name,u.last_name].filter(Boolean).join(" ") || "—"})</span></span>
                     <div className="flex gap-1 items-center">
                       <select value={u.role} onChange={async e => { const newRole=e.target.value; if(!confirm(`Cambiar ${u.email} a ${newRole}?`)) return; const r=await fetch(`/api/users/${u.id}`,{method:"PATCH",headers:{"Content-Type":"application/json",Authorization:authHeader},body:JSON.stringify({role:newRole})}); if(!r.ok) alert((await r.json()).error); else load(); }} className="text-xs border rounded-full px-2 py-1 bg-white">
                         <option value="admin">admin</option>
@@ -394,7 +394,7 @@ export default function AdminGeneral() {
         <div className="mt-6 grid md:grid-cols-2 gap-4">
           <div className="bg-white border rounded-2xl p-5">
             <h3 className="font-black text-sm">Mi cuenta — Cambiar usuario</h3>
-            <p className="text-xs text-slate-500">Tu rol: <span className={`font-black px-2 py-0.5 rounded-full text-xs ${isAdmin?"bg-[#0B1220] text-white":"bg-amber-100 text-amber-800"}`}>{currentUser?.role}</span> {isAdmin ? "(puedes crear usuarios en pestaña Usuarios)" : "(solo lectura)"}</p>
+            <p className="text-xs text-slate-500">Tu rol: <span className={`font-black px-2 py-0.5 rounded-full text-xs ${isAdmin?"bg-[#001d62] text-white":"bg-amber-100 text-amber-800"}`}>{currentUser?.role}</span> {isAdmin ? "(puedes crear usuarios en pestaña Usuarios)" : "(solo lectura)"}</p>
             {editMsg && <p className="mt-2 text-xs font-bold px-3 py-2 rounded-lg bg-green-50 border border-green-200 text-green-700">{editMsg}</p>}
             <div className="mt-3 space-y-2">
               <div><label className="text-xs font-bold uppercase">Email (usuario)</label><input value={editEmail} onChange={e=>setEditEmail(e.target.value)} className="mt-1 w-full border rounded-lg px-3 py-2 text-sm" /></div>
@@ -402,7 +402,7 @@ export default function AdminGeneral() {
                 <div><label className="text-xs font-bold uppercase">Nombre</label><input value={editFirst} onChange={e=>setEditFirst(e.target.value)} className="mt-1 w-full border rounded-lg px-3 py-2 text-sm" /></div>
                 <div><label className="text-xs font-bold uppercase">Apellido</label><input value={editLast} onChange={e=>setEditLast(e.target.value)} className="mt-1 w-full border rounded-lg px-3 py-2 text-sm" /></div>
               </div>
-              <button disabled={editSaving} onClick={async()=>{ setEditSaving(true); setEditMsg(null); try{ const r=await fetch(`/api/users/${currentUser.id}`,{method:"PATCH",headers:{"Content-Type":"application/json",Authorization:authHeader},body:JSON.stringify({email:editEmail, first_name:editFirst, last_name:editLast})}); const j=await r.json(); if(!r.ok) throw new Error(j.error); setCurrentUser(j); localStorage.setItem("knox_user", JSON.stringify(j)); setEditMsg("Usuario actualizado ✓"); load(); }catch(e:any){ alert(e.message); } finally{ setEditSaving(false); } }} className="w-full bg-[#0B1220] text-white py-2 rounded-full text-sm font-bold disabled:opacity-60">{editSaving?"Guardando...":"Guardar cambios"}</button>
+              <button disabled={editSaving} onClick={async()=>{ setEditSaving(true); setEditMsg(null); try{ const r=await fetch(`/api/users/${currentUser.id}`,{method:"PATCH",headers:{"Content-Type":"application/json",Authorization:authHeader},body:JSON.stringify({email:editEmail, first_name:editFirst, last_name:editLast})}); const j=await r.json(); if(!r.ok) throw new Error(j.error); setCurrentUser(j); localStorage.setItem("knox_user", JSON.stringify(j)); setEditMsg("Usuario actualizado ✓"); load(); }catch(e:any){ alert(e.message); } finally{ setEditSaving(false); } }} className="w-full bg-[#001d62] text-white py-2 rounded-full text-sm font-bold disabled:opacity-60">{editSaving?"Guardando...":"Guardar cambios"}</button>
               <p className="text-[11px] text-slate-400">El email es tu usuario para login. Se guarda en minúsculas.</p>
             </div>
           </div>
@@ -412,7 +412,7 @@ export default function AdminGeneral() {
             <div className="mt-3 space-y-2">
               <input placeholder="Contraseña actual" type="password" value={pwOld} onChange={e => setPwOld(e.target.value)} className="w-full border rounded-lg px-3 py-2 text-sm" />
               <input placeholder="Nueva contraseña (≥8)" type="password" value={pwNew} onChange={e => setPwNew(e.target.value)} className="w-full border rounded-lg px-3 py-2 text-sm" />
-              <button onClick={async () => { const r = await fetch("/api/users/change-password", { method: "POST", headers: { "Content-Type": "application/json", Authorization: authHeader }, body: JSON.stringify({ old_password: pwOld, new_password: pwNew }) }); const j = await r.json(); if (r.ok) { alert("Contraseña cambiada ✓"); setPwOld(""); setPwNew(""); } else alert(j.error); }} className="w-full bg-[#0B1220] text-white py-2 rounded-full text-sm font-bold">Cambiar contraseña</button>
+              <button onClick={async () => { const r = await fetch("/api/users/change-password", { method: "POST", headers: { "Content-Type": "application/json", Authorization: authHeader }, body: JSON.stringify({ old_password: pwOld, new_password: pwNew }) }); const j = await r.json(); if (r.ok) { alert("Contraseña cambiada ✓"); setPwOld(""); setPwNew(""); } else alert(j.error); }} className="w-full bg-[#001d62] text-white py-2 rounded-full text-sm font-bold">Cambiar contraseña</button>
               {isAdmin && <p className="text-[11px] text-slate-400">Admin: para resetear clave de otro usuario sin saber la actual, usa la lista de Usuarios → contacta al admin o usa PATCH /api/users/:id/change-password.</p>}
             </div>
           </div>
@@ -439,8 +439,8 @@ export default function AdminGeneral() {
               <div className={`border rounded-xl p-4 ${selected.chaside ? "bg-green-50 border-green-200" : "bg-red-50 border-red-200"}`}>
                 <h4 className="font-black text-sm flex items-center gap-1">CHASIDE {selected.chaside ? <><Check size={14} className="text-green-600" /></> : <><Minus size={14} className="text-red-500" />faltante</>}</h4>
                 {selected.chaside ? <>
-                  <div className="mt-2 grid grid-cols-7 gap-1 text-[10px] text-center">{Object.entries(selected.chaside.intereses).map(([k, v]: any) => <div key={k} className={`font-black p-1 rounded border ${k===selected.chaside.topInteres ? "bg-[#0B1220] text-white" : "bg-[#FFCC00]"}`}>{k}<br />{String(v)}</div>)}</div>
-                  <div className="mt-2 grid grid-cols-7 gap-1 text-[10px] text-center">{Object.entries(selected.chaside.aptitudes).map(([k, v]: any) => <div key={k} className={`p-1 rounded border text-xs ${k===selected.chaside.topAptitud ? "bg-[#0B1220] text-white font-black" : "bg-white"}`}>{k}<br />{String(v)}</div>)}</div>
+                  <div className="mt-2 grid grid-cols-7 gap-1 text-[10px] text-center">{Object.entries(selected.chaside.intereses).map(([k, v]: any) => <div key={k} className={`font-black p-1 rounded border ${k===selected.chaside.topInteres ? "bg-[#001d62] text-white" : "bg-[#d8215d]"}`}>{k}<br />{String(v)}</div>)}</div>
+                  <div className="mt-2 grid grid-cols-7 gap-1 text-[10px] text-center">{Object.entries(selected.chaside.aptitudes).map(([k, v]: any) => <div key={k} className={`p-1 rounded border text-xs ${k===selected.chaside.topAptitud ? "bg-[#001d62] text-white font-black" : "bg-white"}`}>{k}<br />{String(v)}</div>)}</div>
                   <p className="text-[11px] text-slate-500 mt-1">Amarillo/Negro = top. Intereses 0–10 (10 preguntas), Aptitudes 0–4.</p>
                   {/* Contexto completo como ve el estudiante */}
                   <div className="mt-3 bg-white border rounded-xl p-3">
@@ -469,7 +469,7 @@ export default function AdminGeneral() {
                     const label = k==="EI" ? "Mente E/I" : k==="SN" ? "Energía S/N" : k==="TF" ? "Naturaleza T/F" : "Táctica J/P";
                     const left = k==="EI" ? "I Introvertido" : k==="SN" ? "N Intuitivo" : k==="TF" ? "F Sentimiento" : "P Prospección";
                     const right = k==="EI" ? "E Extravertido" : k==="SN" ? "S Observador" : k==="TF" ? "T Pensamiento" : "J Juzgador";
-                    return <div key={k} className="bg-white border rounded-lg p-2"><p className="text-[10px] font-black uppercase tracking-wider">{label}: {v.letter} {v.percent}%</p><div className="mt-1 h-2 bg-slate-200 rounded-full overflow-hidden flex"><div className="h-full bg-[#0B1220]" style={{width:`${v.percent}%`}} /><div className="h-full bg-slate-300" style={{width:`${100-v.percent}%`}} /></div><p className="text-[10px] flex justify-between mt-1"><span>{left}</span><span>{right}</span></p></div>;
+                    return <div key={k} className="bg-white border rounded-lg p-2"><p className="text-[10px] font-black uppercase tracking-wider">{label}: {v.letter} {v.percent}%</p><div className="mt-1 h-2 bg-slate-200 rounded-full overflow-hidden flex"><div className="h-full bg-[#001d62]" style={{width:`${v.percent}%`}} /><div className="h-full bg-slate-300" style={{width:`${100-v.percent}%`}} /></div><p className="text-[10px] flex justify-between mt-1"><span>{left}</span><span>{right}</span></p></div>;
                   })}</div>
                   <p className="text-xs text-slate-500 mt-2">{new Date(selected.personalidad.fecha_unix * 1000).toLocaleString()} · 50% neutral, &gt;60% ligera, &gt;75% marcada</p>
                 </>; })() : <p className="text-xs text-slate-600 mt-2">Pendiente. 60 preguntas Likert -3..+3 → 4 dicotomías → tipo 4 letras (ej: INFP). Ver leyenda MBTI.</p>}
@@ -481,7 +481,7 @@ export default function AdminGeneral() {
                   <p className="text-xs text-slate-700 mt-1">{topInfo.descripcion}</p>
                   <p className="text-xs mt-1"><b>Carreras:</b> {topInfo.carreras}</p>
                   <p className="text-xs mt-2"><b>Ranking:</b> {selected.kuder.ranking.map((k:string, i:number)=> <span key={k} className="inline-flex items-center gap-1">{i>0 && " > "}<LucideIcon name={KUDER_AREAS[k as keyof typeof KUDER_AREAS].icono} size={12} />{k} {selected.kuder.scores[k]}</span>)}</p>
-                  <div className="mt-2 grid grid-cols-5 gap-1 text-[10px] text-center">{Object.entries(selected.kuder.scores).map(([k, v]: any) => { const info=KUDER_AREAS[k as keyof typeof KUDER_AREAS]; const isTop=k===selected.kuder.top; return <div key={k} className={`border rounded p-1 flex flex-col items-center gap-0.5 ${isTop?"bg-[#0B1220] text-white font-black":"bg-white"}`}><LucideIcon name={info.icono} size={14} style={isTop ? {color:"white"} : {color:info.color}} /><b>{k}</b><div className="text-[9px]">{info.nombreCorto}</div><div>{String(v)}</div></div>; })}</div>
+                  <div className="mt-2 grid grid-cols-5 gap-1 text-[10px] text-center">{Object.entries(selected.kuder.scores).map(([k, v]: any) => { const info=KUDER_AREAS[k as keyof typeof KUDER_AREAS]; const isTop=k===selected.kuder.top; return <div key={k} className={`border rounded p-1 flex flex-col items-center gap-0.5 ${isTop?"bg-[#001d62] text-white font-black":"bg-white"}`}><LucideIcon name={info.icono} size={14} style={isTop ? {color:"white"} : {color:info.color}} /><b>{k}</b><div className="text-[9px]">{info.nombreCorto}</div><div>{String(v)}</div></div>; })}</div>
                   <p className="text-xs text-slate-500 mt-2">{new Date(selected.kuder.fecha_unix * 1000).toLocaleString()} · Verif: {selected.kuder.verificacion} · 60 diadas, cada elección +1</p>
                 </>; })() : <p className="text-xs text-slate-600 mt-2">Pendiente. 60 diadas (elige A o B), cada área puntúa 0–60.</p>}
               </div>
@@ -492,7 +492,7 @@ export default function AdminGeneral() {
               <span className={`px-3 py-1 rounded-full text-xs font-bold ${selected.kuder ? "bg-blue-600 text-white" : "bg-red-100 text-red-700"}`}>Kuder {selected.kuder ? "rendido" : "pendiente"}</span>
               <span className="ml-auto text-xs font-bold">Faltan {3 - [selected.chaside, selected.personalidad, selected.kuder].filter(Boolean).length} test(s)</span>
             </div>
-            <button onClick={() => setSelected(null)} className="mt-6 w-full bg-[#0B1220] text-white font-bold py-2 rounded-full">Cerrar</button>
+            <button onClick={() => setSelected(null)} className="mt-6 w-full bg-[#001d62] text-white font-bold py-2 rounded-full">Cerrar</button>
           </div>
         </div>
       )}

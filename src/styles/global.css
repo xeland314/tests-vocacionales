@@ -1,11 +1,12 @@
 @import "tailwindcss";
 
 :root {
-  --ggm-bg-dark: #0b1220;
-  --ggm-bg-card-dark: #162032;
-  --ggm-primary-blue: #0052ff;
-  --ggm-accent-red: #ff3b30;
-  --ggm-accent-yellow: #ffcc00;
+  --ggm-bg-dark: #001d62;
+  --ggm-bg-card-dark: #0f2b6b;
+  --ggm-primary-blue: #1f3875;
+  --ggm-accent-red: #d8215d;
+  --ggm-accent-yellow: #d8215d;
+  --ggm-bg-card: #fcfcfc;
   --ggm-text-light: #f8fafc;
   --ggm-text-dark: #1e293b;
   --ggm-gray-muted: #64748b;
@@ -13,7 +14,7 @@
   --font-body: 'Inter', system-ui, sans-serif;
   --radius-card: 16px;
   --radius-btn: 50px;
-  --shadow-btn: 0 4px 15px rgba(255, 59, 48, 0.4);
+  --shadow-btn: 0 4px 15px rgba(216, 33, 93, 0.4);
 }
 
 body {

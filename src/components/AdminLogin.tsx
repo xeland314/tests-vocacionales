@@ -29,14 +29,14 @@ export default function AdminLogin({ onLogin }: { onLogin?: () => void }){
       <form onSubmit={submit} className="mt-4 space-y-3">
         <div>
           <label className="text-xs font-bold uppercase">Email</label>
-          <input type="email" value={email} onChange={e=>setEmail(e.target.value)} required className="mt-1 w-full px-4 py-2 rounded-xl border-2 border-slate-300 focus:border-[#0B1220] outline-none" placeholder="admin@teamggm.com" />
+          <input type="email" value={email} onChange={e=>setEmail(e.target.value)} required className="mt-1 w-full px-4 py-2 rounded-xl border-2 border-slate-300 focus:border-[#001d62] outline-none" placeholder="admin@teamggm.com" />
         </div>
         <div>
           <label className="text-xs font-bold uppercase">Contraseña</label>
-          <input type="password" value={password} onChange={e=>setPassword(e.target.value)} required className="mt-1 w-full px-4 py-2 rounded-xl border-2 border-slate-300 focus:border-[#0B1220] outline-none" />
+          <input type="password" value={password} onChange={e=>setPassword(e.target.value)} required className="mt-1 w-full px-4 py-2 rounded-xl border-2 border-slate-300 focus:border-[#001d62] outline-none" />
         </div>
         {error && <p className="text-xs text-red-600 font-bold bg-red-50 border border-red-200 rounded-lg px-3 py-2">{error}</p>}
-        <button disabled={loading} className="w-full bg-[#0B1220] text-white font-bold py-2.5 rounded-full disabled:opacity-60">{loading?"Ingresando...":"Ingresar"}</button>
+        <button disabled={loading} className="w-full bg-[#001d62] text-white font-bold py-2.5 rounded-full disabled:opacity-60">{loading?"Ingresando...":"Ingresar"}</button>
       </form>
       <p className="text-xs text-slate-400 mt-3">Primer usuario: crea vía <code>POST /api/users</code> sin token (bootstrap).</p>
     </div>

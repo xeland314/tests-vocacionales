@@ -56,8 +56,9 @@ export const POST: APIRoute = async ({ request }) => {
     const ok = moodleRes.ok && !(moodleData as any)?.exception;
 
     if (!ok) {
-      return new Response(JSON.stringify({ error: "Moodle WS error", moodleData }), {
-        status: 502,
+      // No propagar 502 al navegador — Moodle puede estar en trycloudflare con WS deshabilitado
+      return new Response(JSON.stringify({ success: false, warning: "Moodle WS no disponible", moodleData }), {
+        status: 200,
         headers: { "Content-Type": "application/json" },
       });
     }
