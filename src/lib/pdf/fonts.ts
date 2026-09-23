@@ -10,17 +10,17 @@ export async function getSatoriFonts(): Promise<{ name: string; data: ArrayBuffe
   };
   try {
     const [poppinsBold, poppinsRegular, interRegular] = await Promise.all([
-      load("https://fonts.gstatic.com/s/poppins/v21/pxiByp8kv6yxQkrJJbeczQ.ttf"), // Poppins 700
-      load("https://fonts.gstatic.com/s/poppins/v21/pxiEyp8kv6yxQkrJURIc1Q.ttf"), // Poppins 400
-      load("https://fonts.gstatic.com/s/inter/v13/UcCoElRi-L_vrYpY8dM.ttf"), // Inter 400
+      load("https://cdn.jsdelivr.net/npm/@fontsource/poppins@5.0.16/files/poppins-latin-700-normal.woff"),
+      load("https://cdn.jsdelivr.net/npm/@fontsource/poppins@5.0.16/files/poppins-latin-400-normal.woff"),
+      load("https://cdn.jsdelivr.net/npm/@fontsource/inter@5.0.16/files/inter-latin-400-normal.woff"),
     ]);
     fontsCache = [
       { name: "Poppins", data: poppinsBold, weight: 700 as const, style: "normal" as const },
       { name: "Poppins", data: poppinsRegular, weight: 400 as const, style: "normal" as const },
       { name: "Inter", data: interRegular, weight: 400 as const, style: "normal" as const },
     ];
-  } catch {
-    // Fallback: usa un ArrayBuffer vacío y deja que satori use fallback de sistema (no ideal pero no bloquea)
+  } catch (e) {
+    console.warn("Satori fonts failed, fallback to html2pdf", e);
     fontsCache = [];
   }
   return fontsCache;

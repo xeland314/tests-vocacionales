@@ -75,9 +75,10 @@ function MbtiDoc({ result, studentName, date, logo, isTeacher }: { result: Resul
 
 async function renderPdf(element: React.ReactElement, filename: string) {
   const fonts = await getSatoriFonts();
+  if (!fonts.length) throw new Error("Satori fonts not loaded — fallback to html2pdf");
   const logo = await getLogoDataUrl();
   const withLogo = React.cloneElement(element as any, { logo });
-  const svg = await satori(withLogo as any, { width: 794, height: 1123, fonts: fonts.length ? fonts : [{ name: 'sans-serif', data: new ArrayBuffer(0), weight: 400, style: 'normal' } as any] });
+  const svg = await satori(withLogo as any, { width: 794, height: 1123, fonts });
   const pdf = await PDFDocument.create();
   const page = pdf.addPage([794, 1123]);
   const svgBlob = new Blob([svg], { type: 'image/svg+xml' });

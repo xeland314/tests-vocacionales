@@ -102,13 +102,14 @@ function ChasideDoc({ result, studentName, date, logo, isTeacher }: { result: Re
 
 async function renderPdf(element: React.ReactElement, filename: string) {
   const fonts = await getSatoriFonts();
+  if (!fonts.length) throw new Error("Satori fonts not loaded — fallback to html2pdf");
   const logo = await getLogoDataUrl();
   // Clona el elemento e inyecta logo
   const withLogo = React.cloneElement(element as any, { logo });
   const svg = await satori(withLogo as any, {
     width: 794,
     height: 1123,
-    fonts: fonts.length ? fonts : [{ name: 'sans-serif', data: new ArrayBuffer(0), weight: 400, style: 'normal' } as any],
+    fonts,
   });
   const pdf = await PDFDocument.create();
   const page = pdf.addPage([794, 1123]);
