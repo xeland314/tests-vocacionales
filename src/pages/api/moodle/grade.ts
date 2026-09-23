@@ -76,18 +76,15 @@ export const POST: APIRoute = async ({ request }) => {
 
     const moodleData = await moodleRes.json().catch(async () => ({ raw: await moodleRes.text() }));
     const ok = moodleRes.ok && !(moodleData as any)?.exception;
-    // Con Solución 1 (Show as complete when conditions are met + must receive a grade), Moodle marca Done automáticamente al recibir la nota — no hace falta llamar a core_completion_update_activity_completion_status_manually
-    let completion: any = { auto: "grade triggers completion if activity is set to Show as complete when conditions are met + must receive a grade", cmid };
 
     if (!ok) {
-      // No propagar 502 al navegador — Moodle puede estar en trycloudflare con WS deshabilitado, pero completion ya intentado
-      return new Response(JSON.stringify({ success: false, warning: "Moodle WS no disponible", moodleData, completion }), {
+      return new Response(JSON.stringify({ success: false, warning: "Moodle WS no disponible", moodleData }), {
         status: 200,
         headers: { "Content-Type": "application/json" },
       });
     }
 
-    return new Response(JSON.stringify({ success: true, moodleData, completion }), {
+    return new Response(JSON.stringify({ success: true, moodleData }), {
       status: 200,
       headers: { "Content-Type": "application/json" },
     });

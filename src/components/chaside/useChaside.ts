@@ -2,7 +2,7 @@ import { useEffect, useState, useMemo } from "react";
 import { calculateScores, type Answers } from "../../data/scoring";
 import { useAnonGate } from "../../lib/anonGate";
 import { notifyMoodleCompletion } from "../../lib/moodle";
-import { generateCrispPdf } from "../../lib/pdf";
+import { generateCrispPdf, generateChasideStudentPdf } from "../../lib/pdf";
 
 const STORAGE_KEY = "chaside_answers_v1";
 const STORAGE_NAME = "chaside_student_name";
@@ -169,11 +169,17 @@ export function useChaside() {
     } finally { setSaving(false); }
   };
 
-  const handlePrint = () => {
-    const rawName = (moodleUserName?.trim() || "resultado").replace(/\s+/g, "_").replace(/[^a-zA-Z0-9_\-áéíóúÁÉÍÓÚñÑ]/g, "");
-    const safeName = rawName || "resultado";
-    const filename = `CHASIDE_${safeName}_${new Date().toISOString().slice(0, 10)}.pdf`;
-    generateCrispPdf("print-area-chaside", filename);
+  const handlePrint = async () => {
+    try {
+      const date = savedAt || formatDateTime(new Date());
+      const name = (moodleUserName?.trim() || "resultado").trim();
+      await generateChasideStudentPdf(result as any, name, date);
+    } catch {
+      const rawName = (moodleUserName?.trim() || "resultado").replace(/\s+/g, "_").replace(/[^a-zA-Z0-9_\-áéíóúÁÉÍÓÚñÑ]/g, "");
+      const safeName = rawName || "resultado";
+      const filename = `CHASIDE_${safeName}_${new Date().toISOString().slice(0, 10)}.pdf`;
+      generateCrispPdf("print-area-chaside", filename);
+    }
   };
 
   const handleDownload = () => {

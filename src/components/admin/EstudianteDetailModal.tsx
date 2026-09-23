@@ -1,9 +1,12 @@
 import React from 'react';
-import { BookOpen, Check, Minus, X } from "lucide-react";
+import { BookOpen, Check, Minus, X, Download } from "lucide-react";
 import { AREAS, AREA_ORDER, INTERESES_GRID, APTITUDES_GRID } from "../../data/chaside";
 import { TYPES } from "../../data/personalidad";
 import { KUDER_AREAS, KUDER_ORDER } from "../../data/kuder";
 import { LucideIcon } from "../../lib/icons";
+import { generateChasideTeacherPdf } from "../../lib/pdf/chaside";
+import { generateMbtiTeacherPdf } from "../../lib/pdf/mbti";
+import { generateKuderTeacherPdf } from "../../lib/pdf/kuder";
 
 export function EstudianteDetailModal({ selected, setSelected, authHeader, load, isAdmin }: any) {
   if (!selected) return null;
@@ -76,6 +79,7 @@ export function EstudianteDetailModal({ selected, setSelected, authHeader, load,
               </div>
             </div>
             <p className="text-xs text-slate-500 mt-2">{new Date(selected.chaside.fecha_unix * 1000).toLocaleString()} · Top {selected.chaside.topInteres} · 2do {selected.chaside.segundoInteres || "—"} · Apt {selected.chaside.topAptitud}</p>
+            <button onClick={async () => { const r = { topInteres: selected.chaside.topInteres, segundoInteres: selected.chaside.segundoInteres, topAptitud: selected.chaside.topAptitud, intereses: selected.chaside.intereses, aptitudes: selected.chaside.aptitudes }; await generateChasideTeacherPdf(r as any, selected.estudiante.moodle_user_name || "Estudiante", new Date(selected.chaside.fecha_unix * 1000).toLocaleString()); }} className="mt-3 bg-[#001d62] text-white px-4 py-2 rounded-full text-xs font-bold inline-flex items-center gap-1"><Download size={14} />PDF docente CHASIDE</button>
           </> : <p className="text-xs text-slate-600 mt-2">Pendiente de rendir (98 SÍ/NO).</p>}
         </div>
 
@@ -107,6 +111,7 @@ export function EstudianteDetailModal({ selected, setSelected, authHeader, load,
               return <div key={k} className="bg-white border rounded-lg p-2"><p className="text-[10px] font-black uppercase">{label}: {v.letter} {v.percent}% · {v.raw > 0 ? `+${v.raw}` : v.raw}/45</p><div className="mt-1 h-2 bg-slate-200 rounded-full overflow-hidden flex"><div className="h-full" style={{ background: t.color, width: `${v.percent}%` }} /><div className="h-full bg-slate-200" style={{ width: `${100 - v.percent}%` }} /></div><p className="text-[10px] flex justify-between mt-1"><span>{left}</span><span>{right}</span></p></div>;
             })}</div>
             <p className="text-xs text-slate-500 mt-2">{new Date(selected.personalidad.fecha_unix * 1000).toLocaleString()} · {selected.personalidad.tipo}</p>
+            <button onClick={async () => { const dims: any = selected.personalidad.dimensiones; const perc: any = selected.personalidad.percentages || {}; const res: any = { type: selected.personalidad.tipo, dimensions: dims, percentages: perc }; await generateMbtiTeacherPdf(res, selected.estudiante.moodle_user_name || "Estudiante", new Date(selected.personalidad.fecha_unix * 1000).toLocaleString()); }} className="mt-3 bg-[#7C3AED] text-white px-4 py-2 rounded-full text-xs font-bold inline-flex items-center gap-1"><Download size={14} />PDF docente MBTI</button>
           </>; })() : <p className="text-xs text-slate-600 mt-2">Pendiente (60 Likert -3..+3).</p>}
         </div>
 
@@ -130,6 +135,7 @@ export function EstudianteDetailModal({ selected, setSelected, authHeader, load,
               {KUDER_ORDER.map((k: any) => { const v = selected.kuder.scores[k]; const isTop = k === selected.kuder.top; return <div key={k} className={`border rounded p-1.5 ${isTop ? "bg-[#d8215d] text-white font-black border-[#d8215d]" : "bg-white"}`}><span className="font-black">{k}</span><br />{v}</div>; })}
             </div>
             <p className="text-xs text-slate-500 mt-2">{new Date(selected.kuder.fecha_unix * 1000).toLocaleString()} · Verif: {selected.kuder.verificacion}</p>
+            <button onClick={async () => { const r: any = { top: selected.kuder.top, ranking: selected.kuder.ranking, scores: selected.kuder.scores, verificacion: selected.kuder.verificacion }; await generateKuderTeacherPdf(r, selected.estudiante.moodle_user_name || "Estudiante", new Date(selected.kuder.fecha_unix * 1000).toLocaleString()); }} className="mt-3 bg-[#2563EB] text-white px-4 py-2 rounded-full text-xs font-bold inline-flex items-center gap-1"><Download size={14} />PDF docente Kuder</button>
           </>; })() : <p className="text-xs text-slate-600 mt-2">Pendiente (60 diadas).</p>}
         </div>
         <div className="mt-4 flex gap-2 flex-wrap">

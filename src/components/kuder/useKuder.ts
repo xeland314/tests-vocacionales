@@ -3,6 +3,7 @@ import { calculateKuder, type KuderAnswers } from "../../data/kuderScoring";
 import { useAnonGate } from "../../lib/anonGate";
 import { notifyMoodleCompletion } from "../../lib/moodle";
 import { KUDER_ORDER } from "../../data/kuder";
+import { generateKuderStudentPdf } from "../../lib/pdf";
 
 const STORAGE = "kuder_answers_v1";
 const STORAGE_NAME = "kuder_student_name";
@@ -90,7 +91,16 @@ export function useKuder() {
       const j = await res.json().catch(() => ({})); if (!res.ok) throw new Error(j.error || `Error ${res.status} al guardar`); setSavedAt(stamp + " · ya guardado"); notifyMoodleCompletion({ test: "KUDER", moodleUserId, score: result.scores, top: result.top });
     } catch (e: any) { setError(e.message); } finally { setSaving(false); }
   };
+  const handlePrint = async () => {
+    try {
+      const date = savedAt || fmt(new Date());
+      const name = (moodleUserName?.trim() || "resultado").trim();
+      await generateKuderStudentPdf(result as any, name, date);
+    } catch {
+      window.print();
+    }
+  };
   const reset = () => { setAnswers({}); setShowResult(false); setAlreadyCompleted(false); setError(null); try { localStorage.removeItem(STORAGE); } catch {} window.scrollTo({ top: 0, behavior: "smooth" }); };
 
-  return { answers, setAnswers, showResult, setShowResult, name, setName, savedAt, error, saving, alreadyCompleted, loadingExisting, gateChecked, gateReady, isMoodle, moodleUserId, moodleUserName, total, progress, missing, result, maxScore, handle, submit, save, reset, setError };
+  return { answers, setAnswers, showResult, setShowResult, name, setName, savedAt, error, saving, alreadyCompleted, loadingExisting, gateChecked, gateReady, isMoodle, moodleUserId, moodleUserName, total, progress, missing, result, maxScore, handle, submit, save, handlePrint, reset, setError };
 }

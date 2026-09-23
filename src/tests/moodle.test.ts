@@ -16,7 +16,7 @@ describe("moodle completion — cmid mapping", () => {
     expect(content).toContain("CHASIDE: 9");
     expect(content).toContain("KUDER: 11");
     expect(content).toContain("MBTI: 10");
-    // Verifica que grade.ts use moodleConfig y llame a core_grades_update_grades con iteminstance=cmid para disparo automático de completado
+    // Verifica que grade.ts use moodleConfig y llame a core_grades_update_grades con iteminstance=cmid (Solución 1 nativa, sin segundo WS)
     const gradeContent = fs.readFileSync("src/pages/api/moodle/grade.ts", "utf-8");
     expect(gradeContent).toContain("core_grades_update_grades");
     expect(gradeContent).toContain("getMoodleConfig");
@@ -24,9 +24,9 @@ describe("moodle completion — cmid mapping", () => {
     expect(gradeContent).toContain("itemtype");
     expect(gradeContent).toContain("itemmodule");
     expect(gradeContent).toContain("iteminstance");
-    // Verifica que el marcado manual para admin use override con userid
+    // Verifica que el marcado manual esté deshabilitado (Do not indicate) y el endpoint retorne warning
     const completeContent = fs.readFileSync("src/pages/api/admin/moodle/complete.ts", "utf-8");
-    expect(completeContent).toContain("core_completion_override_activity_completion_status");
-    expect(completeContent).toContain("overrideinstance");
+    expect(completeContent).toContain("Moodle completion deshabilitado");
+    expect(completeContent).toContain("Do not indicate");
   });
 });

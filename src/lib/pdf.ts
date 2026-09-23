@@ -1,8 +1,13 @@
+export * from "./pdf/chaside";
+export * from "./pdf/mbti";
+export * from "./pdf/kuder";
+
 /**
- * Genera PDF nítido usando html2pdf.js (html2canvas + jsPDF)
+ * Genera PDF nítido usando html2pdf.js (html2canvas + jsPDF) — fallback legacy
  * - scale: 2 para alta resolución
  * - Usa data-html2canvas-ignore para ocultar botones
  * - Fallback a window.print() si falla
+ * Para diseño nuevo usa generateChasideStudentPdf / generateMbtiStudentPdf / generateKuderStudentPdf (satori + pdf-lib, vectorial)
  */
 export async function generateCrispPdf(elementId: string, filename: string) {
   if (typeof window === "undefined") return;

@@ -2,6 +2,7 @@ import React from 'react';
 import { usePersonalidad } from "./usePersonalidad";
 import { TYPES } from "../../data/personalidad";
 import { PERSONALITY_QUESTIONS } from "../../data/personalidad";
+import { Printer } from "lucide-react";
 
 
 const SCALE = [
@@ -15,7 +16,7 @@ const SCALE = [
 ];
 
 export default function PersonalidadTest() {
-  const { answers, showResult, savedAt, error, saving, alreadyCompleted, loadingExisting, gateChecked, gateReady, isMoodle, total, progress, missing, result, handle, submit, save, reset } = usePersonalidad();
+  const { answers, showResult, savedAt, error, saving, alreadyCompleted, loadingExisting, gateChecked, gateReady, isMoodle, total, progress, missing, result, handle, submit, save, handlePrint, reset } = usePersonalidad();
   if (loadingExisting) return <div className="min-h-screen bg-[#F3F4F6] flex items-center justify-center p-8"><p className="text-sm text-slate-500">Cargando resultado guardado...</p></div>;
   if (!gateChecked) return <div className="min-h-screen bg-[#F3F4F6] flex items-center justify-center p-8"><p className="text-sm text-slate-500">Detectando entorno...</p></div>;
   if (!isMoodle) return <div className="min-h-screen bg-[#ffffff] flex items-center justify-center p-4"><div className="max-w-md w-full bg-[#fcfcfc] border border-[#0f2b6b]/10 rounded-2xl p-8 text-center"><img src="/logo-fucsia.png" alt="TEAM GGM" className="h-10 mx-auto mb-4" /><h1 className="text-6xl font-black text-[#001d62]" style={{ fontFamily: "Poppins" }}>404</h1><p className="text-sm text-[#0f2b6b] mt-2">Página no encontrada.</p><a href="/" className="mt-4 inline-block bg-[#001d62] hover:bg-[#0f2b6b] text-white px-6 py-2.5 rounded-full font-bold">Ir al inicio</a></div></div>;
@@ -25,9 +26,12 @@ export default function PersonalidadTest() {
       <div className="min-h-screen bg-[#F9F9FB]">
         {alreadyCompleted && <div className="bg-amber-50 border-b border-amber-200 px-4 py-3 text-center text-sm text-amber-800">Ya completaste este test. Mostrando resultado guardado.</div>}
         <div className="max-w-4xl mx-auto px-4 py-6">
+          <div className="flex justify-end mb-4">
+            <button onClick={handlePrint} className="bg-[#001d62] hover:bg-[#0f2b6b] text-white font-bold px-5 py-2.5 rounded-full text-sm inline-flex items-center gap-2"><Printer size={16} />Imprimir / PDF</button>
+          </div>
           {error && <p className="text-xs text-red-600 font-bold mb-4 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{error}</p>}
           {saving && <p className="text-xs text-[#0f2b6b] mb-4">Guardando...</p>}
-          <div className="mt-6 bg-white border border-slate-200 rounded-[20px] overflow-hidden">
+          <div className="mt-2 bg-white border border-slate-200 rounded-[20px] overflow-hidden">
             <div className="h-2" style={{ background: info.color }} />
             <div className="p-8 text-center">
               <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-500">{info.role}</p>

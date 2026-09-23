@@ -26,9 +26,12 @@
     "bcryptjs": "^3.0.3",
     "html2pdf.js": "^0.14.0",
     "lucide-react": "^1.47.0",
+    "pdf-lib": "^1.17.1",
     "plotly.js-dist-min": "^4.1.1",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
+    "satori": "^0.26.0",
+    "satori-html": "^0.3.2",
     "tailwindcss": "^4.3.3"
   },
   "allowScripts": {
