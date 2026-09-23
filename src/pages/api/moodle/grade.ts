@@ -77,13 +77,13 @@ export const POST: APIRoute = async ({ request }) => {
     }
     let completion: any = null;
     if (cmid) {
-      const compUrl = `${MOODLE_URL.replace(/\/$/, "")}/webservice/rest/server.php?wstoken=${WS_TOKEN}&wsfunction=core_completion_update_activity_completion_status_manually&moodlewsrestformat=json`;
-      // Solo cmid y completed — userid no se envía (la función solo acepta 2 params, marca para el usuario del token; para marcar a otro usuario el token debe tener moodle/course:markcomplete y usar userid, pero tu Moodle rechaza el 3er param)
+      // Para marcar a un estudiante específico desde token admin, usar override (acepta userid) — requiere core_completion_override_activity_completion_status con moodle/course:overridecompletion
+      const compUrl = `${MOODLE_URL.replace(/\/$/, "")}/webservice/rest/server.php?wstoken=${WS_TOKEN}&wsfunction=core_completion_override_activity_completion_status&moodlewsrestformat=json`;
       try {
         const compRes = await fetch(compUrl, {
           method: "POST",
           headers: { "Content-Type": "application/x-www-form-urlencoded" },
-          body: new URLSearchParams({ cmid: String(cmid), completed: "1" }),
+          body: new URLSearchParams({ cmid: String(cmid), userid: String(moodleUserId), completed: "1" }),
         });
         const rawText = await compRes.text();
         let compData: any;

@@ -41,13 +41,13 @@ export const POST: APIRoute = async ({ request }) => {
   }
   if (!cmid) return new Response(JSON.stringify({ error: `No hay cmid configurado para ${test}. Ve a Admin > Moodle` }), { status: 400 });
 
-  // Solo cmid y completed — la función solo acepta 2 params (userid no permitido, marca para el usuario del token)
-  const compUrl = `${MOODLE_URL.replace(/\/$/, "")}/webservice/rest/server.php?wstoken=${WS_TOKEN}&wsfunction=core_completion_update_activity_completion_status_manually&moodlewsrestformat=json`;
+  // Override permite marcar a un userid específico (estudiante) desde token admin — requiere core_completion_override_activity_completion_status + moodle/course:overridecompletion
+  const compUrl = `${MOODLE_URL.replace(/\/$/, "")}/webservice/rest/server.php?wstoken=${WS_TOKEN}&wsfunction=core_completion_override_activity_completion_status&moodlewsrestformat=json`;
   try {
     const compRes = await fetch(compUrl, {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({ cmid: String(cmid), completed: "1" }),
+      body: new URLSearchParams({ cmid: String(cmid), userid: String(moodle_user_id), completed: "1" }),
     });
     const text = await compRes.text();
     let compData: any;
