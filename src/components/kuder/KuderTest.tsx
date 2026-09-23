@@ -1,10 +1,10 @@
 import { useKuder } from "./useKuder";
 import { KUDER_DIADAS, KUDER_AREAS } from "../../data/kuder";
 import { LucideIcon } from "../../lib/icons";
-import { BookOpen, Save, Printer, Check } from "lucide-react";
+import { Printer } from "lucide-react";
 
 export default function KuderTest() {
-  const { answers, showResult, savedAt, error, saving, alreadyCompleted, loadingExisting, gateChecked, gateReady, isMoodle, total, progress, missing, result, maxScore, handle, submit, save, reset } = useKuder();
+  const { answers, showResult, error, saving, alreadyCompleted, loadingExisting, gateChecked, gateReady, isMoodle, total, progress, missing, result, maxScore, handle, submit, reset } = useKuder();
   if (loadingExisting) return <div className="min-h-screen bg-[#EFF6FF] flex items-center justify-center p-8"><p className="text-sm text-slate-500">Cargando resultado guardado...</p></div>;
   if (!gateChecked) return <div className="min-h-screen bg-[#EFF6FF] flex items-center justify-center p-8"><p className="text-sm text-slate-500">Detectando entorno...</p></div>;
   if (!isMoodle) return <div className="min-h-screen bg-[#EFF6FF] flex items-center justify-center p-4"><div className="max-w-md w-full bg-white border rounded-2xl p-6 text-center"><h2 className="text-xl font-black">Accede desde Moodle</h2><p className="text-sm text-slate-600 mt-2">Solo Moodle guarda resultados.</p><a href="/" className="mt-4 inline-block bg-[#001d62] text-white px-6 py-2.5 rounded-full font-bold">← Volver</a></div></div>;
@@ -15,12 +15,8 @@ export default function KuderTest() {
         {alreadyCompleted && <div className="bg-amber-50 border-b border-amber-200 px-4 py-3 text-center text-sm text-amber-800">Ya completaste este test. Mostrando resultado guardado.</div>}
         <div className="bg-white border-b sticky top-0 z-20"><div className="max-w-4xl mx-auto px-4 py-3 flex items-center gap-3"><span className="text-sm font-extrabold flex items-center gap-2" style={{ color: topInfo.color }}><LucideIcon name={topInfo.icono} size={16} />{topInfo.nombre} · Kuder</span><div className="ml-auto flex gap-2"><button onClick={() => window.print()} className="text-sm bg-[#001d62] text-white px-4 py-1.5 rounded-full font-bold inline-flex items-center gap-1"><Printer size={14} />Imprimir / PDF</button></div></div></div>
         <div className="max-w-4xl mx-auto px-4 py-6">
-          <div className="bg-white border rounded-2xl p-4">
-            <p className="text-xs font-black uppercase flex items-center gap-1"><Check size={14} className="text-green-600" />{alreadyCompleted ? "Tus respuestas se Guardaron correctamente." : "Datos ya registrados"}</p>
-            {savedAt && <p className="text-xs text-slate-600 mt-2 flex items-center gap-1"><Check size={14} className="text-green-600" />{savedAt}</p>}
-            {error && <p className="text-xs text-red-600 font-bold mt-2">{error}</p>}
-            <button onClick={save} disabled={saving} className="mt-3 bg-[#1f3875] text-white font-bold px-6 py-2.5 rounded-full disabled:opacity-60 inline-flex items-center gap-2"><Save size={16} />{saving ? "Guardando..." : "Guardar en BD"}</button>
-          </div>
+          {error && <p className="text-xs text-red-600 font-bold mb-4 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{error}</p>}
+          {saving && <p className="text-xs text-[#0f2b6b] mb-4">Guardando...</p>}
           <div className="mt-6 bg-white border border-slate-200 rounded-[20px] overflow-hidden">
             <div className="h-2" style={{ background: topInfo.color }} />
             <div className="p-8 text-center">
