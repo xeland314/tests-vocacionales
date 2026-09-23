@@ -3,7 +3,7 @@ import { QUESTIONS } from "../data/chaside";
 import { PERSONALITY_QUESTIONS } from "../data/personalidad";
 import { KUDER_DIADAS } from "../data/kuder";
 
-const url = process.env.TURSO_DATABASE_URL || `file:${process.cwd()}/data/chaside.db`;
+const url = process.env.TURSO_DATABASE_URL || `file:${process.cwd().replace(/\\/g, "/")}/data/chaside.db`;
 
 export const db = createClient({ url, authToken: process.env.TURSO_AUTH_TOKEN });
 

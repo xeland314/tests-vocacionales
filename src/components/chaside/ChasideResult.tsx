@@ -1,7 +1,7 @@
 import type { Dispatch, SetStateAction } from "react";
 import { AREAS, AREA_ORDER, INTERESES_GRID, APTITUDES_GRID } from "../../data/chaside";
 import type { calculateScores } from "../../data/scoring";
-import { Printer, BookOpen, RotateCcw, Check } from "lucide-react";
+import { Printer, BookOpen, Check } from "lucide-react";
 
 type Props = {
   result: ReturnType<typeof calculateScores>;
@@ -11,15 +11,15 @@ type Props = {
   onSave: () => void;
   onPrint: () => void;
   onDownload: () => void;
-  onReset: () => void;
-  onBack: () => void;
+  onReset?: () => void;
+  onBack?: () => void;
   error: string | null;
   extra: { padre: string; correoEst: string; correoPadre: string; cedulaEst: string; cedulaRepr: string };
   setExtra: Dispatch<SetStateAction<{ padre: string; correoEst: string; correoPadre: string; cedulaEst: string; cedulaRepr: string }>>;
   saving: boolean;
 };
 
-export function ChasideResult({ result, studentName, savedAt, onPrint, onReset, onBack, error }: Props) {
+export function ChasideResult({ result, studentName, savedAt, onPrint, error }: Props) {
   const topI = result.topInteres;
   const secondI = result.segundoInteres;
   const topA = result.topAptitud;
@@ -105,10 +105,7 @@ export function ChasideResult({ result, studentName, savedAt, onPrint, onReset, 
             <p className="text-xs text-[#0f2b6b]">Estudiante: <span className="font-bold text-[#001d62]">{studentName}</span> · Fecha: <span className="font-bold text-[#001d62]">{savedAt}</span></p>
           </div>
         )}
-        <div className="mt-6 flex flex-wrap gap-3 print:hidden">
-          <button onClick={onBack} className="bg-[#ffffff] border-2 border-[#1f3875]/20 hover:border-[#001d62] text-[#001d62] font-bold px-6 py-2.5 rounded-full">← Volver al test</button>
-          <button onClick={onReset} className="bg-[#001d62] hover:bg-[#0f2b6b] text-white font-bold px-6 py-2.5 rounded-full inline-flex items-center gap-2"><RotateCcw size={16} />Nuevo test</button>
-        </div>
+        <p className="mt-6 text-xs text-[#0f2b6b]/50 text-center print:hidden">Para volver a rendir, solicita habilitación al administrador.</p>
       </div>
       <style>{`@media print { .print\\:hidden { display:none !important; } }`}</style>
     </div>

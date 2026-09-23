@@ -492,6 +492,12 @@ export default function AdminGeneral() {
               <span className={`px-3 py-1 rounded-full text-xs font-bold ${selected.kuder ? "bg-blue-600 text-white" : "bg-red-100 text-red-700"}`}>Kuder {selected.kuder ? "rendido" : "pendiente"}</span>
               <span className="ml-auto text-xs font-bold">Faltan {3 - [selected.chaside, selected.personalidad, selected.kuder].filter(Boolean).length} test(s)</span>
             </div>
+            {isAdmin && (
+              <div className="mt-4 border-t pt-4 flex gap-2 flex-wrap">
+                <button onClick={async () => { if (!confirm(`¿Habilitar retake para ${selected.estudiante.moodle_user_name || selected.estudiante.id}? Borrará todos los resultados.`)) return; await fetch(`/api/admin/estudiante/${selected.estudiante.id}`, { method: "DELETE", headers: { Authorization: authHeader } }); setSelected(null); load(); }} className="bg-[#d8215d] text-white font-bold px-4 py-2 rounded-full text-sm">Habilitar retake (borrar resultados)</button>
+                <button onClick={async () => { if (!confirm("¿Borrar solo CHASIDE?")) return; await fetch(`/api/admin/estudiante/${selected.estudiante.id}?test=chaside`, { method: "DELETE", headers: { Authorization: authHeader } }); setSelected(null); load(); }} className="bg-white border font-bold px-4 py-2 rounded-full text-sm">Borrar solo CHASIDE</button>
+              </div>
+            )}
             <button onClick={() => setSelected(null)} className="mt-6 w-full bg-[#001d62] text-white font-bold py-2 rounded-full">Cerrar</button>
           </div>
         </div>

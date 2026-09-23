@@ -1,7 +1,7 @@
 import { usePersonalidad } from "./usePersonalidad";
 import { TYPES } from "../../data/personalidad";
 import { PERSONALITY_QUESTIONS } from "../../data/personalidad";
-import { BookOpen, Save, Printer, RotateCcw, Check } from "lucide-react";
+import { BookOpen, Save, Printer, Check } from "lucide-react";
 
 const SCALE = [
   { v: -3 as any, label: "Muy en desacuerdo", color: "#d8215d", size: 48 },
@@ -23,7 +23,7 @@ export default function PersonalidadTest() {
     return (
       <div className="min-h-screen bg-[#F9F9FB]">
         {alreadyCompleted && <div className="bg-amber-50 border-b border-amber-200 px-4 py-3 text-center text-sm text-amber-800">Ya completaste — mostrando resultado guardado.</div>}
-        <div className="bg-[#001d62] text-white border-b sticky top-0 z-20"><div className="max-w-4xl mx-auto px-4 py-3 flex items-center gap-3"><span className="text-sm font-extrabold" style={{ color: info.color }}>{result.type} · {info.name}</span><div className="ml-auto flex gap-2"><button onClick={() => window.print()} className="text-sm bg-[#0B1220] text-white px-4 py-1.5 rounded-full font-bold inline-flex items-center gap-1"><Printer size={14} />Imprimir / PDF</button><button onClick={reset} className="text-sm bg-white border px-4 py-1.5 rounded-full font-bold inline-flex items-center gap-1"><RotateCcw size={14} />Nuevo</button></div></div></div>
+        <div className="bg-[#001d62] text-white border-b sticky top-0 z-20"><div className="max-w-4xl mx-auto px-4 py-3 flex items-center gap-3"><span className="text-sm font-extrabold" style={{ color: info.color }}>{result.type} · {info.name}</span><div className="ml-auto flex gap-2"><button onClick={() => window.print()} className="text-sm bg-[#0B1220] text-white px-4 py-1.5 rounded-full font-bold inline-flex items-center gap-1"><Printer size={14} />Imprimir / PDF</button></div></div></div>
         <div className="max-w-4xl mx-auto px-4 py-6">
           <div className="bg-white border rounded-2xl p-4">
             <p className="text-xs font-black uppercase flex items-center gap-1"><Check size={14} className="text-green-600" />{alreadyCompleted ? "Tus respuestas se Guardaron correctamente." : "Datos ya registrados"}</p>
@@ -54,6 +54,7 @@ export default function PersonalidadTest() {
               })}
             </div>
           </div>
+          <p className="mt-6 text-xs text-[#0f2b6b]/50 text-center">Para volver a rendir, solicita habilitación al administrador.</p>
         </div>
       </div>
     );

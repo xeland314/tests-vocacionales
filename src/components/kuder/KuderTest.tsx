@@ -1,7 +1,7 @@
 import { useKuder } from "./useKuder";
 import { KUDER_DIADAS, KUDER_AREAS, KUDER_ORDER } from "../../data/kuder";
 import { LucideIcon } from "../../lib/icons";
-import { BookOpen, Save, Printer, RotateCcw, Check } from "lucide-react";
+import { BookOpen, Save, Printer, Check } from "lucide-react";
 
 export default function KuderTest() {
   const { answers, showResult, savedAt, error, saving, alreadyCompleted, loadingExisting, gateChecked, gateReady, isMoodle, total, progress, missing, result, maxScore, handle, submit, save, reset } = useKuder();
@@ -13,7 +13,7 @@ export default function KuderTest() {
     return (
       <div className="min-h-screen bg-[#F9F9FB]">
         {alreadyCompleted && <div className="bg-amber-50 border-b border-amber-200 px-4 py-3 text-center text-sm text-amber-800">Ya completaste — mostrando resultado guardado.</div>}
-        <div className="bg-white border-b sticky top-0 z-20"><div className="max-w-4xl mx-auto px-4 py-3 flex items-center gap-3"><span className="text-sm font-extrabold flex items-center gap-2" style={{ color: topInfo.color }}><LucideIcon name={topInfo.icono} size={16} />{topInfo.nombre} · Kuder</span><div className="ml-auto flex gap-2"><button onClick={() => window.print()} className="text-sm bg-[#001d62] text-white px-4 py-1.5 rounded-full font-bold inline-flex items-center gap-1"><Printer size={14} />Imprimir / PDF</button><button onClick={reset} className="text-sm bg-white border px-4 py-1.5 rounded-full font-bold inline-flex items-center gap-1"><RotateCcw size={14} />Nuevo</button></div></div></div>
+        <div className="bg-white border-b sticky top-0 z-20"><div className="max-w-4xl mx-auto px-4 py-3 flex items-center gap-3"><span className="text-sm font-extrabold flex items-center gap-2" style={{ color: topInfo.color }}><LucideIcon name={topInfo.icono} size={16} />{topInfo.nombre} · Kuder</span><div className="ml-auto flex gap-2"><button onClick={() => window.print()} className="text-sm bg-[#001d62] text-white px-4 py-1.5 rounded-full font-bold inline-flex items-center gap-1"><Printer size={14} />Imprimir / PDF</button></div></div></div>
         <div className="max-w-4xl mx-auto px-4 py-6">
           <div className="bg-white border rounded-2xl p-4">
             <p className="text-xs font-black uppercase flex items-center gap-1"><Check size={14} className="text-green-600" />{alreadyCompleted ? "Tus respuestas se Guardaron correctamente." : "Datos ya registrados"}</p>
@@ -45,6 +45,7 @@ export default function KuderTest() {
               </div>
             </div>
           </div>
+          <p className="mt-6 text-xs text-[#0f2b6b]/50 text-center">Para volver a rendir, solicita habilitación al administrador.</p>
         </div>
       </div>
     );
