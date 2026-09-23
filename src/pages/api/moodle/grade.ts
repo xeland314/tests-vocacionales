@@ -78,21 +78,22 @@ export const POST: APIRoute = async ({ request }) => {
     let completion: any = null;
     if (cmid) {
       const compUrl = `${MOODLE_URL.replace(/\/$/, "")}/webservice/rest/server.php?wstoken=${WS_TOKEN}&wsfunction=core_completion_update_activity_completion_status_manually&moodlewsrestformat=json`;
+      // Solo cmid y completed — userid no se envía (la función solo acepta 2 params, marca para el usuario del token; para marcar a otro usuario el token debe tener moodle/course:markcomplete y usar userid, pero tu Moodle rechaza el 3er param)
       try {
         const compRes = await fetch(compUrl, {
           method: "POST",
           headers: { "Content-Type": "application/x-www-form-urlencoded" },
-          body: new URLSearchParams({ cmid: String(cmid), completed: "1", userid: String(moodleUserId) }),
+          body: new URLSearchParams({ cmid: String(cmid), completed: "1" }),
         });
         const rawText = await compRes.text();
         let compData: any;
         try { compData = JSON.parse(rawText); } catch { compData = { raw: rawText, status: compRes.status }; }
         completion = compData;
         if ((compData as any)?.exception) {
-          console.warn(`[moodle] completion cmid=${cmid} userid=${moodleUserId} courseId=${courseId} exception:`, (compData as any).exception, (compData as any).errorcode, (compData as any).message, compData);
-          // Si es invalid_parameter, suele ser cmid no existe en ese curso, o userid no matriculado, o Completion tracking no es "Students must manually mark"
+          console.warn(`[moodle] completion cmid=${cmid} userid=${moodleUserId} courseId=${courseId} exception:`, (compData as any).exception, (compData as any).errorcode, (compData as any).message, (compData as any).debuginfo || "", compData);
           if ((compData as any).errorcode === 'invalidparameter') {
-            console.warn(`[moodle] verifica: 1) cmid ${cmid} existe y es mod/url/view.php?id=${cmid} en curso ${courseId}, 2) Actividad > Completion tracking = Students must manually mark the activity as done, 3) Usuario ${moodleUserId} está matriculado como Student (no solo Teacher), 4) Token tiene moodle/course:markcomplete`);
+            const dbg = (compData as any).debuginfo || "";
+            console.warn(`[moodle] verifica: 1) cmid ${cmid} existe y es mod/url/view.php?id=${cmid} en curso ${courseId} (actual: ${MOODLE_URL}/mod/url/view.php?id=${cmid}), 2) Actividad > Completion tracking = Students can manually mark the activity as completed (no Disabled), 3) Usuario ${moodleUserId} está matriculado como Student en curso ${courseId} (revisa Participants → Jeanine → Student, no solo Teacher), 4) Token WS tiene core_completion_update_activity_completion_status_manually y moodle/course:markcomplete, 5) Prueba con Jeanine real (no 2/Admin ni 3/fake). debuginfo:`, dbg);
           }
         }
       } catch (e) {
