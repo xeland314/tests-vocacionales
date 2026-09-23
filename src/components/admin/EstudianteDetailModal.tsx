@@ -137,6 +137,18 @@ export function EstudianteDetailModal({ selected, setSelected, authHeader, load,
           <span className={`px-3 py-1 rounded-full text-xs font-bold ${selected.kuder ? "bg-blue-600 text-white" : "bg-red-100 text-red-700"}`}>Kuder {selected.kuder ? "rendido" : "pendiente"}</span>
           <span className="ml-auto text-xs font-bold">Faltan {3 - [selected.chaside, selected.personalidad, selected.kuder].filter(Boolean).length} test(s)</span>
         </div>
+        {isAdmin && selected.estudiante.moodle_user_id && (
+          <div className="mt-4 border rounded-xl p-3 bg-[#fcfcfc]">
+            <p className="text-xs font-black">Moodle — marcado manual de completado</p>
+            <p className="text-[11px] text-slate-500 mt-1">Si el check no se marcó automático (ej. cmid mal configurado o WS deshabilitado), usa estos botones. Llama a <code>core_completion_update_activity_completion_status_manually</code> con el cmid de Admin &gt; Moodle.</p>
+            <div className="mt-2 flex gap-2 flex-wrap">
+              {selected.chaside && <button onClick={async () => { const r = await fetch("/api/admin/moodle/complete", { method: "POST", headers: { "Content-Type": "application/json", Authorization: authHeader }, body: JSON.stringify({ moodle_user_id: selected.estudiante.moodle_user_id, test: "CHASIDE" }) }); const j = await r.json(); alert(j.success ? `CHASIDE cmid ${j.cmid} marcado ✓` : `Error: ${j.error || (j.moodleData as any)?.message || JSON.stringify(j)}`); }} className="bg-[#001d62] text-white px-3 py-1.5 rounded-full text-xs font-bold">Marcar CHASIDE (id 9) en Moodle</button>}
+              {selected.personalidad && <button onClick={async () => { const r = await fetch("/api/admin/moodle/complete", { method: "POST", headers: { "Content-Type": "application/json", Authorization: authHeader }, body: JSON.stringify({ moodle_user_id: selected.estudiante.moodle_user_id, test: "MBTI" }) }); const j = await r.json(); alert(j.success ? `MBTI cmid ${j.cmid} marcado ✓` : `Error: ${j.error || (j.moodleData as any)?.message || JSON.stringify(j)}`); }} className="bg-[#7C3AED] text-white px-3 py-1.5 rounded-full text-xs font-bold">Marcar MBTI (id 10) en Moodle</button>}
+              {selected.kuder && <button onClick={async () => { const r = await fetch("/api/admin/moodle/complete", { method: "POST", headers: { "Content-Type": "application/json", Authorization: authHeader }, body: JSON.stringify({ moodle_user_id: selected.estudiante.moodle_user_id, test: "KUDER" }) }); const j = await r.json(); alert(j.success ? `Kuder cmid ${j.cmid} marcado ✓` : `Error: ${j.error || (j.moodleData as any)?.message || JSON.stringify(j)}`); }} className="bg-[#2563EB] text-white px-3 py-1.5 rounded-full text-xs font-bold">Marcar Kuder (id 11) en Moodle</button>}
+            </div>
+            <p className="text-[11px] text-slate-400 mt-2">Moodle: {selected.estudiante.moodle_user_id} · cmids actuales: CHASIDE 9 / MBTI 10 / Kuder 11 (configurables en Admin &gt; Moodle)</p>
+          </div>
+        )}
         {isAdmin && (
           <div className="mt-4 border-t pt-4 flex gap-2 flex-wrap">
             <button onClick={async () => { if (!confirm(`¿Habilitar retake para ${selected.estudiante.moodle_user_name || selected.estudiante.id}? Borrará TODOS los resultados.`)) return; await fetch(`/api/admin/estudiante/${selected.estudiante.id}`, { method: "DELETE", headers: { Authorization: authHeader } }); setSelected(null); load(); }} className="bg-[#d8215d] text-white font-bold px-4 py-2 rounded-full text-sm">Habilitar retake (borrar todo)</button>
