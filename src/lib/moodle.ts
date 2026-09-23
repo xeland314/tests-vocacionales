@@ -128,6 +128,14 @@ export function useMoodleBridge() {
   return info;
 }
 
+// Mapeo cmid por test (configurado en Moodle mod/url/view.php?id=...)
+const CMID_MAP: Record<string, number> = {
+  CHASIDE: 9,
+  KUDER: 11,
+  MBTI: 10,
+  PERSONALIDAD: 10,
+};
+
 // Notifica a Moodle que el test completado (para calificación/completion)
 // Usa servidor Astro como proxy para no exponer WS_TOKEN
 export function notifyMoodleCompletion(payload: {
@@ -154,9 +162,10 @@ export function notifyMoodleCompletion(payload: {
   if (payload.test === "CHASIDE") grade10 = Math.round((score?.[top] ?? 0)); // 0-10
   else if (payload.test === "KUDER") grade10 = Math.round(((score?.[top] ?? 0) / 60) * 10); // 0-60 -> 0-10
   else grade10 = 10; // MBTI completado
+  const cmid = CMID_MAP[payload.test] ?? CMID_MAP[payload.test.toUpperCase()] ?? null;
   fetch("/api/moodle/grade", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ moodleUserId: payload.moodleUserId, score: grade10, testType: payload.test, courseId: 2 }),
+    body: JSON.stringify({ moodleUserId: payload.moodleUserId, score: grade10, testType: payload.test, courseId: 2, cmid }),
   }).catch(() => {});
 }

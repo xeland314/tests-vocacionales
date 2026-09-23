@@ -55,26 +55,42 @@ export const POST: APIRoute = async ({ request }) => {
     const moodleData = await moodleRes.json().catch(async () => ({ raw: await moodleRes.text() }));
     const ok = moodleRes.ok && !(moodleData as any)?.exception;
 
+    // Marcar completado automáticamente (cmid mapeado por testType si no se envía) — independiente de nota
+    const CMID_MAP: Record<string, number> = { CHASIDE: 9, KUDER: 11, MBTI: 10, PERSONALIDAD: 10 };
+    let cmid = (body as any).cmid as number | undefined;
+    if (!cmid) {
+      const key = String(testType || "").toUpperCase();
+      cmid = CMID_MAP[key] ?? (null as any);
+    }
+    let completion: any = null;
+    if (cmid) {
+      const compUrl = `${MOODLE_URL.replace(/\/$/, "")}/webservice/rest/server.php?wstoken=${WS_TOKEN}&wsfunction=core_completion_update_activity_completion_status_manually&moodlewsrestformat=json`;
+      try {
+        const compRes = await fetch(compUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: new URLSearchParams({ cmid: String(cmid), completed: "1", userid: String(moodleUserId) }),
+        });
+        const compData = await compRes.json().catch(async () => ({ raw: await compRes.text() }));
+        completion = compData;
+        if ((compData as any)?.exception) {
+          console.warn(`[moodle] completion cmid=${cmid} exception:`, (compData as any).exception, compData);
+        }
+      } catch (e) {
+        console.warn(`[moodle] completion cmid=${cmid} fetch error:`, e);
+        completion = { error: String(e) };
+      }
+    }
+
     if (!ok) {
-      // No propagar 502 al navegador — Moodle puede estar en trycloudflare con WS deshabilitado
-      return new Response(JSON.stringify({ success: false, warning: "Moodle WS no disponible", moodleData }), {
+      // No propagar 502 al navegador — Moodle puede estar en trycloudflare con WS deshabilitado, pero completion ya intentado
+      return new Response(JSON.stringify({ success: false, warning: "Moodle WS no disponible", moodleData, completion }), {
         status: 200,
         headers: { "Content-Type": "application/json" },
       });
     }
 
-    // Opcional: marcar completado si se envía cmid
-    const { cmid } = body as { cmid?: number };
-    if (cmid) {
-      const compUrl = `${MOODLE_URL.replace(/\/$/, "")}/webservice/rest/server.php?wstoken=${WS_TOKEN}&wsfunction=core_completion_update_activity_completion_status_manually&moodlewsrestformat=json`;
-      await fetch(compUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: new URLSearchParams({ cmid: String(cmid), completed: "1", userid: String(moodleUserId) }),
-      }).catch(() => {});
-    }
-
-    return new Response(JSON.stringify({ success: true, moodleData }), {
+    return new Response(JSON.stringify({ success: true, moodleData, completion }), {
       status: 200,
       headers: { "Content-Type": "application/json" },
     });
