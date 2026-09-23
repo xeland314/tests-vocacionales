@@ -20,7 +20,7 @@ export function EstudianteDetailModal({ selected, setSelected, authHeader, load,
         </div>
         <div className="mt-3 bg-[#fcfcfc] border border-[#001d62]/10 rounded-xl p-3 text-xs">
           <p className="font-black flex items-center gap-1"><BookOpen size={14} />Cómo leer (igual que ve el estudiante):</p>
-          <p className="text-slate-600 mt-1"><b>CHASIDE</b> 7 áreas C/H/A/S/I/D/E — Intereses 0–10, Aptitudes 0–4. <b>MBTI</b> 4 dicotomías con leyenda abajo. <b>Kuder</b> 10 áreas 0–60 con leyenda.</p>
+          <p className="text-slate-600 mt-1"><b>CHASIDE</b> 7 áreas C/H/A/S/I/D/E — Intereses 0–10, Aptitudes 0–4. <b>MBTI</b> 4 dicotomías con leyenda abajo. <b>Kuder</b> 10 áreas 0–45 con leyenda (Excel).</p>
         </div>
 
         {/* CHASIDE — como lo ve el estudiante */}
@@ -123,7 +123,7 @@ export function EstudianteDetailModal({ selected, setSelected, authHeader, load,
               </div>
             </div>
             <div className="mt-3 bg-white border rounded-xl p-3">
-              <p className="text-sm font-black flex items-center gap-1" style={{ color: topInfo.color }}><LucideIcon name={topInfo.icono} size={16} style={{ color: topInfo.color }} />{topInfo.nombre} ({selected.kuder.top}) — {selected.kuder.scores[selected.kuder.top]}/60</p>
+              <p className="text-sm font-black flex items-center gap-1" style={{ color: topInfo.color }}><LucideIcon name={topInfo.icono} size={16} style={{ color: topInfo.color }} />{topInfo.nombre} ({selected.kuder.top}) — {selected.kuder.scores[selected.kuder.top]}/45</p>
               <p className="text-xs text-slate-700 mt-1">{topInfo.descripcion}</p>
               <p className="text-xs mt-1"><b>Carreras:</b> {topInfo.carreras}</p>
               <p className="text-xs mt-2"><b>Ranking:</b> {selected.kuder.ranking.join(" > ")}</p>
@@ -133,7 +133,7 @@ export function EstudianteDetailModal({ selected, setSelected, authHeader, load,
             </div>
             <p className="text-xs text-slate-500 mt-2">{new Date(selected.kuder.fecha_unix * 1000).toLocaleString()} · Verif: {selected.kuder.verificacion}</p>
             <button onClick={async () => { const r: any = { top: selected.kuder.top, ranking: selected.kuder.ranking, scores: selected.kuder.scores, verificacion: selected.kuder.verificacion }; const { generateKuderTeacherPdf } = await import("../../lib/pdf/kuder"); await generateKuderTeacherPdf(r, selected.estudiante.moodle_user_name || "Estudiante", new Date(selected.kuder.fecha_unix * 1000).toLocaleString()); }} className="mt-3 bg-[#2563EB] text-white px-4 py-2 rounded-full text-xs font-bold inline-flex items-center gap-1"><Download size={14} />PDF docente Kuder</button>
-          </>; })() : <p className="text-xs text-slate-600 mt-2">Pendiente (60 diadas).</p>}
+          </>; })() : <p className="text-xs text-slate-600 mt-2">Pendiente (45 diadas Excel).</p>}
         </div>
         <div className="mt-4 flex gap-2 flex-wrap">
           <span className={`px-3 py-1 rounded-full text-xs font-bold ${selected.chaside ? "bg-green-600 text-white" : "bg-red-100 text-red-700"}`}>CHASIDE {selected.chaside ? "rendido" : "pendiente"}</span>

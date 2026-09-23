@@ -10,7 +10,7 @@ export const POST: APIRoute = async ({ request }) => {
     const body = await request.json();
     const { moodle_user_id, moodle_user_name, moodle_user_email, moodle_course_id, moodle_extra, fecha_unix, respuestas, version = 1, estudiante_id } = body;
     if (!respuestas) return new Response(JSON.stringify({ error: "respuestas requeridas" }), { status: 400 });
-    if (Object.keys(respuestas).length !== 60) return new Response(JSON.stringify({ error: "Se requieren 60 respuestas (diadas)" }), { status: 400 });
+    if (Object.keys(respuestas).length !== 45) return new Response(JSON.stringify({ error: "Se requieren 45 respuestas (diadas) — banco Excel Test_Kuder_Completo.xlsx" }), { status: 400 });
 
     const isMoodle = moodle_user_id != null && Number(moodle_user_id) > 0;
     if (!isMoodle) {

@@ -26,7 +26,7 @@ function KuderDoc({ result, studentName, date, logo, isTeacher }: { result: Resu
         <div style={{ fontSize: 22, fontWeight: 800, marginTop: 4 }}>{topInfo.nombre}</div>
         <div style={{ fontSize: 9, marginTop: 6, lineHeight: 1.4 }}>{topInfo.descripcion}</div>
         <div style={{ fontSize: 8, marginTop: 8, backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 6, padding: '4px 8px', display: 'inline-block' }}>Carreras: {topInfo.carreras}</div>
-        <div style={{ fontSize: 10, fontWeight: 800, marginTop: 8 }}>{(result.scores as any)[result.top]}/60</div>
+        <div style={{ fontSize: 10, fontWeight: 800, marginTop: 8 }}>{(result.scores as any)[result.top]}/45</div>
       </div>
 
       <div style={{ marginTop: 16 }}>

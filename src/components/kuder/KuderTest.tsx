@@ -54,7 +54,7 @@ export default function KuderTest() {
           <div className="flex items-center gap-3">
             <img src="/logo-teamggm-horizontal-con-transparencia.webp" alt="TEAM GGM" className="h-6 sm:h-7 w-auto shrink-0" />
             <div className="flex-1">
-              <div className="flex justify-between text-xs font-bold text-white/80"><span>{total}/60 diadas</span><span className="text-[#fcfcfc]">{progress}%</span></div>
+              <div className="flex justify-between text-xs font-bold text-white/80"><span>{total}/45 diadas</span><span className="text-[#fcfcfc]">{progress}%</span></div>
               <div className="h-2 bg-white/20 rounded-full overflow-hidden mt-1"><div className="h-full bg-[#d8215d] transition-all" style={{ width: `${progress}%` }} /></div>
             </div>
             <button onClick={submit} className="hidden sm:inline-flex bg-[#d8215d] text-white font-bold px-5 py-2 rounded-full text-sm">Ver resultado</button>
@@ -64,8 +64,8 @@ export default function KuderTest() {
       </div>
       <div className="max-w-3xl mx-auto px-4 py-6">
         <div className="bg-white border border-slate-200 rounded-2xl p-6 text-center">
-          <h1 className="text-2xl font-black">Test Kuder — 60 diadas</h1>
-          <p className="text-sm text-slate-600 mt-1">Elige en cada par la actividad que <b>más te gusta</b>.</p>
+          <h1 className="text-2xl font-black">Test Kuder — 45 diadas</h1>
+          <p className="text-sm text-slate-600 mt-1">Elige en cada par la actividad que <b>más te gusta</b>. Banco Excel <code>Test_Kuder_Completo.xlsx</code></p>
         </div>
         <div className="mt-4 space-y-3">
           {KUDER_DIADAS.map((d) => {

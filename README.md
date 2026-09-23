@@ -32,7 +32,7 @@ Gestión dev server en background: `astro dev stop` / `status` / `logs`.
 src/
   pages/  index.astro  chaside.astro  personalidad.astro  kuder.astro  admin.astro  admin/login.astro  api/...
   components/ ChasideTest.tsx  PersonalidadTest.tsx  KuderTest.tsx  AdminGeneral.tsx ...
-  data/ chaside.ts (98 Q + tablas CUESA)  personalidad.ts (60 Q)  kuder.ts (60 diadas)  scoring.ts ...
+  data/ chaside.ts (98 Q + tablas CUESA)  personalidad.ts (60 Q)  kuder.ts (45 diadas Excel Test_Kuder_Completo.xlsx)  scoring.ts ...
   lib/ db.ts  auth.ts (Knox SHA512)  admin.ts  users.ts
   tests/ *.test.ts(x)
 docs/ database.md  versionado-espacio.md  chaside.md  personalidad.md  kuder.md
@@ -43,7 +43,7 @@ data/chaside.db  (ignorado en git, WAL)
 
 - **CHASIDE** 98 preguntas SÍ/NO, 7 áreas C-H-A-S-I-D-E (intereses 10 pts, aptitudes 4 pts). Tablas en `src/data/chaside.ts:239`.
 - **Personalidad** 60 ítems Likert -3..3, 4 dimensiones EI/SN/TF/JP → 16 tipos + roles.
-- **Kuder Forma C** 60 diadas ipsativo → 10 áreas EXT/MEC/CAL/CIE/PER/ART/LIT/MUS/SOC/OFI + verificación V.
+- **Kuder** 45 diadas Excel (90 actividades) ipsativo → 10 áreas EXT/MEC/CAL/CIE/PER/ART/LIT/MUS/SOC/OFI + verificación V (45 válido).
 
 Scoring: `src/data/scoring.ts` y `*Scoring.ts`, tests `src/tests/*.test.ts`.
 

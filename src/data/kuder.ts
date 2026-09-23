@@ -1,9 +1,7 @@
 /**
- * Kuder Forma C - Inventario de Intereses Vocacionales (10 áreas + V)
- * Simplificación web: 60 diadas (120 actividades) -> 60 elecciones. Cada elección puntúa 1 en su área.
- * Baremo original: 10 áreas x ~6-7 items cada una + escala V (verificación).
- * Para implementación 60 diadas = 60 respuestas, 6 por área promedio (equivale a forma abreviada usada en orientación escolar).
- * Referencias: PUCV Kuder, U. Lima Forma C, Psicólogos Córdoba.
+ * Kuder Forma C - Inventario de Intereses Vocacionales (10 áreas)
+ * Banco adaptado exactamente al Excel docs/Test_Kuder_Completo.xlsx (45 diadas = 90 actividades)
+ * Referencia: Test_Kuder_Completo.xlsx Resultados 0-9
  */
 
 export type KuderAreaKey = "EXT" | "MEC" | "CAL" | "CIE" | "PER" | "ART" | "LIT" | "MUS" | "SOC" | "OFI";
@@ -15,91 +13,74 @@ export interface KuderAreaInfo {
   color: string;
   descripcion: string;
   carreras: string;
-  icono: string; // Lucide icon name (e.g. "Trees")
+  icono: string;
 }
 
 export const KUDER_AREAS: Record<KuderAreaKey, KuderAreaInfo> = {
-  EXT: { key:"EXT", nombre:"Aire Libre", nombreCorto:"Aire Libre", color:"#16A34A", icono:"Trees", descripcion:"Gusto por actividades al aire libre, naturaleza, agricultura y trabajo físico.", carreras:"Agronomía, Veterinaria, Forestal, Biología de campo, Educación física, Topografía y afines." },
-  MEC: { key:"MEC", nombre:"Mecánico", nombreCorto:"Mecánico", color:"#EA580C", icono:"Wrench", descripcion:"Interés por manipular herramientas, máquinas y construir/reparar.", carreras:"Ing. Mecánica, Industrial, Electrónica, Automotriz, Arquitectura, Diseño industrial." },
+  EXT: { key:"EXT", nombre:"Aire Libre", nombreCorto:"Exterior", color:"#16A34A", icono:"Trees", descripcion:"Gusto por actividades al aire libre, naturaleza, agricultura y trabajo físico.", carreras:"Agronomía, Veterinaria, Forestal, Biología de campo, Educación física, Topografía y afines." },
+  MEC: { key:"MEC", nombre:"Mecánico", nombreCorto:"Mecánica", color:"#EA580C", icono:"Wrench", descripcion:"Interés por manipular herramientas, máquinas y construir/reparar.", carreras:"Ing. Mecánica, Industrial, Electrónica, Automotriz, Arquitectura, Diseño industrial." },
   CAL: { key:"CAL", nombre:"Cálculo", nombreCorto:"Cálculo", color:"#2563EB", icono:"Calculator", descripcion:"Gusto por trabajar con números, estadísticas y cálculos.", carreras:"Matemática, Economía, Contaduría, Finanzas, Estadística, Actuaría, Auditoría." },
-  CIE: { key:"CIE", nombre:"Científico", nombreCorto:"Científico", color:"#0891B2", icono:"FlaskConical", descripcion:"Interés por investigar, experimentar y descubrir causas.", carreras:"Medicina, Química, Farmacia, Física, Bioquímica, Investigación, Laboratorio." },
-  PER: { key:"PER", nombre:"Persuasivo", nombreCorto:"Persuasivo", color:"#DC2626", icono:"Handshake", descripcion:"Gusto por convencer, liderar, negociar y tratar con gente.", carreras:"Marketing, Ventas, Derecho, RRPP, Comercio, Administración, Política." },
-  ART: { key:"ART", nombre:"Artístico", nombreCorto:"Artístico", color:"#9333EA", icono:"Palette", descripcion:"Interés por lo estético, diseño, creación visual y manual.", carreras:"Diseño gráfico, Bellas artes, Arquitectura, Moda, Publicidad, Fotografía." },
-  LIT: { key:"LIT", nombre:"Literario", nombreCorto:"Literario", color:"#4F46E5", icono:"BookOpen", descripcion:"Gusto por leer, escribir, idiomas e historia.", carreras:"Literatura, Periodismo, Comunicación, Filosofía, Historia, Traducción, Educación." },
+  CIE: { key:"CIE", nombre:"Científico", nombreCorto:"Científica", color:"#0891B2", icono:"FlaskConical", descripcion:"Interés por investigar, experimentar y descubrir causas.", carreras:"Medicina, Química, Farmacia, Física, Bioquímica, Investigación, Laboratorio." },
+  PER: { key:"PER", nombre:"Persuasivo", nombreCorto:"Persuasiva", color:"#DC2626", icono:"Handshake", descripcion:"Gusto por convencer, liderar, negociar y tratar con gente.", carreras:"Marketing, Ventas, Derecho, RRPP, Comercio, Administración, Política." },
+  ART: { key:"ART", nombre:"Artístico", nombreCorto:"Artística", color:"#9333EA", icono:"Palette", descripcion:"Interés por lo estético, diseño, creación visual y manual.", carreras:"Diseño gráfico, Bellas artes, Arquitectura, Moda, Publicidad, Fotografía." },
+  LIT: { key:"LIT", nombre:"Literario", nombreCorto:"Literaria", color:"#4F46E5", icono:"BookOpen", descripcion:"Gusto por leer, escribir, idiomas e historia.", carreras:"Literatura, Periodismo, Comunicación, Filosofía, Historia, Traducción, Educación." },
   MUS: { key:"MUS", nombre:"Musical", nombreCorto:"Musical", color:"#DB2777", icono:"Music", descripcion:"Interés por la música, canto e instrumentos.", carreras:"Música, Musicoterapia, Producción musical, Docencia musical." },
-  SOC: { key:"SOC", nombre:"Servicio Social", nombreCorto:"Asistencial", color:"#0D9488", icono:"HeartHandshake", descripcion:"Deseo de ayudar, enseñar y servir a los demás.", carreras:"Psicología, Trabajo social, Enfermería, Medicina, Educación, Terapia, Cuidado." },
+  SOC: { key:"SOC", nombre:"Servicio Social", nombreCorto:"Servicio Social", color:"#0D9488", icono:"HeartHandshake", descripcion:"Deseo de ayudar, enseñar y servir a los demás.", carreras:"Psicología, Trabajo social, Enfermería, Medicina, Educación, Terapia, Cuidado." },
   OFI: { key:"OFI", nombre:"Oficina", nombreCorto:"Oficina", color:"#64748B", icono:"Building2", descripcion:"Gusto por tareas organizadas, de oficina, orden y precisión.", carreras:"Administración, Secretariado, Contaduría, RRHH, Logística, Archivo." },
 };
 
-// 60 diadas: [opción A área, opción B área]. El usuario elige 1 de las 2.
-// Se usan pares que cruzan áreas para forzar preferencia (método ipsativo Kuder).
 export interface KuderDiada {
-  id: number; // 1..60
+  id: number;
   a: { texto: string; area: KuderAreaKey };
   b: { texto: string; area: KuderAreaKey };
 }
 
 export const KUDER_DIADAS: KuderDiada[] = [
-  { id: 1, a: { texto: "Cultivar nuevas variedades de plantas", area: "EXT" }, b: { texto: "Armar un motor", area: "MEC" } },
-  { id: 2, a: { texto: "Resolver ejercicios de matemática", area: "CAL" }, b: { texto: "Analizar muestras en laboratorio", area: "CIE" } },
-  { id: 3, a: { texto: "Convencer a otros de una idea", area: "PER" }, b: { texto: "Dibujar un afiche", area: "ART" } },
-  { id: 4, a: { texto: "Escribir un cuento", area: "LIT" }, b: { texto: "Tocar un instrumento", area: "MUS" } },
-  { id: 5, a: { texto: "Ayudar a personas con problemas", area: "SOC" }, b: { texto: "Organizar archivos de oficina", area: "OFI" } },
-  { id: 6, a: { texto: "Trabajar en el campo", area: "EXT" }, b: { texto: "Calcular presupuestos", area: "CAL" } },
-  { id: 7, a: { texto: "Investigar una enfermedad", area: "CIE" }, b: { texto: "Negociar un contrato", area: "PER" } },
-  { id: 8, a: { texto: "Diseñar un logotipo", area: "ART" }, b: { texto: "Corregir un texto", area: "LIT" } },
-  { id: 9, a: { texto: "Dirigir un coro", area: "MUS" }, b: { texto: "Atender a pacientes", area: "SOC" } },
-  { id: 10, a: { texto: "Llevar contabilidad", area: "OFI" }, b: { texto: "Reparar una bicicleta", area: "MEC" } },
-  { id: 11, a: { texto: "Estudiar el crecimiento de árboles", area: "EXT" }, b: { texto: "Experimentar con químicos", area: "CIE" } },
-  { id: 12, a: { texto: "Vender un producto", area: "PER" }, b: { texto: "Escribir poemas", area: "LIT" } },
-  { id: 13, a: { texto: "Componer una canción", area: "MUS" }, b: { texto: "Clasificar documentos", area: "OFI" } },
-  { id: 14, a: { texto: "Construir una maqueta", area: "MEC" }, b: { texto: "Resolver problemas de cálculo", area: "CAL" } },
-  { id: 15, a: { texto: "Pintar un mural", area: "ART" }, b: { texto: "Cuidar a niños", area: "SOC" } },
-  { id: 16, a: { texto: "Trabajar en un vivero", area: "EXT" }, b: { texto: "Dar una charla motivacional", area: "PER" } },
-  { id: 17, a: { texto: "Programar una app que calcula promedios", area: "CAL" }, b: { texto: "Diseñar una portada de libro", area: "ART" } },
-  { id: 18, a: { texto: "Investigar el origen de palabras", area: "LIT" }, b: { texto: "Enseñar a leer a adultos", area: "SOC" } },
-  { id: 19, a: { texto: "Afinar un piano", area: "MUS" }, b: { texto: "Reparar un tractor", area: "MEC" } },
-  { id: 20, a: { texto: "Ordenar facturas", area: "OFI" }, b: { texto: "Observar aves en la naturaleza", area: "EXT" } },
-  { id: 21, a: { texto: "Hacer análisis de sangre", area: "CIE" }, b: { texto: "Escribir artículos", area: "LIT" } },
-  { id: 22, a: { texto: "Liderar un equipo de ventas", area: "PER" }, b: { texto: "Tocar en una banda", area: "MUS" } },
-  { id: 23, a: { texto: "Calcular costos de producción", area: "CAL" }, b: { texto: "Atender en un albergue", area: "SOC" } },
-  { id: 24, a: { texto: "Diseñar muebles", area: "MEC" }, b: { texto: "Decorar interiores", area: "ART" } },
-  { id: 25, a: { texto: "Trabajar en una reserva natural", area: "EXT" }, b: { texto: "Archivar historias clínicas", area: "OFI" } },
-  { id: 26, a: { texto: "Investigar vacunas", area: "CIE" }, b: { texto: "Crear una escultura", area: "ART" } },
-  { id: 27, a: { texto: "Recitar en público", area: "LIT" }, b: { texto: "Organizar un concierto", area: "MUS" } },
-  { id: 28, a: { texto: "Aconsejar a jóvenes", area: "SOC" }, b: { texto: "Armar un circuito eléctrico", area: "MEC" } },
-  { id: 29, a: { texto: "Hacer balances contables", area: "CAL" }, b: { texto: "Persuadir a clientes", area: "PER" } },
-  { id: 30, a: { texto: "Explorar una cueva", area: "EXT" }, b: { texto: "Escribir una novela", area: "LIT" } },
-  { id: 31, a: { texto: "Estudiar bacterias", area: "CIE" }, b: { texto: "Cantar en un coro", area: "MUS" } },
-  { id: 32, a: { texto: "Coordinar un evento", area: "PER" }, b: { texto: "Ordenar una biblioteca", area: "OFI" } },
-  { id: 33, a: { texto: "Calcular intereses bancarios", area: "CAL" }, b: { texto: "Pintar retratos", area: "ART" } },
-  { id: 34, a: { texto: "Cuidar animales", area: "EXT" }, b: { texto: "Enseñar matemáticas", area: "SOC" } },
-  { id: 35, a: { texto: "Reparar celulares", area: "MEC" }, b: { texto: "Investigar el espacio", area: "CIE" } },
-  { id: 36, a: { texto: "Debatir en público", area: "PER" }, b: { texto: "Diseñar joyas", area: "ART" } },
-  { id: 37, a: { texto: "Traducir un libro", area: "LIT" }, b: { texto: "Llevar agenda de oficina", area: "OFI" } },
-  { id: 38, a: { texto: "Componer música", area: "MUS" }, b: { texto: "Hacer trabajo de campo", area: "EXT" } },
-  { id: 39, a: { texto: "Atender quejas de clientes", area: "SOC" }, b: { texto: "Calcular impuestos", area: "CAL" } },
-  { id: 40, a: { texto: "Diseñar un puente", area: "MEC" }, b: { texto: "Escribir crónicas", area: "LIT" } },
-  { id: 41, a: { texto: "Negociar precios", area: "PER" }, b: { texto: "Cuidar un huerto", area: "EXT" } },
-  { id: 42, a: { texto: "Analizar datos científicos", area: "CIE" }, b: { texto: "Archivar contratos", area: "OFI" } },
-  { id: 43, a: { texto: "Ilustrar un libro", area: "ART" }, b: { texto: "Dar clases", area: "SOC" } },
-  { id: 44, a: { texto: "Tocar guitarra", area: "MUS" }, b: { texto: "Arreglar una impresora", area: "MEC" } },
-  { id: 45, a: { texto: "Hacer inventario", area: "OFI" }, b: { texto: "Resolver ecuaciones", area: "CAL" } },
-  { id: 46, a: { texto: "Guiar una excursión", area: "EXT" }, b: { texto: "Investigar ADN", area: "CIE" } },
-  { id: 47, a: { texto: "Vender seguros", area: "PER" }, b: { texto: "Restaurar cuadros", area: "ART" } },
-  { id: 48, a: { texto: "Corregir estilos", area: "LIT" }, b: { texto: "Dirigir orquesta", area: "MUS" } },
-  { id: 49, a: { texto: "Apoyar a personas mayores", area: "SOC" }, b: { texto: "Programar planillas", area: "OFI" } },
-  { id: 50, a: { texto: "Instalar paneles solares", area: "MEC" }, b: { texto: "Calcular estadísticas", area: "CAL" } },
-  { id: 51, a: { texto: "Fotografiar paisajes", area: "EXT" }, b: { texto: "Negociar acuerdos", area: "PER" } },
-  { id: 52, a: { texto: "Estudiar virus", area: "CIE" }, b: { texto: "Escribir guiones", area: "LIT" } },
-  { id: 53, a: { texto: "Modelar en 3D", area: "ART" }, b: { texto: "Enseñar música", area: "MUS" } },
-  { id: 54, a: { texto: "Organizar donaciones", area: "SOC" }, b: { texto: "Manejar caja", area: "OFI" } },
-  { id: 55, a: { texto: "Sincronizar motores", area: "MEC" }, b: { texto: "Cultivar orquídeas", area: "EXT" } },
-  { id: 56, a: { texto: "Auditar cuentas", area: "CAL" }, b: { texto: "Investigar clima", area: "CIE" } },
-  { id: 57, a: { texto: "Presentar un producto", area: "PER" }, b: { texto: "Escribir reseñas", area: "LIT" } },
-  { id: 58, a: { texto: "Grabar un disco", area: "MUS" }, b: { texto: "Clasificar correspondencia", area: "OFI" } },
-  { id: 59, a: { texto: "Diseñar jardines", area: "ART" }, b: { texto: "Cuidar enfermos", area: "SOC" } },
-  { id: 60, a: { texto: "Soldar piezas", area: "MEC" }, b: { texto: "Calcular dosis", area: "CAL" } },
+  { id: 1, a: { texto: "Ser un(a) artista.", area: "MUS" }, b: { texto: "Dirigir la crianza de ganado", area: "EXT" } },
+  { id: 2, a: { texto: "Conocer datos útiles para navegar en internet.", area: "MEC" }, b: { texto: "Dar charlas sobre química", area: "CIE" } },
+  { id: 3, a: { texto: "Trabajar en una agencia de publicidad.", area: "PER" }, b: { texto: "Estudiar métodos de regadío", area: "EXT" } },
+  { id: 4, a: { texto: "Tomar clases de locución y expresión corporal.", area: "ART" }, b: { texto: "Realizar experimentos", area: "CIE" } },
+  { id: 5, a: { texto: "Ilustrar cuentos infantiles.", area: "ART" }, b: { texto: "Ser protagonista de una obra de teatro", area: "LIT" } },
+  { id: 6, a: { texto: "Animar un programa de televisión.", area: "PER" }, b: { texto: "Crear el vestuario para una obra de teatro", area: "ART" } },
+  { id: 7, a: { texto: "Ser guía de excursiones.", area: "EXT" }, b: { texto: "Participar en campaña de ayuda a niños discapacitados", area: "SOC" } },
+  { id: 8, a: { texto: "Aprender bailes folclóricos.", area: "MUS" }, b: { texto: "Ser escultor(a)", area: "ART" } },
+  { id: 9, a: { texto: "Trabajar como soporte técnico computacional.", area: "CAL" }, b: { texto: "Asistir a una conferencia sobre los derechos de los trabajadores", area: "PER" } },
+  { id: 10, a: { texto: "Enseñar cómo funciona un motor de avión.", area: "MEC" }, b: { texto: "Dirigir la clasificación de fruta según su calidad", area: "EXT" } },
+  { id: 11, a: { texto: "Participar en un Comité de Navidad recolectando juguetes para niños de escasos recursos.", area: "SOC" }, b: { texto: "Componer la música para un poema.", area: "MUS" } },
+  { id: 12, a: { texto: "Crear afiches para una agencia de publicidad.", area: "PER" }, b: { texto: "Saber armar y desarmar computadores.", area: "MEC" } },
+  { id: 13, a: { texto: "Intervenir en un conflicto familiar ante tribunales de justicia.", area: "SOC" }, b: { texto: "Ser relacionador(a) público(a) de una empresa.", area: "OFI" } },
+  { id: 14, a: { texto: "Dirigir una función teatral de aficionados.", area: "ART" }, b: { texto: "Investigar sobre los nuevos usos de las matemáticas.", area: "CAL" } },
+  { id: 15, a: { texto: "Aprender estadística.", area: "CAL" }, b: { texto: "Ser conocido(a) como un(a) buen(a) escritor(a)", area: "LIT" } },
+  { id: 16, a: { texto: "Ser programador(a) en computación.", area: "CAL" }, b: { texto: "Manejar aparatos y maquinas industriales como prensas, tornos, etc.", area: "MEC" } },
+  { id: 17, a: { texto: "Efectuar análisis de muestras de sangre.", area: "CIE" }, b: { texto: "Investigar las causas de enfermedades mentales.", area: "SOC" } },
+  { id: 18, a: { texto: "Pertenecer a una Academia Literaria.", area: "LIT" }, b: { texto: "Tener a cargo el equipo agrícola en su fundo.", area: "MEC" } },
+  { id: 19, a: { texto: "Pertenecer a un grupo musical.", area: "MUS" }, b: { texto: "Ser dentista.", area: "CIE" } },
+  { id: 20, a: { texto: "Ayudar a niños con dificultades de aprendizaje.", area: "SOC" }, b: { texto: "Dirigir investigaciones sobre televisión.", area: "PER" } },
+  { id: 21, a: { texto: "Realizar un estudio sobre el desarrollo económico en una empresa.", area: "OFI" }, b: { texto: "Pintar loza.", area: "ART" } },
+  { id: 22, a: { texto: "Ser gerente de ventas de una revista.", area: "OFI" }, b: { texto: "Manejar bases de datos", area: "CAL" } },
+  { id: 23, a: { texto: "Investigar los roles del hombre y de la mujer en algunas sociedades primitivas.", area: "PER" }, b: { texto: "Inventar nuevas formas de poesía.", area: "MUS" } },
+  { id: 24, a: { texto: "Trabajar en un laboratorio.", area: "CIE" }, b: { texto: "Entrevistar aspirantes a un empleo.", area: "PER" } },
+  { id: 25, a: { texto: "Ser químico(a).", area: "CIE" }, b: { texto: "Leer artículos acerca de los avances tecnológicos en computación.", area: "CAL" } },
+  { id: 26, a: { texto: "Seguir un curso de biología.", area: "CIE" }, b: { texto: "Escribir una obra de teatro.", area: "LIT" } },
+  { id: 27, a: { texto: "Dar una conferencia sobre literatura universal.", area: "LIT" }, b: { texto: "Asistir a la ceremonia de entrega de los premios Oscar.", area: "PER" } },
+  { id: 28, a: { texto: "Ser el (la) director(a) de una película.", area: "ART" }, b: { texto: "Ser experto(a) en cuidar árboles.", area: "EXT" } },
+  { id: 29, a: { texto: "Mantener en buen estado y reparar calculadoras electrónicas.", area: "MEC" }, b: { texto: "Componer música.", area: "MUS" } },
+  { id: 30, a: { texto: "Ayudar en un servicio de Asistencia Social.", area: "SOC" }, b: { texto: "Arreglar un motor.", area: "MEC" } },
+  { id: 31, a: { texto: "Calcular el costo de producción de un artículo.", area: "CAL" }, b: { texto: "Recolectar dinero para obras sociales.", area: "SOC" } },
+  { id: 32, a: { texto: "Solucionar conflictos interpersonales.", area: "SOC" }, b: { texto: "Escribir el guion para una película.", area: "LIT" } },
+  { id: 33, a: { texto: "Diseñar equipos para excursionistas.", area: "MEC" }, b: { texto: "Confeccionar el presupuesto de materiales para una empresa.", area: "OFI" } },
+  { id: 34, a: { texto: "Ser el rostro de un producto recién lanzado al mercado.", area: "PER" }, b: { texto: "Dictar un curso sobre sistemas de rendimiento en las oficinas.", area: "OFI" } },
+  { id: 35, a: { texto: "Analizar la calidad de la tierra para fines agrícolas.", area: "EXT" }, b: { texto: "Instalar redes internas en diversas empresas.", area: "CAL" } },
+  { id: 36, a: { texto: "Asistir a una conferencia sobre nuevos métodos para aprovechar la madera.", area: "EXT" }, b: { texto: "Realizar el balance anual de una empresa.", area: "OFI" } },
+  { id: 37, a: { texto: "Planificar campañas de publicidad.", area: "OFI" }, b: { texto: "Estudiar ballet.", area: "MUS" } },
+  { id: 38, a: { texto: "Hacer análisis químicos de nuevos productos.", area: "CIE" }, b: { texto: "Cultivar verduras para el mercado.", area: "EXT" } },
+  { id: 39, a: { texto: "Reparar fallas de artefactos electrónicos (planchas, jugueras, secadores de pelo, etc)", area: "MEC" }, b: { texto: "Escribir para una revista de arte.", area: "ART" } },
+  { id: 40, a: { texto: "Arreglar música para una orquesta.", area: "MUS" }, b: { texto: "Inventar problemas matemáticos.", area: "CAL" } },
+  { id: 41, a: { texto: "Recomendar sitios de veraneo.", area: "EXT" }, b: { texto: "Ser el (la) autor(a) de un libro.", area: "LIT" } },
+  { id: 42, a: { texto: "Seguir un curso de literatura moderna.", area: "LIT" }, b: { texto: "Calcular las ganancias y pérdidas de un producto.", area: "OFI" } },
+  { id: 43, a: { texto: "Diseñar joyas.", area: "ART" }, b: { texto: "Participar en una campaña contra el alcoholismo.", area: "SOC" } },
+  { id: 44, a: { texto: "Dirigir y supervisar a los empleados de una oficina.", area: "OFI" }, b: { texto: "Ser secretario(a) de un científico famoso.", area: "MUS" } },
+  { id: 45, a: { texto: "Enseñar sobre los diferentes estilos literarios.", area: "LIT" }, b: { texto: "Cantar en un coro.", area: "MUS" } },
 ];
 
 export const KUDER_ORDER: KuderAreaKey[] = ["EXT","MEC","CAL","CIE","PER","ART","LIT","MUS","SOC","OFI"];

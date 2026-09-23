@@ -55,8 +55,8 @@ export function useKuder() {
   }, [gateChecked, isMoodle, moodleUserId]);
 
   const total = Object.keys(answers).length;
-  const progress = Math.round((total / 60) * 100);
-  const missing = useMemo(() => { const m: number[] = []; for (let i = 1; i <= 60; i++) if (!answers[i]) m.push(i); return m; }, [answers]);
+  const progress = Math.round((total / 45) * 100);
+  const missing = useMemo(() => { const m: number[] = []; for (let i = 1; i <= 45; i++) if (!answers[i]) m.push(i); return m; }, [answers]);
   const result = useMemo(() => calculateKuder(answers), [answers]);
   const maxScore = Math.max(...KUDER_ORDER.map((k) => result.scores[k]), 1);
 

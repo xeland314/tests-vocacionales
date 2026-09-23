@@ -22,8 +22,8 @@ export function calculateKuder(answers: KuderAnswers): KuderScores {
   }
   const ranking = [...KUDER_ORDER].sort((a,b)=> scores[b]-scores[a] || KUDER_ORDER.indexOf(a)-KUDER_ORDER.indexOf(b));
   const top = ranking[0];
-  // Escala V: si total <60 (incompleto) -> dudoso
-  const verificacion = total===60 ? "válido" : "dudoso";
+  // Escala V: Excel Test_Kuder_Completo.xlsx tiene 45 diadas (90 actividades) — 45 respuestas = válido
+  const verificacion = total===45 ? "válido" : "dudoso";
   return { scores, total, top, ranking, verificacion };
 }
 
