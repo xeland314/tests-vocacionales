@@ -33,7 +33,7 @@ export default function AdminGeneral() {
         <div className="ml-auto flex gap-2 flex-wrap">
           <a href="/" className="bg-white border-2 border-slate-300 font-bold px-4 py-2 rounded-full text-sm">← Menú</a>
           <button onClick={load} className="bg-[#1f3875] text-white font-bold px-4 py-2 rounded-full text-sm">↻ Actualizar</button>
-          {isAdmin && <button onClick={async () => { await fetch("/api/chaside/init", { headers: { Authorization: authHeader } }); load(); }} className="bg-slate-100 border font-bold px-4 py-2 rounded-full text-sm">Init DB</button>}
+          {isAdmin && <button onClick={async () => { const r = await fetch("/api/admin/backup", { headers: { Authorization: authHeader } }); if (!r.ok) { alert((await r.json()).error || "Error respaldo"); return; } const blob = await r.blob(); const url = URL.createObjectURL(blob); const a = document.createElement("a"); a.href = url; a.download = `respaldo_${new Date().toISOString().slice(0,10)}.json`; a.click(); URL.revokeObjectURL(url); }} className="bg-[#0f2b6b] text-white font-bold px-4 py-2 rounded-full text-sm">⤓ Respaldo BD</button>}
           <button onClick={logout} className="bg-white border font-bold px-4 py-2 rounded-full text-sm">Logout</button>
           <button onClick={logoutAll} className="bg-red-50 border border-red-200 text-red-700 font-bold px-4 py-2 rounded-full text-sm">Logout All</button>
         </div>
