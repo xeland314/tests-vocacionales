@@ -12,7 +12,7 @@ export default function KuderTest() {
     const topInfo = KUDER_AREAS[result.top];
     return (
       <div className="min-h-screen bg-[#F9F9FB]">
-        {alreadyCompleted && <div className="bg-amber-50 border-b border-amber-200 px-4 py-3 text-center text-sm text-amber-800">Ya completaste — mostrando resultado guardado.</div>}
+        {alreadyCompleted && <div className="bg-amber-50 border-b border-amber-200 px-4 py-3 text-center text-sm text-amber-800">Ya completaste este test. Mostrando resultado guardado.</div>}
         <div className="bg-white border-b sticky top-0 z-20"><div className="max-w-4xl mx-auto px-4 py-3 flex items-center gap-3"><span className="text-sm font-extrabold flex items-center gap-2" style={{ color: topInfo.color }}><LucideIcon name={topInfo.icono} size={16} />{topInfo.nombre} · Kuder</span><div className="ml-auto flex gap-2"><button onClick={() => window.print()} className="text-sm bg-[#001d62] text-white px-4 py-1.5 rounded-full font-bold inline-flex items-center gap-1"><Printer size={14} />Imprimir / PDF</button></div></div></div>
         <div className="max-w-4xl mx-auto px-4 py-6">
           <div className="bg-white border rounded-2xl p-4">

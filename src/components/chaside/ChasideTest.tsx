@@ -21,7 +21,7 @@ export default function ChasideTest() {
       <>
         {alreadyCompleted && (
           <div className="bg-amber-50 border-b border-amber-200 px-4 py-3 text-center text-sm text-amber-800">
-            Ya completaste este test. Mostrando resultado guardado en BD — no se creará duplicado si vuelves a guardar.
+            Ya completaste este test. Mostrando resultado guardado.
           </div>
         )}
         <ChasideResult
