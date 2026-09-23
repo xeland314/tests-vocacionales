@@ -1,5 +1,5 @@
 import { useKuder } from "./useKuder";
-import { KUDER_DIADAS, KUDER_AREAS, KUDER_ORDER } from "../../data/kuder";
+import { KUDER_DIADAS, KUDER_AREAS } from "../../data/kuder";
 import { LucideIcon } from "../../lib/icons";
 import { BookOpen, Save, Printer, Check } from "lucide-react";
 
@@ -81,11 +81,9 @@ export default function KuderTest() {
                   {(["a", "b"] as const).map((ch) => {
                     const opt = ch === "a" ? d.a : d.b;
                     const active = v === ch;
-                    const info = KUDER_AREAS[opt.area];
                     return (
-                      <button key={ch} onClick={() => handle(d.id, ch)} className={`text-left p-3 rounded-xl border-2 flex gap-3 items-center transition ${active ? "border-[#001d62] bg-[#001d62] text-white shadow" : "bg-white border-slate-300 hover:border-slate-400"}`}>
-                        <LucideIcon name={info.icono} size={18} className={active ? "text-white" : ""} style={!active ? { color: info.color } : undefined} />
-                        <div className="flex-1"><p className={`text-sm font-bold leading-tight ${active ? "text-white" : "text-[#001d62]"}`}>{opt.texto}</p><p className={`text-[10px] font-black uppercase tracking-wider ${active ? "text-white/70" : "text-slate-500"}`}>{opt.area} · {info.nombre}</p></div>
+                      <button key={ch} onClick={() => handle(d.id, ch)} className={`text-left p-3 rounded-xl border-2 flex items-center transition ${active ? "border-[#001d62] bg-[#001d62] text-white shadow" : "bg-white border-slate-300 hover:border-slate-400 hover:bg-[#fcfcfc]"}`}>
+                        <div className="flex-1"><p className={`text-sm font-bold leading-tight ${active ? "text-white" : "text-[#001d62]"}`}>{opt.texto}</p></div>
                       </button>
                     );
                   })}
