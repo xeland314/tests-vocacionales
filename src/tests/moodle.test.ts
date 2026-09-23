@@ -16,11 +16,11 @@ describe("moodle completion — cmid mapping", () => {
     expect(content).toContain("CHASIDE: 9");
     expect(content).toContain("KUDER: 11");
     expect(content).toContain("MBTI: 10");
-    // Verifica que grade.ts use moodleConfig y llame a core_completion_override_activity_completion_status (con userid)
+    // Verifica que grade.ts use moodleConfig y llame a core_completion_update_activity_completion_status_manually con solo 2 params (cmid+completed)
     const gradeContent = fs.readFileSync("src/pages/api/moodle/grade.ts", "utf-8");
-    expect(gradeContent).toContain("core_completion_override_activity_completion_status");
+    expect(gradeContent).toContain("core_completion_update_activity_completion_status_manually");
     expect(gradeContent).toContain("getMoodleConfig");
     expect(gradeContent).toContain("getCmidForTest");
-    expect(gradeContent).toContain("userid");
+    expect(gradeContent).toContain('cmid: String(cmid), completed: "1"');
   });
 });
