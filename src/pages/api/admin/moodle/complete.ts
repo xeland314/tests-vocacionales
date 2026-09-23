@@ -48,13 +48,26 @@ export const POST: APIRoute = async ({ request }) => {
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: new URLSearchParams({ cmid: String(cmid), completed: "1", userid: String(moodle_user_id) }),
     });
-    const compData = await compRes.json().catch(async () => ({ raw: await compRes.text(), status: compRes.status }));
+    const text = await compRes.text();
+    let compData: any;
+    try { compData = JSON.parse(text); } catch { compData = { raw: text, status: compRes.status }; }
     const isException = !!(compData as any)?.exception;
-    return new Response(JSON.stringify({ success: !isException, cmid, moodleUserId: moodle_user_id, test, moodleData: compData, httpStatus: compRes.status }), {
-      status: isException ? 502 : 200,
+    const isHtml502 = typeof text === "string" && text.includes("<html") && compRes.status >= 500;
+    if (!compRes.ok || isException || isHtml502) {
+      // No propagar 502 al navegador — trycloudflare puede estar caído o WS deshabilitado
+      return new Response(JSON.stringify({ success: false, warning: "Moodle WS no disponible (trycloudflare caído o WS deshabilitado)", cmid, moodleUserId: moodle_user_id, test, moodleData: compData, httpStatus: compRes.status }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+    return new Response(JSON.stringify({ success: true, cmid, moodleUserId: moodle_user_id, test, moodleData: compData, httpStatus: compRes.status }), {
+      status: 200,
       headers: { "Content-Type": "application/json" },
     });
   } catch (e: any) {
-    return new Response(JSON.stringify({ error: "Error llamando a Moodle", details: e?.message, cmid }), { status: 502 });
+    return new Response(JSON.stringify({ success: false, warning: "Error llamando a Moodle (red/trycloudflare)", details: e?.message, cmid, test }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
   }
 };
