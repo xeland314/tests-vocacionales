@@ -1,7 +1,7 @@
 import { usePersonalidad } from "./usePersonalidad";
 import { TYPES } from "../../data/personalidad";
 import { PERSONALITY_QUESTIONS } from "../../data/personalidad";
-import { BookOpen, Save, Printer, Check } from "lucide-react";
+
 
 const SCALE = [
   { v: -3 as any, label: "Muy en desacuerdo", color: "#d8215d", size: 48 },
@@ -23,14 +23,9 @@ export default function PersonalidadTest() {
     return (
       <div className="min-h-screen bg-[#F9F9FB]">
         {alreadyCompleted && <div className="bg-amber-50 border-b border-amber-200 px-4 py-3 text-center text-sm text-amber-800">Ya completaste este test. Mostrando resultado guardado.</div>}
-        <div className="bg-[#001d62] text-white border-b sticky top-0 z-20"><div className="max-w-4xl mx-auto px-4 py-3 flex items-center gap-3"><span className="text-sm font-extrabold" style={{ color: info.color }}>{result.type} · {info.name}</span><div className="ml-auto flex gap-2"><button onClick={() => window.print()} className="text-sm bg-[#0B1220] text-white px-4 py-1.5 rounded-full font-bold inline-flex items-center gap-1"><Printer size={14} />Imprimir / PDF</button></div></div></div>
         <div className="max-w-4xl mx-auto px-4 py-6">
-          <div className="bg-white border rounded-2xl p-4">
-            <p className="text-xs font-black uppercase flex items-center gap-1"><Check size={14} className="text-green-600" />{alreadyCompleted ? "Tus respuestas se Guardaron correctamente." : "Datos ya registrados"}</p>
-            {savedAt && <p className="text-xs text-green-700 mt-2 flex items-center gap-1 font-bold"><Check size={14} className="text-green-600" />{alreadyCompleted ? "Tus respuestas se Guardaron correctamente." : `Guardado: ${savedAt}`}</p>}
-            {error && <p className="text-xs text-red-600 font-bold mt-2">{error}</p>}
-            <button onClick={save} disabled={saving} className="mt-3 bg-[#d8215d] text-white font-bold px-6 py-2.5 rounded-full disabled:opacity-60 inline-flex items-center gap-2"><Save size={16} />{saving ? "Guardando..." : "Guardar en BD"}</button>
-          </div>
+          {error && <p className="text-xs text-red-600 font-bold mb-4 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{error}</p>}
+          {saving && <p className="text-xs text-[#0f2b6b] mb-4">Guardando...</p>}
           <div className="mt-6 bg-white border border-slate-200 rounded-[20px] overflow-hidden">
             <div className="h-2" style={{ background: info.color }} />
             <div className="p-8 text-center">
