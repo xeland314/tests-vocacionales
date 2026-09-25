@@ -88,13 +88,8 @@ export function usePersonalidad() {
       const j = await res.json().catch(() => ({})); if (!res.ok) throw new Error(j.error || `Error ${res.status} al guardar`); setSavedAt("Tus respuestas se Guardaron correctamente."); notifyMoodleCompletion({ test: "MBTI", moodleUserId, score: result.dimensions, top: result.type });
     } catch (e: any) { setError(e.message); } finally { setSaving(false); }
   };
-  const handlePrint = async () => {
-    try {
-      const date = savedAt || fmt(new Date());
-      const name = (moodleUserName?.trim() || "resultado").trim();
-      const { generateMbtiStudentPdf } = await import("../../lib/pdf/mbti");
-      await generateMbtiStudentPdf(result as any, name, date);
-    } catch { window.print(); }
+  const handlePrint = () => {
+    window.print();
   };
   const reset = () => { setAnswers({}); setShowResult(false); setAlreadyCompleted(false); setError(null); try { localStorage.removeItem(STORAGE); } catch {} window.scrollTo({ top: 0, behavior: "smooth" }); };
   return { answers, setAnswers, showResult, setShowResult, name, setName, savedAt, error, saving, alreadyCompleted, loadingExisting, gateChecked, gateReady, isMoodle, moodleUserId, total, progress, missing, result, handle, submit, save, handlePrint, reset, setError };

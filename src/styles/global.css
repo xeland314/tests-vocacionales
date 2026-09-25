@@ -31,3 +31,9 @@ h1, h2, h3 {
 @media print {
   .no-print { display: none !important; }
 }
+
+@keyframes panel-slide-in {
+  from { transform: translateX(28px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+.animate-panel-in { animation: panel-slide-in 0.18s ease-out; }

@@ -21,7 +21,7 @@ export function MbtiLista({
       <h4 className="text-sm font-black uppercase tracking-wider text-[#001d62]">{title}</h4>
       <div className={`mt-3 grid gap-3 ${columns === 2 ? "sm:grid-cols-2" : ""}`}>
         {items.map((it) => (
-          <div key={it.title} className="flex gap-3 bg-[#fcfcfc] border border-slate-100 rounded-xl p-3">
+          <div key={it.title} className="print-block flex gap-3 bg-[#fcfcfc] border border-slate-100 rounded-xl p-3">
             <span className="shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-white" style={{ background: accent }}>
               <Icon size={14} />
             </span>

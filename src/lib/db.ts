@@ -228,6 +228,18 @@ export async function initDb() {
   `);
   // Seed con valores actuales (9/10/11) si no existe
   await db.execute(`INSERT OR IGNORE INTO moodle_config (id, chaside_cmid, mbti_cmid, kuder_cmid, course_id) VALUES (1, 9, 10, 11, 2)`);
+
+  // Tokens opacos (uuid4) para abrir el detalle de un estudiante en otra pestaña.
+  // No exponen el id real de la BD ni datos en la URL; expiran solos.
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS admin_view_tokens (
+      token TEXT PRIMARY KEY,
+      estudiante_id TEXT NOT NULL,
+      created_at INTEGER DEFAULT (unixepoch()),
+      expires_unix INTEGER NOT NULL
+    )
+  `);
+  await db.execute(`CREATE INDEX IF NOT EXISTS idx_view_tokens_exp ON admin_view_tokens(expires_unix)`);
   } catch (e) {
     _initLock = null;
     throw e;

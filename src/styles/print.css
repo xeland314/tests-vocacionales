@@ -1,0 +1,98 @@
+/* =========================================================
+   Plantilla de impresión (inspirada en informes-tecnicos):
+   - Página A4 con márgenes fijos
+   - Sin rellenos oscuros a página completa
+   - Reglas de salto para que nada se desborde ni se corte
+   - Tablas e imágenes acotadas al ancho de la hoja
+   ========================================================= */
+
+.print-only { display: none; }
+
+@media print {
+  @page {
+    size: A4;
+    margin: 12mm 14mm 14mm 14mm;
+  }
+
+  html, body {
+    background: #ffffff !important;
+    width: auto !important;
+  }
+
+  /* Conserva los acentos de color al imprimir (barely affects ink) */
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .no-print { display: none !important; }
+  .print-only { display: block !important; }
+  .print-hidden { display: none !important; }
+
+  /* Ancho fijo de hoja: evita desborde horizontal */
+  .print-page {
+    width: 100% !important;
+    max-width: 182mm !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+  }
+
+  /* El panel lateral fijo se imprime como documento normal */
+  .print-static {
+    position: static !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    width: 100% !important;
+    max-width: none !important;
+    box-shadow: none !important;
+  }
+
+  a {
+    text-decoration: none !important;
+    color: inherit !important;
+  }
+
+  h1, h2, h3, h4, h5 {
+    break-after: avoid-page;
+    page-break-after: avoid;
+  }
+
+  p, li, blockquote {
+    orphans: 3;
+    widows: 3;
+  }
+
+  img {
+    max-width: 100% !important;
+    page-break-inside: avoid;
+  }
+
+  table {
+    table-layout: fixed !important;
+    width: 100% !important;
+    border-collapse: collapse !important;
+  }
+
+  th, td {
+    word-break: break-word;
+    overflow-wrap: anywhere;
+  }
+
+  /* Bloques que no deben partirse entre páginas */
+  .print-block,
+  article,
+  figure {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* Evita que un título quede solo al final de una página */
+  section > h2,
+  section > .print-block {
+    break-after: avoid-page;
+    page-break-after: avoid;
+  }
+
+  .print-break-before { break-before: page; page-break-before: always; }
+}

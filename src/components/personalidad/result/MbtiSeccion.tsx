@@ -62,7 +62,7 @@ export function MbtiSeccion({
             <h4 className="text-sm font-black uppercase tracking-wider text-[#001d62]">Rasgos Influyentes</h4>
             <div className="mt-3 grid gap-3 sm:grid-cols-2">
               {influential.map((r) => (
-                <div key={r.name} className="bg-[#fcfcfc] border border-slate-100 rounded-xl p-3">
+                <div key={r.name} className="print-block bg-[#fcfcfc] border border-slate-100 rounded-xl p-3">
                   <p className="text-sm font-black flex items-center gap-1.5" style={{ color }}>
                     <Lightbulb size={14} /> {r.name}
                   </p>

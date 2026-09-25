@@ -8,7 +8,7 @@ import { EstudiantesTab } from "./admin/tabs/EstudiantesTab";
 import { UsuariosTab } from "./admin/tabs/UsuariosTab";
 import { MoodleTab } from "./admin/tabs/MoodleTab";
 import { CuentaTab } from "./admin/tabs/CuentaTab";
-import { EstudianteDetailModal } from "./admin/EstudianteDetailModal";
+import { EstudianteDetailPanel } from "./admin/EstudianteDetailPanel";
 
 export default function AdminGeneral() {
   const {
@@ -65,7 +65,7 @@ export default function AdminGeneral() {
       {tab === "moodle" && <MoodleTab authHeader={authHeader} isAdmin={isAdmin} />}
       {tab === "cuenta" && <CuentaTab currentUser={currentUser} isAdmin={isAdmin} editEmail={editEmail} setEditEmail={setEditEmail} editFirst={editFirst} setEditFirst={setEditFirst} editLast={editLast} setEditLast={setEditLast} editSaving={editSaving} setEditSaving={setEditSaving} editMsg={editMsg} setEditMsg={setEditMsg} pwOld={pwOld} setPwOld={setPwOld} pwNew={pwNew} setPwNew={setPwNew} authHeader={authHeader} load={load} setCurrentUser={setCurrentUser} />}
 
-      <EstudianteDetailModal selected={selected} setSelected={setSelected} authHeader={authHeader} load={load} isAdmin={isAdmin} />
+      <EstudianteDetailPanel selected={selected} setSelected={setSelected} authHeader={authHeader} load={load} isAdmin={isAdmin} />
     </div>
   );
 }

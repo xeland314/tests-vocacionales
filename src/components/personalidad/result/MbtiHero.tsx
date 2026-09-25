@@ -18,7 +18,7 @@ export function MbtiHero({
 }) {
   const suffix = `${code}-${identity.letter}`;
   return (
-    <section className="bg-white border border-slate-200 rounded-[24px] overflow-hidden shadow-sm">
+    <section className="print-block bg-white border border-slate-200 rounded-[24px] overflow-hidden shadow-sm">
       <div className="h-1.5" style={{ background: info.color }} />
       <div className="p-6 sm:p-8 grid gap-6 md:grid-cols-[220px_1fr] items-center">
         <div className="mx-auto w-44 sm:w-52">

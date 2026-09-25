@@ -1,0 +1,10 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import EstudianteDetailPage from '../../../components/admin/EstudianteDetailPage.tsx';
+
+const { token } = Astro.params;
+---
+
+<Layout>
+  <EstudianteDetailPage client:load token={token} />
+</Layout>
