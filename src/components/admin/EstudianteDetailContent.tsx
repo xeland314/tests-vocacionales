@@ -1,11 +1,55 @@
 import React from 'react';
-import { BookOpen, Check, Minus } from "lucide-react";
+import { BookOpen, Check, Minus, RotateCcw, X, History, ArrowRight } from "lucide-react";
 import { AREAS, AREA_ORDER, INTERESES_GRID, APTITUDES_GRID } from "../../data/chaside";
 import { TYPES } from "../../data/personalidad";
 import { KUDER_AREAS, KUDER_ORDER } from "../../data/kuder";
 import { LucideIcon } from "../../lib/icons";
 import { deriveIdentity } from "../../data/mbti/identity";
 import { MBTI_PROFILES } from "../../data/mbti";
+
+type TestCodigoUI = "CHASIDE" | "PERSONALIDAD" | "KUDER";
+
+/** Bloque compacto de comparación entre el intento actual y el anterior. */
+function DiffResumen({ diff }: { diff: any }) {
+  if (!diff) return null;
+  const esPersonalidad = diff.tipoAnterior !== undefined;
+  const esKuder = diff.topAnterior !== undefined && !esPersonalidad;
+  return (
+    <div className="mt-3 bg-white border rounded-xl p-3">
+      <p className="text-xs font-black uppercase tracking-wider text-[#001d62] flex items-center gap-1"><History size={13} />Comparación con intento anterior</p>
+      {esPersonalidad && (
+        <p className="text-xs mt-2 flex items-center gap-1 flex-wrap">
+          <b>{diff.tipoAnterior}</b><ArrowRight size={12} className="text-slate-400" /><b style={{ color: diff.tipoCambio ? "#d8215d" : undefined }}>{diff.tipoActual}</b>
+          {diff.tipoCambio && <span className="bg-[#d8215d]/10 text-[#d8215d] px-2 py-0.5 rounded-full font-bold">cambió de tipo</span>}
+          <span className="ml-auto text-[10px] text-slate-400">{diff.dimensiones.filter((d: any) => d.cambioSignificativo).length}/4 dimensiones con cambio ≥15%</span>
+        </p>
+      )}
+      {esKuder && (
+        <p className="text-xs mt-2 flex items-center gap-1 flex-wrap">
+          <b>{diff.topAnterior}</b><ArrowRight size={12} className="text-slate-400" /><b style={{ color: diff.topAnterior !== diff.topActual ? "#d8215d" : undefined }}>{diff.topActual}</b>
+          {diff.topAnterior !== diff.topActual && <span className="bg-[#d8215d]/10 text-[#d8215d] px-2 py-0.5 rounded-full font-bold">cambió de área principal</span>}
+          <span className="ml-auto text-[10px] text-slate-400">{diff.scores.filter((d: any) => d.cambioSignificativo).length}/10 áreas con cambio ≥15 pts</span>
+        </p>
+      )}
+      {!esPersonalidad && !esKuder && (
+        <p className="text-xs mt-2 flex items-center gap-1 flex-wrap">
+          Interés <b>{diff.topInteresAnterior}</b><ArrowRight size={12} className="text-slate-400" /><b style={{ color: diff.topInteresAnterior !== diff.topInteresActual ? "#d8215d" : undefined }}>{diff.topInteresActual}</b>
+          {" "}· Aptitud <b>{diff.topAptitudAnterior}</b><ArrowRight size={12} className="text-slate-400" /><b style={{ color: diff.topAptitudAnterior !== diff.topAptitudActual ? "#d8215d" : undefined }}>{diff.topAptitudActual}</b>
+          <span className="ml-auto text-[10px] text-slate-400">{diff.intereses.filter((d: any) => d.cambioSignificativo).length + diff.aptitudes.filter((d: any) => d.cambioSignificativo).length} áreas con cambio ≥15%</span>
+        </p>
+      )}
+      <div className="mt-2 flex flex-wrap gap-1">
+        {(esPersonalidad ? diff.dimensiones : esKuder ? diff.scores : [...diff.intereses, ...diff.aptitudes])
+          .filter((d: any) => d.cambioSignificativo)
+          .map((d: any) => (
+            <span key={d.clave} className="text-[10px] font-bold px-2 py-0.5 rounded-full border" style={{ borderColor: d.delta > 0 ? "#16a34a" : "#d8215d", color: d.delta > 0 ? "#16a34a" : "#d8215d" }}>
+              {d.clave} {d.delta > 0 ? "+" : ""}{d.delta}
+            </span>
+          ))}
+      </div>
+    </div>
+  );
+}
 
 export function EstudianteDetailContent({ selected, authHeader, isAdmin, onDeleted }: {
   selected: any;
@@ -16,13 +60,38 @@ export function EstudianteDetailContent({ selected, authHeader, isAdmin, onDelet
   if (!selected) return null;
   const estudiante = selected.estudiante;
 
-  const retake = async (test?: "chaside" | "personalidad" | "kuder") => {
-    const label = test ? `solo ${test.toUpperCase()}` : "TODOS los resultados";
-    if (!confirm(`¿Habilitar retake para ${estudiante.moodle_user_name || estudiante.id}? Borrará ${label}.`)) return;
-    const url = `/api/admin/estudiante/${estudiante.id}` + (test ? `?test=${test}` : "");
-    await fetch(url, { method: "DELETE", headers: { Authorization: authHeader } });
+  const habilitar = async (test: TestCodigoUI, nombre: string) => {
+    const motivo = prompt(`Motivo para habilitar reintento de ${nombre} (queda auditado):`);
+    if (motivo === null) return; // cancelado
+    const r = await fetch("/api/admin/estudiante/retake", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: authHeader },
+      body: JSON.stringify({ estudiante_id: estudiante.id, test_codigo: test, motivo }),
+    });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) { alert(j.error || "No se pudo habilitar el reintento"); return; }
     onDeleted?.();
   };
+
+  const revocar = async (test: TestCodigoUI) => {
+    if (!confirm("¿Revocar el reintento pendiente? El estudiante no podrá volver a rendir hasta que se habilite de nuevo.")) return;
+    await fetch(`/api/admin/estudiante/retake?estudiante_id=${estudiante.id}&test_codigo=${test}`, { method: "DELETE", headers: { Authorization: authHeader } });
+    onDeleted?.();
+  };
+
+  const pendientes: TestCodigoUI[] = selected.reintentosPendientes || [];
+  const btnReintento = (test: TestCodigoUI, nombre: string, color: string) => (
+    <span className="no-print inline-flex gap-1 ml-2 align-middle">
+      {pendientes.includes(test) ? (
+        <>
+          <span className="bg-amber-100 text-amber-800 border border-amber-200 px-2 py-0.5 rounded-full text-[10px] font-black">REINTENTO HABILITADO</span>
+          <button onClick={() => revocar(test)} title="Revocar reintento pendiente" className="border rounded-full w-5 h-5 flex items-center justify-center text-slate-500 hover:bg-slate-100"><X size={11} /></button>
+        </>
+      ) : isAdmin ? (
+        <button onClick={() => habilitar(test, nombre)} className="border rounded-full px-2 py-0.5 text-[10px] font-bold inline-flex items-center gap-1 hover:bg-slate-50" style={{ color }}><RotateCcw size={10} />Habilitar reintento</button>
+      ) : null}
+    </span>
+  );
 
   return (
     <>
@@ -33,7 +102,8 @@ export function EstudianteDetailContent({ selected, authHeader, isAdmin, onDelet
 
       {/* CHASIDE — como lo ve el estudiante */}
       <div className={`print-block mt-4 border rounded-2xl p-4 ${selected.chaside ? "bg-green-50 border-green-200" : "bg-red-50 border-red-200"}`}>
-        <h4 className="font-black text-sm flex items-center gap-1">CHASIDE {selected.chaside ? <><Check size={14} className="text-green-600" />{selected.chaside.topInteres} · {(AREAS as any)[selected.chaside.topInteres]?.nombre}</> : <><Minus size={14} className="text-red-500" />faltante</>}</h4>
+        <h4 className="font-black text-sm flex items-center gap-1 flex-wrap">CHASIDE {selected.chaside ? <><Check size={14} className="text-green-600" />{selected.chaside.topInteres} · {(AREAS as any)[selected.chaside.topInteres]?.nombre}<span className="text-[10px] font-bold text-slate-500">Intento {selected.historial?.chaside?.length || 1}</span></> : <><Minus size={14} className="text-red-500" />faltante</>}{btnReintento("CHASIDE", "CHASIDE", "#001d62")}</h4>
+        {selected.chaside && selected.diffs?.chaside && <DiffResumen diff={selected.diffs.chaside} />}
         {selected.chaside ? <>
           <div className="mt-3 bg-white border border-[#001d62]/10 rounded-xl p-3">
             <p className="text-xs font-black uppercase tracking-wider text-[#001d62]">Leyenda CHASIDE — 7 áreas</p>
@@ -89,7 +159,8 @@ export function EstudianteDetailContent({ selected, authHeader, isAdmin, onDelet
 
       {/* MBTI — con leyenda de cada letra */}
       <div className={`print-block mt-4 border rounded-2xl p-4 ${selected.personalidad ? "bg-purple-50 border-purple-200" : "bg-red-50 border-red-200"}`}>
-        <h4 className="font-black text-sm flex items-center gap-1">MBTI Personalidad {selected.personalidad ? <><Check size={14} className="text-green-600" />{selected.personalidad.tipo}{selected.personalidad.respuestas ? `-${deriveIdentity(selected.personalidad.respuestas).letter}` : ""} · {(TYPES as any)[selected.personalidad.tipo]?.name}</> : <><Minus size={14} className="text-red-500" />faltante</>}</h4>
+        <h4 className="font-black text-sm flex items-center gap-1 flex-wrap">MBTI Personalidad {selected.personalidad ? <><Check size={14} className="text-green-600" />{selected.personalidad.tipo}{selected.personalidad.respuestas ? `-${deriveIdentity(selected.personalidad.respuestas).letter}` : ""} · {(TYPES as any)[selected.personalidad.tipo]?.name}<span className="text-[10px] font-bold text-slate-500">Intento {selected.historial?.personalidad?.length || 1}</span></> : <><Minus size={14} className="text-red-500" />faltante</>}{btnReintento("PERSONALIDAD", "MBTI", "#7C3AED")}</h4>
+        {selected.personalidad && selected.diffs?.personalidad && <DiffResumen diff={selected.diffs.personalidad} />}
         {selected.personalidad ? (() => { const t = (TYPES as any)[selected.personalidad.tipo]; const profile = (MBTI_PROFILES as any)[selected.personalidad.tipo]; return <>
           <div className="mt-3 bg-white border rounded-xl p-3">
             <p className="text-xs font-black uppercase tracking-wider text-[#001d62]">Leyenda MBTI — qué significa cada letra</p>
@@ -121,7 +192,8 @@ export function EstudianteDetailContent({ selected, authHeader, isAdmin, onDelet
 
       {/* KUDER — con leyenda de cada abreviatura */}
       <div className={`print-block mt-4 border rounded-2xl p-4 ${selected.kuder ? "bg-blue-50 border-blue-200" : "bg-red-50 border-red-200"}`}>
-        <h4 className="font-black text-sm flex items-center gap-1">Kuder {selected.kuder ? <><Check size={14} className="text-green-600" />{selected.kuder.top} · {(KUDER_AREAS as any)[selected.kuder.top]?.nombre}</> : <><Minus size={14} className="text-red-500" />faltante</>}</h4>
+        <h4 className="font-black text-sm flex items-center gap-1 flex-wrap">Kuder {selected.kuder ? <><Check size={14} className="text-green-600" />{selected.kuder.top} · {(KUDER_AREAS as any)[selected.kuder.top]?.nombre}<span className="text-[10px] font-bold text-slate-500">Intento {selected.historial?.kuder?.length || 1}</span></> : <><Minus size={14} className="text-red-500" />faltante</>}{btnReintento("KUDER", "Kuder", "#2563EB")}</h4>
+        {selected.kuder && selected.diffs?.kuder && <DiffResumen diff={selected.diffs.kuder} />}
         {selected.kuder ? (() => { const topInfo = (KUDER_AREAS as any)[selected.kuder.top]; return <>
           <div className="mt-3 bg-white border rounded-xl p-3">
             <p className="text-xs font-black uppercase tracking-wider text-[#001d62]">Leyenda Kuder — 10 áreas</p>
@@ -150,11 +222,26 @@ export function EstudianteDetailContent({ selected, authHeader, isAdmin, onDelet
       </div>
 
       {isAdmin && (
-        <div className="no-print mt-4 border-t pt-4 flex gap-2 flex-wrap">
-          <button onClick={() => retake()} className="bg-[#d8215d] text-white font-bold px-4 py-2 rounded-full text-sm">Habilitar retake (borrar todo)</button>
-          <button onClick={() => retake("chaside")} className="bg-white border font-bold px-4 py-2 rounded-full text-sm">Borrar solo CHASIDE</button>
-          <button onClick={() => retake("personalidad")} className="bg-white border font-bold px-4 py-2 rounded-full text-sm">Borrar solo MBTI</button>
-          <button onClick={() => retake("kuder")} className="bg-white border font-bold px-4 py-2 rounded-full text-sm">Borrar solo Kuder</button>
+        <div className="no-print mt-4 border-t pt-4">
+          <p className="text-xs font-black uppercase tracking-wider text-[#001d62] mb-2">Auditoría de reintentos</p>
+          {(() => {
+            const hr = selected.historialReintentos || {};
+            const rows: any[] = [...(hr.chaside || []), ...(hr.personalidad || []), ...(hr.kuder || [])];
+            if (!rows.length) return <p className="text-xs text-slate-500">Sin habilitaciones registradas. Los intentos previos nunca se borran: habilitar un reintento crea un intento nuevo auditable (quién, cuándo, motivo).</p>;
+            return (
+              <div className="space-y-1">
+                {rows.sort((a: any, b: any) => b.habilitado_en - a.habilitado_en).map((r: any) => (
+                  <div key={r.id} className="text-xs flex gap-2 items-center flex-wrap bg-white border rounded-lg px-2 py-1.5">
+                    <span className="font-black">{r.test_codigo}</span>
+                    <span className={r.usado ? "bg-green-100 text-green-700 px-2 rounded-full font-bold" : "bg-amber-100 text-amber-800 px-2 rounded-full font-bold"}>{r.usado ? "usado" : "pendiente"}</span>
+                    <span className="text-slate-500">{new Date(r.habilitado_en * 1000).toLocaleString()} · por {String(r.habilitado_por).slice(0, 8)}</span>
+                    {r.motivo && <span className="italic text-slate-600">"{r.motivo}"</span>}
+                    {r.resultado_id && <span className="text-[10px] text-slate-400 font-mono">→ {String(r.resultado_id).slice(0, 8)}</span>}
+                  </div>
+                ))}
+              </div>
+            );
+          })()}
         </div>
       )}
     </>

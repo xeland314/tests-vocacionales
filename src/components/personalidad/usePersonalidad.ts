@@ -20,6 +20,7 @@ export function usePersonalidad() {
   const [saving, setSaving] = useState(false);
   const { moodleUserId, moodleUserName, moodleUserEmail, isMoodle, gateReady, checked: gateChecked } = useAnonGate("personalidad");
   const [alreadyCompleted, setAlreadyCompleted] = useState(false);
+  const [reintentoPendiente, setReintentoPendiente] = useState(false);
   const [loadingExisting, setLoadingExisting] = useState(false);
 
   useEffect(() => {
@@ -42,12 +43,20 @@ export function usePersonalidad() {
         if (r.ok) {
           const j = await r.json();
           if (j.found && j.respuestas) {
-            setAnswers(j.respuestas);
-            try { localStorage.setItem(STORAGE, JSON.stringify(j.respuestas)); } catch {}
-            const d = j.fecha_unix ? new Date(j.fecha_unix * 1000).toLocaleString() : fmt(new Date());
-            setSavedAt(d);
-            setAlreadyCompleted(true);
-            setShowResult(true);
+            if (j.reintentoPendiente) {
+              // Reintento habilitado: NO se carga el intento anterior; el estudiante
+              // responde de nuevo y al enviar se guarda como intento_numero+1.
+              setReintentoPendiente(true);
+              setAlreadyCompleted(true);
+              try { localStorage.removeItem(STORAGE); } catch {}
+            } else {
+              setAnswers(j.respuestas);
+              try { localStorage.setItem(STORAGE, JSON.stringify(j.respuestas)); } catch {}
+              const d = j.fecha_unix ? new Date(j.fecha_unix * 1000).toLocaleString() : fmt(new Date());
+              setSavedAt(d);
+              setAlreadyCompleted(true);
+              setShowResult(true);
+            }
           }
         }
       } catch {} finally { setLoadingExisting(false); }
@@ -92,5 +101,5 @@ export function usePersonalidad() {
     window.print();
   };
   const reset = () => { setAnswers({}); setShowResult(false); setAlreadyCompleted(false); setError(null); try { localStorage.removeItem(STORAGE); } catch {} window.scrollTo({ top: 0, behavior: "smooth" }); };
-  return { answers, setAnswers, showResult, setShowResult, name, setName, savedAt, error, saving, alreadyCompleted, loadingExisting, gateChecked, gateReady, isMoodle, moodleUserId, total, progress, missing, result, handle, submit, save, handlePrint, reset, setError };
+  return { answers, setAnswers, showResult, setShowResult, name, setName, savedAt, error, saving, alreadyCompleted, reintentoPendiente, loadingExisting, gateChecked, gateReady, isMoodle, moodleUserId, total, progress, missing, result, handle, submit, save, handlePrint, reset, setError };
 }

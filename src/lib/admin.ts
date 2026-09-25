@@ -1,5 +1,15 @@
 import { db, initDb } from "./db";
 import { calculateScores } from "../data/scoring";
+import {
+  getReintentosPendientes,
+  getHistorialReintentos,
+  habilitarReintento,
+  revocarReintentoPendiente,
+  diffPersonalidad,
+  diffChaside,
+  diffKuder,
+  type TestCodigo,
+} from "./reintentos";
 
 async function withInitRetry<T>(fn: () => Promise<T>): Promise<T> {
   try {
@@ -136,19 +146,44 @@ export async function getEstudiantesWithStatus(limit=200){
   await initDb();
   return withInitRetry(async () => {
   const students = await getEstudiantes(limit);
-  const ch = new Map<string, any>((await db.execute("SELECT estudiante_id, fecha_unix, top_interes, segundo_interes FROM chaside_resultados")).rows.map((r:any)=>[r.estudiante_id, r]));
-  const pers = new Map<string, any>((await db.execute("SELECT estudiante_id, fecha_unix, tipo FROM personalidad_resultados")).rows.map((r:any)=>[r.estudiante_id, r]));
-  const kuder = new Map<string, any>((await db.execute("SELECT estudiante_id, fecha_unix, top FROM kuder_resultados")).rows.map((r:any)=>[r.estudiante_id, r]));
-  return students.map((s:any)=> ({
-    ...s,
-    hasChaside: ch.has(s.id),
-    hasPersonalidad: pers.has(s.id),
-    hasKuder: kuder.has(s.id),
-    chaside: ch.get(s.id) || null,
-    personalidad: pers.get(s.id) || null,
-    kuder: kuder.get(s.id) || null,
-    completados: (ch.has(s.id)?1:0)+(pers.has(s.id)?1:0)+(kuder.has(s.id)?1:0),
-  }));
+  // IMPORTANTE: ORDER BY fecha_unix ASC — con retakes hay varias filas por estudiante_id
+  // y el Map se queda con la ÚLTIMA fila procesada; con ASC, esa última es la más reciente.
+  // Sin este ORDER BY, qué intento "gana" queda a merced del orden físico de SQLite.
+  const ch = new Map<string, any>((await db.execute("SELECT estudiante_id, fecha_unix, top_interes, segundo_interes, intento_numero FROM chaside_resultados ORDER BY fecha_unix ASC")).rows.map((r:any)=>[r.estudiante_id, r]));
+  const pers = new Map<string, any>((await db.execute("SELECT estudiante_id, fecha_unix, tipo, intento_numero FROM personalidad_resultados ORDER BY fecha_unix ASC")).rows.map((r:any)=>[r.estudiante_id, r]));
+  const kuder = new Map<string, any>((await db.execute("SELECT estudiante_id, fecha_unix, top, intento_numero FROM kuder_resultados ORDER BY fecha_unix ASC")).rows.map((r:any)=>[r.estudiante_id, r]));
+
+  const result = [];
+  for (const s of students as any[]) {
+    const pendientes = await getReintentosPendientes(s.id);
+    result.push({
+      ...s,
+      hasChaside: ch.has(s.id),
+      hasPersonalidad: pers.has(s.id),
+      hasKuder: kuder.has(s.id),
+      chaside: ch.get(s.id) || null,
+      personalidad: pers.get(s.id) || null,
+      kuder: kuder.get(s.id) || null,
+      completados: (ch.has(s.id)?1:0)+(pers.has(s.id)?1:0)+(kuder.has(s.id)?1:0),
+      // Tests con un reintento habilitado y aún no usado — para pintar la fila en blanco en el panel
+      reintentosPendientes: pendientes.map((p) => p.test_codigo),
+    });
+  }
+  return result;
+  });
+}
+
+/**
+ * Todos los intentos de un estudiante para un test, ordenados del más antiguo al
+ * más reciente (intento_numero 1, 2, 3...). Es la fuente para la tabla de historial
+ * con "fila en blanco" debajo de la última fila llena, y para calcular diffs.
+ */
+export async function getHistorialTest(estudianteId: string, testCodigo: TestCodigo) {
+  await initDb();
+  return withInitRetry(async () => {
+    const tabla = testCodigo === "CHASIDE" ? "chaside_resultados" : testCodigo === "PERSONALIDAD" ? "personalidad_resultados" : "kuder_resultados";
+    const r = await db.execute({ sql: `SELECT * FROM ${tabla} WHERE estudiante_id=? ORDER BY fecha_unix ASC`, args: [estudianteId] });
+    return r.rows as any[];
   });
 }
 
@@ -176,8 +211,72 @@ export async function getStudentDetail(id:string){
     const r = kud.rows[0] as any;
     kudData = { top: r.top, ranking: JSON.parse(r.ranking_json), scores: JSON.parse(r.scores_json), respuestas: JSON.parse(r.respuestas_json), verificacion: r.verificacion, fecha_unix: r.fecha_unix };
   }
-  return { estudiante: est, chaside: chScores, personalidad: persData, kuder: kudData };
+
+  // Historial completo (todos los intentos) + diff entre el actual y el inmediatamente anterior.
+  const [histChaside, histPersonalidad, histKuder] = await Promise.all([
+    getHistorialTest(id, "CHASIDE"),
+    getHistorialTest(id, "PERSONALIDAD"),
+    getHistorialTest(id, "KUDER"),
+  ]);
+
+  let diffPers = null;
+  if (histPersonalidad.length >= 2) {
+    const [prev, curr] = histPersonalidad.slice(-2) as any[];
+    diffPers = diffPersonalidad(
+      { tipo: prev.tipo, percentages: JSON.parse(prev.percentages_json) },
+      { tipo: curr.tipo, percentages: JSON.parse(curr.percentages_json) }
+    );
+  }
+  let diffCha = null;
+  if (histChaside.length >= 2) {
+    const [prev, curr] = histChaside.slice(-2) as any[];
+    diffCha = diffChaside(
+      { top_interes: prev.top_interes, top_aptitud: prev.top_aptitud, intereses: JSON.parse(prev.intereses_json), aptitudes: JSON.parse(prev.aptitudes_json) },
+      { top_interes: curr.top_interes, top_aptitud: curr.top_aptitud, intereses: JSON.parse(curr.intereses_json), aptitudes: JSON.parse(curr.aptitudes_json) }
+    );
+  }
+  let diffKud = null;
+  if (histKuder.length >= 2) {
+    const [prev, curr] = histKuder.slice(-2) as any[];
+    diffKud = diffKuder(
+      { top: prev.top, scores: JSON.parse(prev.scores_json) },
+      { top: curr.top, scores: JSON.parse(curr.scores_json) }
+    );
+  }
+
+  const reintentosPendientes = await getReintentosPendientes(id);
+  const [historialReintentosCh, historialReintentosPers, historialReintentosKud] = await Promise.all([
+    getHistorialReintentos(id, "CHASIDE"),
+    getHistorialReintentos(id, "PERSONALIDAD"),
+    getHistorialReintentos(id, "KUDER"),
+  ]);
+
+  return {
+    estudiante: est,
+    chaside: chScores,
+    personalidad: persData,
+    kuder: kudData,
+    historial: { chaside: histChaside, personalidad: histPersonalidad, kuder: histKuder },
+    diffs: { chaside: diffCha, personalidad: diffPers, kuder: diffKud },
+    reintentosPendientes: reintentosPendientes.map((p) => p.test_codigo),
+    historialReintentos: { chaside: historialReintentosCh, personalidad: historialReintentosPers, kuder: historialReintentosKud },
+  };
   });
+}
+
+/**
+ * Habilita un reintento desde el panel de administración. `actorUser` debe
+ * pasar la verificación de permisos (canEnableRetake) ANTES de llamar aquí —
+ * este módulo no conoce el objeto de sesión/HTTP, solo el user.id ya validado.
+ */
+export async function habilitarReintentoAdmin(estudianteId: string, testCodigo: TestCodigo, actorUserId: string, motivo?: string) {
+  await initDb();
+  return habilitarReintento({ estudianteId, testCodigo, habilitadoPor: actorUserId, motivo });
+}
+
+export async function revocarReintentoAdmin(estudianteId: string, testCodigo: TestCodigo) {
+  await initDb();
+  return revocarReintentoPendiente(estudianteId, testCodigo);
 }
 
 // legacy for old API

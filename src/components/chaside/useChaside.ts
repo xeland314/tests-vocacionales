@@ -24,6 +24,7 @@ export function useChaside() {
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [extra, setExtra] = useState({ padre: "", correoEst: "", correoPadre: "", cedulaEst: "", cedulaRepr: "" });
+  const [reintentoPendiente, setReintentoPendiente] = useState(false);
   const { moodleUserId, moodleUserName, moodleUserEmail, isMoodle, gateReady, checked: gateChecked } = useAnonGate("chaside");
 
   // persistencia local
@@ -54,12 +55,20 @@ export function useChaside() {
         if (r.ok) {
           const j = await r.json();
           if (j.found && j.respuestas) {
-            setAnswers(j.respuestas);
-            try { localStorage.setItem(STORAGE_KEY, JSON.stringify(j.respuestas)); } catch {}
-            const d = j.fecha_unix ? new Date(j.fecha_unix * 1000).toLocaleString() : formatDateTime(new Date());
-            setSavedAt(d + " · ya guardado");
-            setAlreadyCompleted(true);
-            setShowResult(true);
+            if (j.reintentoPendiente) {
+              // Reintento habilitado: NO se carga el intento anterior; el estudiante
+              // responde de nuevo y al enviar se guarda como intento_numero+1.
+              setReintentoPendiente(true);
+              setAlreadyCompleted(true);
+              try { localStorage.removeItem(STORAGE_KEY); } catch {}
+            } else {
+              setAnswers(j.respuestas);
+              try { localStorage.setItem(STORAGE_KEY, JSON.stringify(j.respuestas)); } catch {}
+              const d = j.fecha_unix ? new Date(j.fecha_unix * 1000).toLocaleString() : formatDateTime(new Date());
+              setSavedAt(d + " · ya guardado");
+              setAlreadyCompleted(true);
+              setShowResult(true);
+            }
           }
         }
       } catch {} finally { setLoadingExisting(false); }
@@ -219,7 +228,7 @@ export function useChaside() {
   return {
     // state
     answers, setAnswers, showResult, setShowResult, studentName, setStudentName, savedAt, error, saving, extra, setExtra,
-    alreadyCompleted, setAlreadyCompleted, loadingExisting,
+    alreadyCompleted, setAlreadyCompleted, loadingExisting, reintentoPendiente,
     // gate
     moodleUserId, moodleUserName, moodleUserEmail, isMoodle, gateChecked,
     // derived

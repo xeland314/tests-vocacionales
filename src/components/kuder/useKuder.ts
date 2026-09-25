@@ -29,6 +29,7 @@ export function useKuder() {
   const [saving, setSaving] = useState(false);
   const { moodleUserId, moodleUserName, moodleUserEmail, isMoodle, gateReady, checked: gateChecked } = useAnonGate("kuder");
   const [alreadyCompleted, setAlreadyCompleted] = useState(false);
+  const [reintentoPendiente, setReintentoPendiente] = useState(false);
   const [loadingExisting, setLoadingExisting] = useState(false);
 
   useEffect(() => {
@@ -59,14 +60,22 @@ export function useKuder() {
         if (r.ok) {
           const j = await r.json();
           if (j.found && j.respuestas) {
-            const norm = normalizeKuderAnswers(j.respuestas);
-            setAnswers(norm);
-            try { localStorage.setItem(STORAGE, JSON.stringify(norm)); } catch {}
-            // si la BD tenía 60, corrige silenciosamente sin mostrar 60/45
-            const d = j.fecha_unix ? new Date(j.fecha_unix * 1000).toLocaleString() : fmt(new Date());
-            setSavedAt(d + " · ya guardado");
-            setAlreadyCompleted(true);
-            setShowResult(true);
+            if (j.reintentoPendiente) {
+              // Reintento habilitado: NO se carga el intento anterior; el estudiante
+              // responde de nuevo y al enviar se guarda como intento_numero+1.
+              setReintentoPendiente(true);
+              setAlreadyCompleted(true);
+              try { localStorage.removeItem(STORAGE); } catch {}
+            } else {
+              const norm = normalizeKuderAnswers(j.respuestas);
+              setAnswers(norm);
+              try { localStorage.setItem(STORAGE, JSON.stringify(norm)); } catch {}
+              // si la BD tenía 60, corrige silenciosamente sin mostrar 60/45
+              const d = j.fecha_unix ? new Date(j.fecha_unix * 1000).toLocaleString() : fmt(new Date());
+              setSavedAt(d + " · ya guardado");
+              setAlreadyCompleted(true);
+              setShowResult(true);
+            }
           }
         }
       } catch {} finally { setLoadingExisting(false); }
@@ -125,5 +134,5 @@ export function useKuder() {
   };
   const reset = () => { setAnswers({}); setShowResult(false); setAlreadyCompleted(false); setError(null); try { localStorage.removeItem(STORAGE); } catch {} window.scrollTo({ top: 0, behavior: "smooth" }); };
 
-  return { answers, setAnswers, showResult, setShowResult, name, setName, savedAt, error, saving, alreadyCompleted, loadingExisting, gateChecked, gateReady, isMoodle, moodleUserId, moodleUserName, total, progress, missing, result, maxScore, handle, submit, save, handlePrint, reset, setError };
+  return { answers, setAnswers, showResult, setShowResult, name, setName, savedAt, error, saving, alreadyCompleted, reintentoPendiente, loadingExisting, gateChecked, gateReady, isMoodle, moodleUserId, moodleUserName, total, progress, missing, result, maxScore, handle, submit, save, handlePrint, reset, setError };
 }

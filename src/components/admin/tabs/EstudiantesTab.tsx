@@ -65,6 +65,7 @@ export function EstudiantesTab({ students, openDetail }: { students: any[]; open
         <span className="inline-flex items-center gap-1"><b>P</b> = MBTI (<Check size={12} className="inline text-green-600" /> + tipo)</span>
         <span className="inline-flex items-center gap-1"><b>K</b> = Kuder (<Check size={12} className="inline text-green-600" /> + área)</span>
         <span><b>Faltan</b> = 3 - completados</span>
+        <span><b>R</b> = reintento habilitado (sin usar) · <b>·I2</b> = intento 2</span>
         <span className="text-slate-500">Ver = detalle + habilitar retake (solo admin)</span>
       </div>
 
@@ -128,10 +129,10 @@ export function EstudiantesTab({ students, openDetail }: { students: any[]; open
                   <td className="px-3 py-2 text-center text-xs font-mono">{s.moodle_user_id ?? "—"}</td>
                   <td className="px-3 py-2 text-xs">{s.moodle_user_email || s.correo_estudiante || "—"}</td>
                   <td className="px-3 py-2 text-xs text-center">{s.moodle_course_id ?? "—"}</td>
-                  <td className="px-3 py-2 text-center">{s.hasChaside ? <span className="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs font-bold inline-flex items-center gap-1"><Check size={12} />{s.chaside?.top_interes}</span> : <span className="bg-red-100 text-red-600 px-2 py-1 rounded-full text-xs inline-flex items-center gap-1"><Minus size={12} /></span>}</td>
-                  <td className="px-3 py-2 text-center">{s.hasPersonalidad ? <span className="bg-purple-100 text-purple-700 px-2 py-1 rounded-full text-xs font-bold">{s.personalidad?.tipo}</span> : <span className="bg-red-100 text-red-600 px-2 py-1 rounded-full text-xs inline-flex items-center gap-1"><Minus size={12} /></span>}</td>
-                  <td className="px-3 py-2 text-center">{s.hasKuder ? <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded-full text-xs font-bold">{s.kuder?.top}</span> : <span className="bg-red-100 text-red-600 px-2 py-1 rounded-full text-xs inline-flex items-center gap-1"><Minus size={12} /></span>}</td>
-                  <td className="px-3 py-2 text-center font-black text-red-600">{3 - s.completados}</td>
+                  <td className="px-3 py-2 text-center">{s.hasChaside ? <span className="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs font-bold inline-flex items-center gap-1"><Check size={12} />{s.chaside?.top_interes}{s.chaside?.intento_numero > 1 ? <span className="opacity-70">·I{s.chaside.intento_numero}</span> : null}</span> : <span className="bg-red-100 text-red-600 px-2 py-1 rounded-full text-xs inline-flex items-center gap-1"><Minus size={12} /></span>}</td>
+                  <td className="px-3 py-2 text-center">{s.hasPersonalidad ? <span className="bg-purple-100 text-purple-700 px-2 py-1 rounded-full text-xs font-bold">{s.personalidad?.tipo}{s.personalidad?.intento_numero > 1 ? <span className="opacity-70"> ·I{s.personalidad.intento_numero}</span> : null}</span> : <span className="bg-red-100 text-red-600 px-2 py-1 rounded-full text-xs inline-flex items-center gap-1"><Minus size={12} /></span>}</td>
+                  <td className="px-3 py-2 text-center">{s.hasKuder ? <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded-full text-xs font-bold">{s.kuder?.top}{s.kuder?.intento_numero > 1 ? <span className="opacity-70">·I{s.kuder.intento_numero}</span> : null}</span> : <span className="bg-red-100 text-red-600 px-2 py-1 rounded-full text-xs inline-flex items-center gap-1"><Minus size={12} /></span>}</td>
+                  <td className="px-3 py-2 text-center font-black text-red-600">{3 - s.completados}{(s.reintentosPendientes || []).length > 0 && <span className="ml-1 align-middle bg-amber-100 text-amber-800 border border-amber-200 rounded-full px-1.5 py-0.5 text-[10px] font-black" title={`Reintento habilitado: ${s.reintentosPendientes.join(", ")}`}>R</span>}</td>
                   <td className="px-3 py-2"><button onClick={() => openDetail(s.id)} className="bg-[#001d62] text-white px-3 py-1 rounded-full text-xs font-bold">Ver</button></td>
                 </tr>
               ))}

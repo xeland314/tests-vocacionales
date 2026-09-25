@@ -118,6 +118,19 @@ export function requireRole(user: any, allowed: UserRole | UserRole[]): boolean 
   return list.includes(user.role as UserRole);
 }
 
+/**
+ * Permiso específico para habilitar/rehabilitar reintentos de exámenes psicológicos.
+ * Decisión de negocio: aunque "docente" es de solo lectura sobre los formularios,
+ * SÍ puede habilitar reintentos igual que "admin" (requisito explícito del sistema
+ * de evaluación). Toda habilitación queda igualmente auditada con habilitado_por
+ * en reintentos_habilitados, así que el permiso amplio no implica pérdida de trazabilidad.
+ * Si más adelante se quiere restringir esto solo a admin, basta con cambiar esta función
+ * sin tocar el resto del código que la llama.
+ */
+export function canEnableRetake(user: any): boolean {
+  return requireRole(user, ["admin", "docente"]) && user?.is_active !== 0;
+}
+
 // get_post_response_data equivalent
 export function get_post_response_data(token: string, instance: KnoxTokenInstance, user: any) {
   return {

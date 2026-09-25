@@ -9,7 +9,7 @@ import { ChasideResult } from "./ChasideResult";
 export default function ChasideTest() {
   const {
     answers, showResult, studentName, setStudentName, savedAt, error, saving, extra, setExtra,
-    alreadyCompleted, loadingExisting, moodleUserId, moodleUserName, moodleUserEmail, isMoodle, gateChecked,
+    alreadyCompleted, reintentoPendiente, loadingExisting, moodleUserId, moodleUserName, moodleUserEmail, isMoodle, gateChecked,
     total, siCount, missing, result, progress,
     handleAnswer, handleSubmit, handleSave, handlePrint, handleDownload, handleReset,
   } = useChaside();
@@ -46,6 +46,11 @@ export default function ChasideTest() {
   return (
     <div className="min-h-screen bg-[#ffffff]">
       <ChasideHero />
+      {reintentoPendiente && (
+        <div className="max-w-3xl mx-auto px-4 mt-3 bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-sm text-green-800">
+          <b>Tienes un reintento habilitado.</b> Tu intento anterior queda guardado en el historial: responde de nuevo y al enviar se registrará como un intento adicional.
+        </div>
+      )}
       <ChasideProgress total={total} progress={progress} siCount={siCount} onSubmit={handleSubmit} error={error} />
       <ChasideQuestions answers={answers} error={error} missing={missing} onAnswer={handleAnswer} onSubmit={handleSubmit} onReset={handleReset} />
     </div>

@@ -69,12 +69,24 @@ export default function EstudianteDetailPage({ token }: { token: string }) {
     })();
   }, [token]);
 
-  const retake = async (test?: "chaside" | "personalidad" | "kuder") => {
+  const habilitar = async (test: string, nombre: string) => {
     if (!data) return;
-    const label = test ? `solo ${test.toUpperCase()}` : "TODOS los resultados";
-    if (!confirm(`¿Habilitar retake? Borrará ${label}.`)) return;
-    const url = `/api/admin/estudiante/${data.estudiante.id}` + (test ? `?test=${test}` : "");
-    await fetch(url, { method: "DELETE", headers: { Authorization: authHeader } });
+    const motivo = prompt(`Motivo para habilitar reintento de ${nombre} (queda auditado):`);
+    if (motivo === null) return;
+    const r = await fetch("/api/admin/estudiante/retake", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: authHeader },
+      body: JSON.stringify({ estudiante_id: data.estudiante.id, test_codigo: test, motivo }),
+    });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) { alert(j.error || "No se pudo habilitar el reintento"); return; }
+    window.location.reload();
+  };
+
+  const revocar = async (test: string) => {
+    if (!data) return;
+    if (!confirm("¿Revocar el reintento pendiente?")) return;
+    await fetch(`/api/admin/estudiante/retake?estudiante_id=${data.estudiante.id}&test_codigo=${test}`, { method: "DELETE", headers: { Authorization: authHeader } });
     window.location.reload();
   };
 
@@ -228,11 +240,14 @@ export default function EstudianteDetailPage({ token }: { token: string }) {
         </SeccionInforme>
 
         {isAdmin && (
-          <div className="no-print mt-10 border-t pt-4 flex gap-2 flex-wrap">
-            <button onClick={() => retake()} className="bg-[#d8215d] text-white font-bold px-4 py-2 rounded-full text-sm">Habilitar retake (borrar todo)</button>
-            <button onClick={() => retake("chaside")} className="bg-white border font-bold px-4 py-2 rounded-full text-sm">Borrar solo CHASIDE</button>
-            <button onClick={() => retake("personalidad")} className="bg-white border font-bold px-4 py-2 rounded-full text-sm">Borrar solo MBTI</button>
-            <button onClick={() => retake("kuder")} className="bg-white border font-bold px-4 py-2 rounded-full text-sm">Borrar solo Kuder</button>
+          <div className="no-print mt-10 border-t pt-4 flex gap-2 flex-wrap items-center">
+            <span className="text-xs font-black uppercase tracking-wider text-[#001d62]">Reintentos:</span>
+            {(data.reintentosPendientes || []).length > 0 && <span className="bg-amber-100 text-amber-800 border border-amber-200 px-2 py-1 rounded-full text-xs font-black">{data.reintentosPendientes.join(", ")} habilitado(s)</span>}
+            {data.chaside && !(data.reintentosPendientes || []).includes("CHASIDE") && <button onClick={() => habilitar("CHASIDE", "CHASIDE")} className="bg-white border font-bold px-4 py-2 rounded-full text-sm">Habilitar CHASIDE</button>}
+            {data.personalidad && !(data.reintentosPendientes || []).includes("PERSONALIDAD") && <button onClick={() => habilitar("PERSONALIDAD", "MBTI")} className="bg-white border font-bold px-4 py-2 rounded-full text-sm">Habilitar MBTI</button>}
+            {data.kuder && !(data.reintentosPendientes || []).includes("KUDER") && <button onClick={() => habilitar("KUDER", "Kuder")} className="bg-white border font-bold px-4 py-2 rounded-full text-sm">Habilitar Kuder</button>}
+            {(data.reintentosPendientes || []).map((t: string) => <button key={t} onClick={() => revocar(t)} className="bg-red-50 border border-red-200 text-red-700 font-bold px-4 py-2 rounded-full text-sm">Revocar {t}</button>)}
+            <span className="text-[11px] text-slate-500 w-full">Los intentos previos nunca se borran; cada habilitación queda auditada con motivo y autor.</span>
           </div>
         )}
       </div>

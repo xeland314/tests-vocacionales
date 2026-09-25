@@ -1,6 +1,7 @@
 import type { APIRoute } from "astro";
 import { db, initDb } from "../../../lib/db";
 import { calculateScores } from "../../../data/scoring";
+import { getReintentoPendiente, consumirReintento } from "../../../lib/reintentos";
 
 export const prerender = false;
 
@@ -38,24 +39,26 @@ export const POST: APIRoute = async ({ request }) => {
     }
 
     const fecha = fecha_unix ?? Math.floor(Date.now() / 1000);
-    // Idempotencia: si ya existe resultado para este estudiante, actualizar en lugar de duplicar
+    // Regla de reintentos: si ya existe un intento previo, solo se permite un nuevo
+    // envío con un reintento habilitado (auditado). Los intentos previos NUNCA se borran
+    // ni se sobrescriben: cada intento es una fila nueva con intento_numero.
     const existingRes = await db.execute({ sql: "SELECT id FROM chaside_resultados WHERE estudiante_id=? LIMIT 1", args: [estId] });
-    let id: string;
     if (existingRes.rows.length > 0) {
-      id = (existingRes.rows[0] as any).id as string;
-      await db.execute({
-        sql: `UPDATE chaside_resultados SET fecha_unix=?, version=?, top_interes=?, segundo_interes=?, top_aptitud=?, intereses_json=?, aptitudes_json=?, respuestas_json=? WHERE id=?`,
-        args: [fecha, version, scores.topInteres, scores.segundoInteres ?? null, scores.topAptitud, JSON.stringify(scores.intereses), JSON.stringify(scores.aptitudes), JSON.stringify(respuestas), id],
-      });
-    } else {
-      id = crypto.randomUUID();
-      await db.execute({
-        sql: `INSERT INTO chaside_resultados (id, estudiante_id, fecha_unix, version, top_interes, segundo_interes, top_aptitud, intereses_json, aptitudes_json, respuestas_json) VALUES (?,?,?,?,?,?,?,?,?,?)`,
-        args: [id, estId, fecha, version, scores.topInteres, scores.segundoInteres ?? null, scores.topAptitud, JSON.stringify(scores.intereses), JSON.stringify(scores.aptitudes), JSON.stringify(respuestas)],
-      });
+      const pendiente = await getReintentoPendiente(estId, "CHASIDE");
+      if (!pendiente) {
+        return new Response(JSON.stringify({ error: "Ya completaste este test. Para volver a rendirlo, solicita la habilitación de un reintento a tu docente o administrador." }), { status: 403 });
+      }
     }
-
-    return new Response(JSON.stringify({ ok: true, id, estudiante_id: estId, fecha_unix: fecha, updated: existingRes.rows.length > 0 }), { status: 200, headers: { "Content-Type": "application/json" } });
+    const maxR = await db.execute({ sql: "SELECT MAX(intento_numero) as m FROM chaside_resultados WHERE estudiante_id=?", args: [estId] });
+    const intento = Number((maxR.rows[0] as any)?.m || 0) + 1;
+    const id = crypto.randomUUID();
+    await db.execute({
+      sql: `INSERT INTO chaside_resultados (id, estudiante_id, fecha_unix, version, top_interes, segundo_interes, top_aptitud, intereses_json, aptitudes_json, respuestas_json, intento_numero) VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
+      args: [id, estId, fecha, version, scores.topInteres, scores.segundoInteres ?? null, scores.topAptitud, JSON.stringify(scores.intereses), JSON.stringify(scores.aptitudes), JSON.stringify(respuestas), intento],
+    });
+    // Si este envío consumió un reintento habilitado, márcalo como usado (auditoría).
+    await consumirReintento(estId, "CHASIDE", id);
+    return new Response(JSON.stringify({ ok: true, id, estudiante_id: estId, fecha_unix: fecha, intento_numero: intento, reintentoUsado: existingRes.rows.length > 0 }), { status: 200, headers: { "Content-Type": "application/json" } });
   } catch (e: any) {
     return new Response(JSON.stringify({ error: e.message }), { status: 500 });
   }

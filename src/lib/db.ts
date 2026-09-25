@@ -115,6 +115,18 @@ export async function initDb() {
   `);
   await db.execute(`CREATE INDEX IF NOT EXISTS idx_chaside_est ON chaside_resultados(estudiante_id)`);
   await db.execute(`CREATE INDEX IF NOT EXISTS idx_chaside_fecha ON chaside_resultados(fecha_unix)`);
+  // Migración: intento_numero (para retakes) — orden cronológico por estudiante
+  if (!(await hasColumn("chaside_resultados", "intento_numero"))) {
+    await db.execute(`ALTER TABLE chaside_resultados ADD COLUMN intento_numero INTEGER`);
+    await db.execute(`
+      UPDATE chaside_resultados SET intento_numero = sub.rn
+      FROM (
+        SELECT id, ROW_NUMBER() OVER (PARTITION BY estudiante_id ORDER BY fecha_unix ASC, created_at ASC) as rn
+        FROM chaside_resultados
+      ) sub
+      WHERE chaside_resultados.id = sub.id
+    `);
+  }
 
   await db.execute(`
     CREATE TABLE IF NOT EXISTS personalidad_resultados (
@@ -131,6 +143,17 @@ export async function initDb() {
   `);
   await db.execute(`CREATE INDEX IF NOT EXISTS idx_pers_est ON personalidad_resultados(estudiante_id)`);
   await db.execute(`CREATE INDEX IF NOT EXISTS idx_pers_tipo ON personalidad_resultados(tipo)`);
+  if (!(await hasColumn("personalidad_resultados", "intento_numero"))) {
+    await db.execute(`ALTER TABLE personalidad_resultados ADD COLUMN intento_numero INTEGER`);
+    await db.execute(`
+      UPDATE personalidad_resultados SET intento_numero = sub.rn
+      FROM (
+        SELECT id, ROW_NUMBER() OVER (PARTITION BY estudiante_id ORDER BY fecha_unix ASC, created_at ASC) as rn
+        FROM personalidad_resultados
+      ) sub
+      WHERE personalidad_resultados.id = sub.id
+    `);
+  }
 
   await db.execute(`
     CREATE TABLE IF NOT EXISTS kuder_resultados (
@@ -148,6 +171,17 @@ export async function initDb() {
   `);
   await db.execute(`CREATE INDEX IF NOT EXISTS idx_kuder_est ON kuder_resultados(estudiante_id)`);
   await db.execute(`CREATE INDEX IF NOT EXISTS idx_kuder_top ON kuder_resultados(top)`);
+  if (!(await hasColumn("kuder_resultados", "intento_numero"))) {
+    await db.execute(`ALTER TABLE kuder_resultados ADD COLUMN intento_numero INTEGER`);
+    await db.execute(`
+      UPDATE kuder_resultados SET intento_numero = sub.rn
+      FROM (
+        SELECT id, ROW_NUMBER() OVER (PARTITION BY estudiante_id ORDER BY fecha_unix ASC, created_at ASC) as rn
+        FROM kuder_resultados
+      ) sub
+      WHERE kuder_resultados.id = sub.id
+    `);
+  }
 
   // Legacy respuestas table kept for compatibility if needed (not used now) – ensure dropped if exists with old shape
   // Do not create respuestas anymore; stats use *_resultados
@@ -172,7 +206,8 @@ export async function initDb() {
     }
   }
 
-  // Auth — roles: admin (gestiona usuarios) / docente (solo lectura formularios)
+  // Auth — roles: admin (gestiona usuarios) / docente (lectura de formularios;
+  // excepción explícita: admin y docente pueden habilitar/rehabilitar reintentos — ver auth.ts:canEnableRetake)
   await db.execute(`
     CREATE TABLE IF NOT EXISTS users (
       id TEXT PRIMARY KEY,
@@ -240,6 +275,25 @@ export async function initDb() {
     )
   `);
   await db.execute(`CREATE INDEX IF NOT EXISTS idx_view_tokens_exp ON admin_view_tokens(expires_unix)`);
+
+  // Reintentos: habilitación explícita + auditoría de quién/cuándo/por qué,
+  // y si ya fue consumido por un nuevo resultado. NO se usa para borrar intentos previos.
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS reintentos_habilitados (
+      id TEXT PRIMARY KEY,
+      estudiante_id TEXT NOT NULL REFERENCES estudiantes(id) ON DELETE CASCADE,
+      test_codigo TEXT NOT NULL CHECK (test_codigo IN ('CHASIDE','PERSONALIDAD','KUDER')),
+      habilitado_por TEXT NOT NULL REFERENCES users(id),
+      habilitado_en INTEGER DEFAULT (unixepoch()),
+      motivo TEXT,
+      usado INTEGER NOT NULL DEFAULT 0,
+      usado_en INTEGER,
+      resultado_id TEXT
+    )
+  `);
+  await db.execute(`CREATE INDEX IF NOT EXISTS idx_reintentos_est ON reintentos_habilitados(estudiante_id, test_codigo)`);
+  // Consulta más frecuente: "¿tiene este estudiante un reintento pendiente para este test?"
+  await db.execute(`CREATE INDEX IF NOT EXISTS idx_reintentos_pendientes ON reintentos_habilitados(estudiante_id, test_codigo, usado)`);
   } catch (e) {
     _initLock = null;
     throw e;
