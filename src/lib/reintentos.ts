@@ -21,24 +21,47 @@ export interface ReintentoRow {
   habilitado_por: string;
   habilitado_en: number;
   motivo: string | null;
+  ventana_desde_unix: number | null;
+  ventana_hasta_unix: number | null;
   usado: number;
   usado_en: number | null;
   resultado_id: string | null;
 }
 
+/** ¿El reintento está dentro de su ventana de fechas (si tiene)? */
+export function dentroDeVentana(r: ReintentoRow | null): boolean {
+  if (!r) return false;
+  const now = Math.floor(Date.now() / 1000);
+  if (r.ventana_desde_unix && now < Number(r.ventana_desde_unix)) return false;
+  if (r.ventana_hasta_unix && now > Number(r.ventana_hasta_unix)) return false;
+  return true;
+}
+
+function parseFechaAUnix(v: any): number | null {
+  if (v === undefined || v === null || v === "") return null;
+  const d = new Date(v);
+  if (isNaN(d.getTime())) return null;
+  return Math.floor(d.getTime() / 1000);
+}
+
 /**
  * Habilita un nuevo intento para un estudiante en un test específico.
- * Lanza error si ya existe un reintento pendiente (usado=0) para ese par
- * estudiante+test, para evitar duplicados / inconsistencias en el panel.
+ * Regla de "ronda única": antes de insertar, REVIRA (revoca) los reintentos
+ * pendientes de los OTROS tests, de modo que solo puede haber una ronda de
+ * test abierta a la vez por estudiante. Lanza error si ya existe un reintento
+ * pendiente (usado=0) para el mismo test.
+ * ventanaDesde/ventanaHasta (ISO o yyyy-mm-dd) acotan CUÁNDO puede rendirse.
  */
 export async function habilitarReintento(params: {
   estudianteId: string;
   testCodigo: TestCodigo;
   habilitadoPor: string; // user.id de quien habilita (admin o docente)
   motivo?: string;
+  ventanaDesde?: string | null;
+  ventanaHasta?: string | null;
 }): Promise<ReintentoRow> {
   await initDb();
-  const { estudianteId, testCodigo, habilitadoPor, motivo } = params;
+  const { estudianteId, testCodigo, habilitadoPor, motivo, ventanaDesde, ventanaHasta } = params;
 
   const pendiente = await getReintentoPendiente(estudianteId, testCodigo);
   if (pendiente) {
@@ -47,11 +70,24 @@ export async function habilitarReintento(params: {
     );
   }
 
+  const desde = parseFechaAUnix(ventanaDesde);
+  const hasta = parseFechaAUnix(ventanaHasta);
+  if (desde && hasta && desde > hasta) {
+    throw new Error("La fecha 'desde' no puede ser posterior a la fecha 'hasta'");
+  }
+
+  // Ronda única: cierra los reintentos pendientes de los demás tests.
+  const otros: TestCodigo[] = (["CHASIDE", "PERSONALIDAD", "KUDER"] as TestCodigo[]).filter((t) => t !== testCodigo);
+  await db.execute({
+    sql: `DELETE FROM reintentos_habilitados WHERE estudiante_id=? AND usado=0 AND test_codigo IN (?,?)`,
+    args: [estudianteId, otros[0], otros[1]],
+  });
+
   const id = randomUUID();
   await db.execute({
-    sql: `INSERT INTO reintentos_habilitados (id, estudiante_id, test_codigo, habilitado_por, motivo)
-          VALUES (?,?,?,?,?)`,
-    args: [id, estudianteId, testCodigo, habilitadoPor, motivo ?? null],
+    sql: `INSERT INTO reintentos_habilitados (id, estudiante_id, test_codigo, habilitado_por, motivo, ventana_desde_unix, ventana_hasta_unix)
+          VALUES (?,?,?,?,?,?,?)`,
+    args: [id, estudianteId, testCodigo, habilitadoPor, motivo ?? null, desde, hasta],
   });
   const r = await db.execute({ sql: "SELECT * FROM reintentos_habilitados WHERE id=?", args: [id] });
   return r.rows[0] as any as ReintentoRow;

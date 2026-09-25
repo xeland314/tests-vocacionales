@@ -73,10 +73,20 @@ export default function EstudianteDetailPage({ token }: { token: string }) {
     if (!data) return;
     const motivo = prompt(`Motivo para habilitar reintento de ${nombre} (queda auditado):`);
     if (motivo === null) return;
+    let ventana_desde: string | undefined;
+    let ventana_hasta: string | undefined;
+    if (confirm("¿Acotar el reintento a un intervalo de fechas?\n(Aceptar = pedir fechas; Cancelar = disponible de inmediato, sin límite)")) {
+      const desde = prompt("Fecha DESDE (formato AAAA-MM-DD, vacío = desde ahora):");
+      if (desde === null) return;
+      const hasta = prompt("Fecha HASTA (formato AAAA-MM-DD, vacío = sin límite):");
+      if (hasta === null) return;
+      ventana_desde = desde.trim() || undefined;
+      ventana_hasta = hasta.trim() || undefined;
+    }
     const r = await fetch("/api/admin/estudiante/retake", {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: authHeader },
-      body: JSON.stringify({ estudiante_id: data.estudiante.id, test_codigo: test, motivo }),
+      body: JSON.stringify({ estudiante_id: data.estudiante.id, test_codigo: test, motivo, ventana_desde, ventana_hasta }),
     });
     const j = await r.json().catch(() => ({}));
     if (!r.ok) { alert(j.error || "No se pudo habilitar el reintento"); return; }

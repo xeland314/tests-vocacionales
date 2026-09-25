@@ -1,6 +1,6 @@
 import type { APIRoute } from "astro";
 import { db, initDb } from "../../../lib/db";
-import { getReintentoPendiente } from "../../../lib/reintentos";
+import { getReintentoPendiente, dentroDeVentana } from "../../../lib/reintentos";
 
 export const prerender = false;
 
@@ -31,6 +31,9 @@ export const GET: APIRoute = async ({ url }) => {
       respuestas: JSON.parse(row.respuestas_json),
       // Si hay un reintento habilitado sin usar, el estudiante puede volver a rendir.
       reintentoPendiente: !!pendiente,
+      // Vigente = pendiente DENTRO de su ventana de fechas (si tiene).
+      reintentoVigente: !!pendiente && dentroDeVentana(pendiente),
+      reintentoVentana: pendiente ? { desde_unix: pendiente.ventana_desde_unix, hasta_unix: pendiente.ventana_hasta_unix } : null,
     }), { status: 200, headers: { "Content-Type": "application/json" } });
   } catch (e: any) {
     return new Response(JSON.stringify({ error: e.message }), { status: 500 });

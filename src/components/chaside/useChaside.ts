@@ -55,7 +55,7 @@ export function useChaside() {
         if (r.ok) {
           const j = await r.json();
           if (j.found && j.respuestas) {
-            if (j.reintentoPendiente) {
+            if (j.reintentoVigente) {
               // Reintento habilitado: NO se carga el intento anterior; el estudiante
               // responde de nuevo y al enviar se guarda como intento_numero+1.
               setReintentoPendiente(true);

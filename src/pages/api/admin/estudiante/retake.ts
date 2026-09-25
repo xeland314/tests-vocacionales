@@ -22,12 +22,19 @@ export const POST: APIRoute = async ({ request }) => {
   if (!canEnableRetake(auth.user)) return json({ error: "No autorizado para habilitar reintentos" }, 403);
 
   const body = await request.json().catch(() => ({} as any));
-  const { estudiante_id, test_codigo, motivo } = body ?? {};
+  const { estudiante_id, test_codigo, motivo, ventana_desde, ventana_hasta } = body ?? {};
   if (!estudiante_id) return json({ error: "estudiante_id requerido" }, 400);
   if (!esCodigo(test_codigo)) return json({ error: "test_codigo inválido (CHASIDE|PERSONALIDAD|KUDER)" }, 400);
 
   try {
-    const row = await habilitarReintentoAdmin(String(estudiante_id), test_codigo, auth.user.id, motivo ? String(motivo).trim() || undefined : undefined);
+    const row = await habilitarReintentoAdmin(
+      String(estudiante_id),
+      test_codigo,
+      auth.user.id,
+      motivo ? String(motivo).trim() || undefined : undefined,
+      ventana_desde ? String(ventana_desde) : undefined,
+      ventana_hasta ? String(ventana_hasta) : undefined
+    );
     return json({ ok: true, reintento: row });
   } catch (e: any) {
     return json({ error: e.message }, 409);

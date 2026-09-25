@@ -1,7 +1,7 @@
 import type { APIRoute } from "astro";
 import { db, initDb } from "../../../lib/db";
 import { calculateScores } from "../../../data/scoring";
-import { getReintentoPendiente, consumirReintento } from "../../../lib/reintentos";
+import { getReintentoPendiente, consumirReintento, dentroDeVentana } from "../../../lib/reintentos";
 
 export const prerender = false;
 
@@ -47,6 +47,11 @@ export const POST: APIRoute = async ({ request }) => {
       const pendiente = await getReintentoPendiente(estId, "CHASIDE");
       if (!pendiente) {
         return new Response(JSON.stringify({ error: "Ya completaste este test. Para volver a rendirlo, solicita la habilitación de un reintento a tu docente o administrador." }), { status: 403 });
+      }
+      if (!dentroDeVentana(pendiente)) {
+        const hasta = pendiente.ventana_hasta_unix ? new Date(pendiente.ventana_hasta_unix * 1000).toLocaleString() : null;
+        const desde = pendiente.ventana_desde_unix ? new Date(pendiente.ventana_desde_unix * 1000).toLocaleString() : null;
+        return new Response(JSON.stringify({ error: `Tu reintento está habilitado ${desde ? `desde ${desde}` : ""}${hasta ? ` hasta ${hasta}` : ""}. Vuelve dentro de esa ventana.` }), { status: 403 });
       }
     }
     const maxR = await db.execute({ sql: "SELECT MAX(intento_numero) as m FROM chaside_resultados WHERE estudiante_id=?", args: [estId] });

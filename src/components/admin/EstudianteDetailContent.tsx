@@ -7,6 +7,15 @@ import { LucideIcon } from "../../lib/icons";
 import { deriveIdentity } from "../../data/mbti/identity";
 import { MBTI_PROFILES } from "../../data/mbti";
 
+/** ¿El reintento está dentro de su ventana de fechas (si tiene)? — versión cliente, sin imports de servidor. */
+function enVentana(row: any): boolean {
+  if (!row) return true;
+  const now = Math.floor(Date.now() / 1000);
+  if (row.ventana_desde_unix && now < Number(row.ventana_desde_unix)) return false;
+  if (row.ventana_hasta_unix && now > Number(row.ventana_hasta_unix)) return false;
+  return true;
+}
+
 type TestCodigoUI = "CHASIDE" | "PERSONALIDAD" | "KUDER";
 
 /** Bloque compacto de comparación entre el intento actual y el anterior. */
@@ -51,6 +60,35 @@ function DiffResumen({ diff }: { diff: any }) {
   );
 }
 
+/** Tabla de evolución: comparación entre TODOS los intentos consecutivos de un test. */
+function EvolucionIntentos({ titulo, serie, resumen }: { titulo: string; serie: any[]; resumen: (row: any) => React.ReactNode }) {
+  if (!serie?.length) return null;
+  return (
+    <div className="mt-3 bg-white border rounded-xl p-3">
+      <p className="text-xs font-black uppercase tracking-wider text-[#001d62] flex items-center gap-1"><History size={13} />{titulo} — todos los intentos</p>
+      <div className="overflow-x-auto mt-2">
+        <table className="w-full text-xs border-collapse">
+          <thead><tr className="border-b-2 border-[#001d62]/20"><th className="text-left px-1 py-1">Intento</th><th className="text-left px-1 py-1">Fecha</th><th className="text-left px-1 py-1">Resultado</th><th className="text-left px-1 py-1">vs anterior</th></tr></thead>
+          <tbody>
+            {serie.map((s: any, i: number) => (
+              <tr key={i} className="border-b border-slate-100">
+                <td className="px-1 py-1 font-black">#{s.intento}</td>
+                <td className="px-1 py-1 text-slate-500">{new Date(s.fecha_unix * 1000).toLocaleDateString()}</td>
+                <td className="px-1 py-1">{resumen(s.diff)}</td>
+                <td className="px-1 py-1">
+                  {s.diff.cambioSignificativo
+                    ? <span className="bg-[#d8215d]/10 text-[#d8215d] px-2 py-0.5 rounded-full font-bold text-[10px]">cambio significativo</span>
+                    : <span className="bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-bold text-[10px]">estable</span>}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
 export function EstudianteDetailContent({ selected, authHeader, isAdmin, onDeleted }: {
   selected: any;
   authHeader: string;
@@ -63,10 +101,20 @@ export function EstudianteDetailContent({ selected, authHeader, isAdmin, onDelet
   const habilitar = async (test: TestCodigoUI, nombre: string) => {
     const motivo = prompt(`Motivo para habilitar reintento de ${nombre} (queda auditado):`);
     if (motivo === null) return; // cancelado
+    let ventana_desde: string | undefined;
+    let ventana_hasta: string | undefined;
+    if (confirm(`¿Acotar el reintento a un intervalo de fechas?\n(Aceptar = pedir fechas; Cancelar = disponible de inmediato, sin límite)`)) {
+      const desde = prompt("Fecha DESDE (formato AAAA-MM-DD, vacío = desde ahora):");
+      if (desde === null) return;
+      const hasta = prompt("Fecha HASTA (formato AAAA-MM-DD, vacío = sin límite):");
+      if (hasta === null) return;
+      ventana_desde = desde.trim() || undefined;
+      ventana_hasta = hasta.trim() || undefined;
+    }
     const r = await fetch("/api/admin/estudiante/retake", {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: authHeader },
-      body: JSON.stringify({ estudiante_id: estudiante.id, test_codigo: test, motivo }),
+      body: JSON.stringify({ estudiante_id: estudiante.id, test_codigo: test, motivo, ventana_desde, ventana_hasta }),
     });
     const j = await r.json().catch(() => ({}));
     if (!r.ok) { alert(j.error || "No se pudo habilitar el reintento"); return; }
@@ -84,7 +132,11 @@ export function EstudianteDetailContent({ selected, authHeader, isAdmin, onDelet
     <span className="no-print inline-flex gap-1 ml-2 align-middle">
       {pendientes.includes(test) ? (
         <>
-          <span className="bg-amber-100 text-amber-800 border border-amber-200 px-2 py-0.5 rounded-full text-[10px] font-black">REINTENTO HABILITADO</span>
+          {(() => {
+            const row = (selected.historialReintentos?.[test === "CHASIDE" ? "chaside" : test === "PERSONALIDAD" ? "personalidad" : "kuder"] || [])[0];
+            const vigente = enVentana(row);
+            return <span className={`border px-2 py-0.5 rounded-full text-[10px] font-black ${vigente ? "bg-amber-100 text-amber-800 border-amber-200" : "bg-slate-100 text-slate-600 border-slate-300"}`}>{vigente ? "REINTENTO HABILITADO" : "REINTENTO FUERA DE VENTANA"}</span>;
+          })()}
           <button onClick={() => revocar(test)} title="Revocar reintento pendiente" className="border rounded-full w-5 h-5 flex items-center justify-center text-slate-500 hover:bg-slate-100"><X size={11} /></button>
         </>
       ) : isAdmin ? (
@@ -104,6 +156,7 @@ export function EstudianteDetailContent({ selected, authHeader, isAdmin, onDelet
       <div className={`print-block mt-4 border rounded-2xl p-4 ${selected.chaside ? "bg-green-50 border-green-200" : "bg-red-50 border-red-200"}`}>
         <h4 className="font-black text-sm flex items-center gap-1 flex-wrap">CHASIDE {selected.chaside ? <><Check size={14} className="text-green-600" />{selected.chaside.topInteres} · {(AREAS as any)[selected.chaside.topInteres]?.nombre}<span className="text-[10px] font-bold text-slate-500">Intento {selected.historial?.chaside?.length || 1}</span></> : <><Minus size={14} className="text-red-500" />faltante</>}{btnReintento("CHASIDE", "CHASIDE", "#001d62")}</h4>
         {selected.chaside && selected.diffs?.chaside && <DiffResumen diff={selected.diffs.chaside} />}
+        {selected.chaside && <EvolucionIntentos titulo="CHASIDE" serie={selected.evolucion?.chaside} resumen={(d: any) => <>Interés {d.topInteresAnterior}→<b>{d.topInteresActual}</b> · Apt {d.topAptitudAnterior}→<b>{d.topAptitudActual}</b></>} />}
         {selected.chaside ? <>
           <div className="mt-3 bg-white border border-[#001d62]/10 rounded-xl p-3">
             <p className="text-xs font-black uppercase tracking-wider text-[#001d62]">Leyenda CHASIDE — 7 áreas</p>
@@ -161,6 +214,7 @@ export function EstudianteDetailContent({ selected, authHeader, isAdmin, onDelet
       <div className={`print-block mt-4 border rounded-2xl p-4 ${selected.personalidad ? "bg-purple-50 border-purple-200" : "bg-red-50 border-red-200"}`}>
         <h4 className="font-black text-sm flex items-center gap-1 flex-wrap">MBTI Personalidad {selected.personalidad ? <><Check size={14} className="text-green-600" />{selected.personalidad.tipo}{selected.personalidad.respuestas ? `-${deriveIdentity(selected.personalidad.respuestas).letter}` : ""} · {(TYPES as any)[selected.personalidad.tipo]?.name}<span className="text-[10px] font-bold text-slate-500">Intento {selected.historial?.personalidad?.length || 1}</span></> : <><Minus size={14} className="text-red-500" />faltante</>}{btnReintento("PERSONALIDAD", "MBTI", "#7C3AED")}</h4>
         {selected.personalidad && selected.diffs?.personalidad && <DiffResumen diff={selected.diffs.personalidad} />}
+        {selected.personalidad && <EvolucionIntentos titulo="MBTI" serie={selected.evolucion?.personalidad} resumen={(d: any) => <>{d.tipoAnterior}→<b style={{ color: d.tipoCambio ? "#d8215d" : undefined }}>{d.tipoActual}</b></>} />}
         {selected.personalidad ? (() => { const t = (TYPES as any)[selected.personalidad.tipo]; const profile = (MBTI_PROFILES as any)[selected.personalidad.tipo]; return <>
           <div className="mt-3 bg-white border rounded-xl p-3">
             <p className="text-xs font-black uppercase tracking-wider text-[#001d62]">Leyenda MBTI — qué significa cada letra</p>
@@ -194,6 +248,7 @@ export function EstudianteDetailContent({ selected, authHeader, isAdmin, onDelet
       <div className={`print-block mt-4 border rounded-2xl p-4 ${selected.kuder ? "bg-blue-50 border-blue-200" : "bg-red-50 border-red-200"}`}>
         <h4 className="font-black text-sm flex items-center gap-1 flex-wrap">Kuder {selected.kuder ? <><Check size={14} className="text-green-600" />{selected.kuder.top} · {(KUDER_AREAS as any)[selected.kuder.top]?.nombre}<span className="text-[10px] font-bold text-slate-500">Intento {selected.historial?.kuder?.length || 1}</span></> : <><Minus size={14} className="text-red-500" />faltante</>}{btnReintento("KUDER", "Kuder", "#2563EB")}</h4>
         {selected.kuder && selected.diffs?.kuder && <DiffResumen diff={selected.diffs.kuder} />}
+        {selected.kuder && <EvolucionIntentos titulo="Kuder" serie={selected.evolucion?.kuder} resumen={(d: any) => <>{d.topAnterior}→<b style={{ color: d.topAnterior !== d.topActual ? "#d8215d" : undefined }}>{d.topActual}</b></>} />}
         {selected.kuder ? (() => { const topInfo = (KUDER_AREAS as any)[selected.kuder.top]; return <>
           <div className="mt-3 bg-white border rounded-xl p-3">
             <p className="text-xs font-black uppercase tracking-wider text-[#001d62]">Leyenda Kuder — 10 áreas</p>

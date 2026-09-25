@@ -278,6 +278,7 @@ export async function initDb() {
 
   // Reintentos: habilitación explícita + auditoría de quién/cuándo/por qué,
   // y si ya fue consumido por un nuevo resultado. NO se usa para borrar intentos previos.
+  // ventana_*: opcional, reintento disponible solo dentro del intervalo de fechas indicado.
   await db.execute(`
     CREATE TABLE IF NOT EXISTS reintentos_habilitados (
       id TEXT PRIMARY KEY,
@@ -286,6 +287,8 @@ export async function initDb() {
       habilitado_por TEXT NOT NULL REFERENCES users(id),
       habilitado_en INTEGER DEFAULT (unixepoch()),
       motivo TEXT,
+      ventana_desde_unix INTEGER,
+      ventana_hasta_unix INTEGER,
       usado INTEGER NOT NULL DEFAULT 0,
       usado_en INTEGER,
       resultado_id TEXT

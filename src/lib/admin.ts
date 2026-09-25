@@ -187,6 +187,41 @@ export async function getHistorialTest(estudianteId: string, testCodigo: TestCod
   });
 }
 
+/**
+ * Serie de diffs entre intentos CONSECUTIVOS (intento 1→2, 2→3, ...).
+ * Complementa `diffs` (solo actual vs anterior) y permite ver la evolución completa.
+ */
+function serieDiffs(rows: any[], testCodigo: TestCodigo) {
+  const out: any[] = [];
+  for (let i = 1; i < rows.length; i++) {
+    const prev = rows[i - 1] as any;
+    const curr = rows[i] as any;
+    if (testCodigo === "PERSONALIDAD") {
+      out.push({
+        intento: curr.intento_numero ?? i + 1,
+        fecha_unix: curr.fecha_unix,
+        diff: diffPersonalidad({ tipo: prev.tipo, percentages: JSON.parse(prev.percentages_json) }, { tipo: curr.tipo, percentages: JSON.parse(curr.percentages_json) }),
+      });
+    } else if (testCodigo === "CHASIDE") {
+      out.push({
+        intento: curr.intento_numero ?? i + 1,
+        fecha_unix: curr.fecha_unix,
+        diff: diffChaside(
+          { top_interes: prev.top_interes, top_aptitud: prev.top_aptitud, intereses: JSON.parse(prev.intereses_json), aptitudes: JSON.parse(prev.aptitudes_json) },
+          { top_interes: curr.top_interes, top_aptitud: curr.top_aptitud, intereses: JSON.parse(curr.intereses_json), aptitudes: JSON.parse(curr.aptitudes_json) }
+        ),
+      });
+    } else {
+      out.push({
+        intento: curr.intento_numero ?? i + 1,
+        fecha_unix: curr.fecha_unix,
+        diff: diffKuder({ top: prev.top, scores: JSON.parse(prev.scores_json) }, { top: curr.top, scores: JSON.parse(curr.scores_json) }),
+      });
+    }
+  }
+  return out;
+}
+
 export async function getStudentDetail(id:string){
   await initDb();
   return withInitRetry(async () => {
@@ -258,6 +293,12 @@ export async function getStudentDetail(id:string){
     kuder: kudData,
     historial: { chaside: histChaside, personalidad: histPersonalidad, kuder: histKuder },
     diffs: { chaside: diffCha, personalidad: diffPers, kuder: diffKud },
+    // Evolución completa: diff entre cada par de intentos consecutivos
+    evolucion: {
+      chaside: serieDiffs(histChaside, "CHASIDE"),
+      personalidad: serieDiffs(histPersonalidad, "PERSONALIDAD"),
+      kuder: serieDiffs(histKuder, "KUDER"),
+    },
     reintentosPendientes: reintentosPendientes.map((p) => p.test_codigo),
     historialReintentos: { chaside: historialReintentosCh, personalidad: historialReintentosPers, kuder: historialReintentosKud },
   };
@@ -269,9 +310,9 @@ export async function getStudentDetail(id:string){
  * pasar la verificación de permisos (canEnableRetake) ANTES de llamar aquí —
  * este módulo no conoce el objeto de sesión/HTTP, solo el user.id ya validado.
  */
-export async function habilitarReintentoAdmin(estudianteId: string, testCodigo: TestCodigo, actorUserId: string, motivo?: string) {
+export async function habilitarReintentoAdmin(estudianteId: string, testCodigo: TestCodigo, actorUserId: string, motivo?: string, ventanaDesde?: string, ventanaHasta?: string) {
   await initDb();
-  return habilitarReintento({ estudianteId, testCodigo, habilitadoPor: actorUserId, motivo });
+  return habilitarReintento({ estudianteId, testCodigo, habilitadoPor: actorUserId, motivo, ventanaDesde, ventanaHasta });
 }
 
 export async function revocarReintentoAdmin(estudianteId: string, testCodigo: TestCodigo) {
