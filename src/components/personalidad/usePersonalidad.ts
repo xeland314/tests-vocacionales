@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { calculatePersonality, type AnswersPers } from "../../data/personalidadScoring";
+import { deriveIdentity } from "../../data/mbti/identity";
 import { useAnonGate } from "../../lib/anonGate";
 import { notifyMoodleCompletion } from "../../lib/moodle";
 
@@ -56,7 +57,7 @@ export function usePersonalidad() {
   const total = Object.keys(answers).length;
   const progress = Math.round((total / 60) * 100);
   const missing = useMemo(() => { const m: number[] = []; for (let i = 1; i <= 60; i++) if (answers[i] === undefined) m.push(i); return m; }, [answers]);
-  const result = useMemo(() => calculatePersonality(answers), [answers]);
+  const result = useMemo(() => ({ ...calculatePersonality(answers), identity: deriveIdentity(answers) }), [answers]);
   const getCourseId = () => {
     try {
       const p = new URLSearchParams(window.location.search);
