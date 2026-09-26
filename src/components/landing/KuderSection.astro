@@ -1,0 +1,64 @@
+---
+type KuderRow = {
+  label: string;
+  color: string;
+  w: number;
+};
+
+const { rows, site, whatsapp } = Astro.props as {
+  rows: KuderRow[];
+  site: string;
+  whatsapp: string;
+};
+---
+
+<section id="kuder" class="py-8 md:py-10">
+  <article class="grid lg:grid-cols-2 gap-8 items-center rounded-2xl border p-6 md:p-8" style="background: #fcfcfc; border-color: rgba(31,56,117,0.08)">
+    <div class="rounded-xl border bg-white p-5 shadow-sm order-2 lg:order-1" style="border-color: rgba(31,56,117,0.08)">
+      <div class="text-[11px] font-bold uppercase tracking-wider" style="color: #1f3875">Informe Kuder — resultado de otro estudiante</div>
+      <div class="mt-4 space-y-2.5">
+        {rows.map((r: KuderRow, i: number) => (
+          <div class="flex items-center gap-3">
+            <span class={`w-6 h-6 shrink-0 rounded-md flex items-center justify-center text-[11px] font-black ${i === 0 ? "text-white" : ""}`} style={i === 0 ? "background: #d8215d" : "background: rgba(31,56,117,0.08); color: #1f3875"}>{i + 1}</span>
+            <span class="w-36 shrink-0 text-[11px] font-semibold" style="color: #0f2b6b">{r.label}</span>
+            <div class="flex-1 h-2.5 rounded-full overflow-hidden" style="background: rgba(31,56,117,0.06)">
+              <div class="h-full rounded-full" style={`width: ${r.w}%; background: ${r.color}`}></div>
+            </div>
+            <span class="w-9 text-right text-[11px] font-extrabold" style="color: #1f3875">▓▓</span>
+          </div>
+        ))}
+        <div class="flex items-center gap-3">
+          <span class="w-6 h-6 shrink-0 rounded-md flex items-center justify-center text-[11px] font-black" style="background: rgba(31,56,117,0.08); color: #1f3875">…</span>
+          <span class="flex-1 text-[11px]" style="color: #64748b">más ▓▓ ▓▓▓▓▓ ▓▓▓▓ areas censuradas…</span>
+        </div>
+      </div>
+      <div class="mt-4 p-3 rounded-lg border text-[11px] leading-relaxed flex items-start gap-2" style="border-color: rgba(31,56,117,0.08); background: rgba(0,29,98,0.02); color: #64748b">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0 mt-0.5" aria-hidden="true"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
+        <div><b>Tus carreras afines:</b> <span class="blur-[5px] select-none" aria-hidden="true">██████, ██████, ████████ y ████ más.</span>
+        <p class="mt-1">Fórmula de cálculo con diadas tipo Excel, igual al Kuder oficial.</p></div>
+      </div>
+    </div>
+
+    <div class="space-y-4 order-1 lg:order-2">
+      <span class="text-[11px] font-bold tracking-widest uppercase" style="color: #d8215d">Test de áreas profesionales · 10 áreas</span>
+      <h3 class="text-[22px] md:text-[26px] font-extrabold tracking-tight" style="color: #001d62">Kuder — ¿qué despierta más tu curiosidad?</h3>
+      <p class="text-sm leading-relaxed" style="color: #0f2b6b">
+        45 decisiones forzadas entre parejas (diadas) que ordenan tus 10 áreas Kuder:
+        <strong style="color: #001d62">Aire Libre, Mecánico, Cálculo, Científico, Persuasivo, Artístico, Literario, Musical,
+        Servicio Social y Oficina</strong>. Al final, el ranking con carreras afines.
+      </p>
+      <div class="flex flex-wrap gap-2 text-xs font-bold">
+        <span class="px-3 py-1 rounded-full" style="background: #2563EB; color: #fff">Científico</span>
+        <span class="px-3 py-1 rounded-full border bg-white" style="border-color: rgba(31,56,117,0.10); color: #1f3875">Persuasivo</span>
+        <span class="px-3 py-1 rounded-full border bg-white" style="border-color: rgba(31,56,117,0.10); color: #1f3875">Musical</span>
+      </div>
+      <div class="flex flex-wrap items-center gap-4 pt-2">
+        <a href="/kuder" class="inline-flex items-center gap-2 rounded-full px-6 py-3 text-sm font-bold text-white transition hover:-translate-y-px" style="background: #d8215d; box-shadow: 0 4px 16px rgba(216,33,93,0.28)">
+          Rendir Kuder
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
+        </a>
+        <span class="text-xs" style="color: #1f3875">45 diadas · 12–15 min · Imprimible</span>
+      </div>
+    </div>
+  </article>
+</section>

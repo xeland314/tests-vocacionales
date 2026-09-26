@@ -1,0 +1,91 @@
+---
+const { site, whatsapp } = Astro.props;
+---
+
+<section class="py-10 md:py-14 grid lg:grid-cols-[1.05fr_0.95fr] gap-10 items-center">
+  <div class="space-y-5">
+    <span class="inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-xs font-semibold tracking-widest uppercase border" style="background: #fcfcfc; border-color: rgba(31,56,117,0.10); color: #1f3875">
+      <span class="w-2 h-2 rounded-full" style="background: #d8215d" aria-hidden="true"></span>
+      Preuniversitario GGM · Acceso por Moodle
+    </span>
+
+    <h1 class="text-[32px] md:text-[46px] lg:text-[50px] font-extrabold leading-[0.98] tracking-tight" style="color: #001d62">
+      No elijas tu carrera<br />a ciegas.<br />
+      <span style="color: #d8215d">Descúbrela con tests.</span>
+    </h1>
+
+    <p class="text-[15px] md:text-[16px] leading-relaxed max-w-[560px]" style="color: #0f2b6b">
+      Tres tests vocacionales para saber quién eres antes de decidir qué estudiar:
+      <strong style="color: #001d62">Personalidad (MBTI · 16 tipos)</strong>, <strong style="color: #001d62">CHASIDE (intereses y aptitudes)</strong> y
+      <strong style="color: #001d62">Kuder (áreas profesionales)</strong>. Con resultados al instante y PDF descargable, dentro del <strong style="color: #001d62">Moodle del preuniversitario</strong>: contáctanos y te activamos el acceso.
+    </p>
+
+    <div class="flex flex-wrap gap-3 pt-1">
+      <a href={whatsapp} target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 rounded-full px-7 py-3.5 text-sm font-bold text-white transition hover:-translate-y-px" style="background: #d8215d; box-shadow: 0 4px 16px rgba(216,33,93,0.28)">
+        Solicitar acceso a los tests
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
+      </a>
+      <a href={site} target="_blank" rel="noopener noreferrer" class="inline-flex items-center rounded-full px-6 py-3.5 text-sm font-semibold transition" style="color: #001d62; border: 1px solid rgba(31,56,117,0.12)">
+        Conocer el preuniversitario
+      </a>
+    </div>
+
+    <div class="flex flex-wrap gap-6 pt-2 border-t mt-2" style="border-color: rgba(31,56,117,0.08)">
+      <div>
+        <div class="text-xl font-extrabold" style="color: #001d62">3 tests</div>
+        <div class="text-xs" style="color: #1f3875">Personalidad + vocación + áreas</div>
+      </div>
+      <div>
+        <div class="text-xl font-extrabold" style="color: #001d62">Con respaldo</div>
+        <div class="text-xs" style="color: #1f3875">Baremos de referencia · plataforma Moodle</div>
+      </div>
+      <div>
+        <div class="text-xl font-extrabold" style="color: #001d62">10–15 min</div>
+        <div class="text-xs" style="color: #1f3875">Resultado al instante · PDF</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="relative">
+    <div class="rounded-2xl border bg-white p-5 shadow-[0_16px_40px_rgba(0,29,98,0.10)]" style="border-color: rgba(31,56,117,0.08)">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-full flex items-center justify-center text-white font-black text-sm" style="background: #001d62">T</div>
+          <div>
+            <div class="text-[11px] font-bold uppercase tracking-wider" style="color: #1f3875">Informe de personalidad</div>
+            <div class="text-[10px]" style="color: #64748b">Estudiante · 17 años · Quito</div>
+          </div>
+        </div>
+        <span class="rounded-full px-2.5 py-1 text-[10px] font-extrabold border" style="background: rgba(216,33,93,0.08); color: #d8215d; border-color: rgba(216,33,93,0.18)">Vista censurada</span>
+      </div>
+
+      <div class="mt-4 rounded-xl p-4 blur-[5px] select-none censor" style="background: #35594D" aria-hidden="true">
+        <div class="flex items-center gap-4">
+          <img src="/mbti/INFJ-fondo-claro.webp" alt="" width="200" height="200" class="w-24 h-24 rounded-lg object-cover shadow-md" loading="eager" decoding="async" />
+          <div>
+            <div class="text-2xl font-extrabold text-white tracking-tight">IN▓ ▓</div>
+            <div class="text-sm font-bold" style="color: rgba(255,255,255,0.92)">El ▓▓▓▓▓▓▓</div>
+            <div class="mt-2 space-y-1.5">
+              <div class="flex items-center gap-2"><span class="text-[10px] font-bold w-14 text-white/80">Mente</span><div class="w-28 h-1.5 rounded-full bg-white/30 overflow-hidden"><div class="h-full rounded-full bg-white" style="width: 58%"></div></div></div>
+              <div class="flex items-center gap-2"><span class="text-[10px] font-bold w-14 text-white/80">Energía</span><div class="w-28 h-1.5 rounded-full bg-white/30 overflow-hidden"><div class="h-full rounded-full bg-white" style="width: 81%"></div></div></div>
+              <div class="flex items-center gap-2"><span class="text-[10px] font-bold w-14 text-white/80">Tácticas</span><div class="w-28 h-1.5 rounded-full bg-white/30 overflow-hidden"><div class="h-full rounded-full bg-white" style="width: 34%"></div></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-3 flex items-center justify-center gap-2 rounded-full border py-2 text-[11px] font-bold" style="border-color: rgba(216,33,93,0.25); background: rgba(216,33,93,0.06); color: #b01a4a">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2" /><path d="M8 11V7a4 4 0 0 1 7.9-.8" /></svg>
+        Resultado casi censurado — haz el test para verlo completo
+      </div>
+    </div>
+
+    <div class="absolute -bottom-4 -left-2 md:left-0 rounded-2xl border bg-white px-4 py-3 shadow-[0_12px_32px_rgba(0,29,98,0.12)] hidden md:flex items-center gap-3" style="border-color: rgba(31,56,117,0.08)">
+      <img src="/mbti/ENTJ-el-comandante.webp" alt="El Comandante — uno de los 16 resultados posibles" width="56" height="56" class="w-11 h-11 rounded-full object-cover" loading="lazy" decoding="async" />
+      <div>
+        <div class="text-xs font-extrabold" style="color: #001d62">16 resultados posibles</div>
+        <div class="text-[11px]" style="color: #0f2b6b">¿Ya sabes cuál es el tuyo?</div>
+      </div>
+    </div>
+  </div>
+</section>

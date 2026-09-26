@@ -1,0 +1,36 @@
+---
+const { site, whatsapp } = Astro.props;
+---
+
+<footer class="border-t" style="background: #0f2b6b; border-color: rgba(255,255,255,0.08); color: rgba(255,255,255,0.78)">
+  <div class="max-w-[1180px] mx-auto px-5 md:px-6 py-10 grid md:grid-cols-4 gap-8 text-sm">
+    <div class="md:col-span-2">
+      <img src="/logo-teamggm-horizontal-con-transparencia.webp" alt="GGM Preuniversitario — Gestores de experiencias educativas" width="709" height="276" class="h-8 w-auto" loading="lazy" decoding="async" />
+      <p class="mt-3 text-xs leading-relaxed max-w-[380px]" style="color: rgba(255,255,255,0.70)">
+        Guanoluisa Vasco Asociados Cia. Ltda. — Gestores de experiencias educativas. Preuniversitario con método propio, sedes en Quito y Machachi, modalidad virtual en vivo y orientación vocacional In-útiles.
+      </p>
+    </div>
+    <div>
+      <div class="font-bold" style="color: #fff">Tests</div>
+      <ul class="mt-2 space-y-1 text-xs">
+        <li><a href="/chaside" class="hover:text-white" style="color: rgba(255,255,255,0.70)">Test CHASIDE</a></li>
+        <li><a href="/personalidad" class="hover:text-white" style="color: rgba(255,255,255,0.70)">Test de Personalidad · 16 tipos</a></li>
+        <li><a href="/kuder" class="hover:text-white" style="color: rgba(255,255,255,0.70)">Test Kuder</a></li>
+        <li><a href={site} target="_blank" rel="noopener" class="hover:text-white font-bold" style="color: #ffffff">Preuniversitario teamggm.com →</a></li>
+      </ul>
+    </div>
+    <div>
+      <div class="font-bold" style="color: #fff">Contacto</div>
+      <ul class="mt-2 space-y-1 text-xs">
+        <li><a href={whatsapp} target="_blank" rel="noopener" class="hover:text-white" style="color: rgba(255,255,255,0.70)">WhatsApp 96 794 1844</a></li>
+        <li><a href="mailto:ggm.instituto@gmail.com" class="hover:text-white" style="color: rgba(255,255,255,0.70)">ggm.instituto@gmail.com</a></li>
+        <li><a href="https://www.instagram.com/teamggm.ec/" target="_blank" rel="noopener" class="hover:text-white" style="color: rgba(255,255,255,0.70)">Instagram @teamggm.ec</a></li>
+        <li><a href="https://www.tiktok.com/@teamggm.latam" target="_blank" rel="noopener" class="hover:text-white" style="color: rgba(255,255,255,0.70)">TikTok @teamggm.latam</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="max-w-[1180px] mx-auto px-5 md:px-6 pb-6 flex flex-col md:flex-row gap-2 justify-between text-[11px]" style="color: rgba(255,255,255,0.45)">
+    <span>© GGM Preuniversitario 2026 · <a href={site} class="underline" style="color: inherit">teamggm.com</a> — Quito &amp; Ecuador</span>
+    <span>Los tests son herramientas orientativas y no constituyen diagnóstico profesional.</span>
+  </div>
+</footer>
