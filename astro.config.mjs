@@ -10,7 +10,7 @@ import sitemap from "@astrojs/sitemap";
 
 // https://astro.build/config
 export default defineConfig({
-  site: "https://teamggm.com",
+  site: "https://testvocacional.teamggm.com",
   output: "server",
   adapter: node({ mode: "standalone" }),
   vite: {

@@ -1,4 +1,4 @@
-const site = "https://teamggm.com";
+const site = "https://testvocacional.teamggm.com";
 
 export async function GET() {
   const body = `User-agent: *

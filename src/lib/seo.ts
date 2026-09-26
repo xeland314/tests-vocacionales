@@ -16,14 +16,14 @@ export type SeoOverrides = {
 export const siteConfig = {
   name: "TeamGGM",
   siteName: "TeamGGM",
-  baseUrl: "https://teamggm.com",
+  baseUrl: "https://testvocacional.teamggm.com",
   defaultTitle: "Tests vocacionales TeamGGM | MBTI, CHASIDE y Kuder",
   defaultDescription:
     "Descubre tu tipo, intereses y áreas profesionales con MBTI, CHASIDE y Kuder en TeamGGM.",
   defaultKeywords:
     "tests vocacionales, MBTI, CHASIDE, Kuder, orientación vocacional, TeamGGM, Quito, Ecuador",
   defaultImage:
-    "https://teamggm.com/wp-content/uploads/2025/03/1-logo-horizontal-con-transparencia-1.png",
+    "https://testvocacional.teamggm.com/wp-content/uploads/2025/03/1-logo-horizontal-con-transparencia-1.png",
   defaultImageAlt: "Tests vocacionales y de personalidad TeamGGM",
   author: "TeamGGM",
   twitterHandle: "@teamggm",

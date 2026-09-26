@@ -55,7 +55,6 @@ const businessSchema = buildBusinessSchema(Astro.props);
 
     <script type="application/ld+json" set:html={JSON.stringify(businessSchema)} />
 
-    <script is:inline src="/coi-serviceworker.js"></script>
     <script>
       if (import.meta.env.PROD && "serviceWorker" in navigator) {
         window.addEventListener("load", () => {
