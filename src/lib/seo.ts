@@ -1,10 +1,25 @@
+export type SeoOverrides = {
+  title?: string;
+  description?: string;
+  keywords?: string;
+  author?: string;
+  applicationName?: string;
+  url?: string;
+  image?: string;
+  imageAlt?: string;
+  robots?: string;
+  canonical?: string;
+  lang?: string;
+  showHeader?: boolean;
+};
+
 export const siteConfig = {
   name: "TeamGGM",
   siteName: "TeamGGM",
   baseUrl: "https://teamggm.com",
-  defaultTitle: "Tests vocacionales y de personalidad — CHASIDE, MBTI y Kuder | Preuniversitario TeamGGM",
+  defaultTitle: "Tests vocacionales TeamGGM | MBTI, CHASIDE y Kuder",
   defaultDescription:
-    "Descubre tu vocación con 3 tests: personalidad estilo MBTI (16 tipos), CHASIDE de intereses y aptitudes, y Kuder de áreas profesionales. Contáctanos para tu acceso desde el Moodle del preuniversitario TeamGGM, Quito y Ecuador.",
+    "Descubre tu tipo, intereses y áreas profesionales con MBTI, CHASIDE y Kuder en TeamGGM.",
   defaultKeywords:
     "tests vocacionales, MBTI, CHASIDE, Kuder, orientación vocacional, TeamGGM, Quito, Ecuador",
   defaultImage:
@@ -27,7 +42,7 @@ export const siteConfig = {
   ],
 } as const;
 
-export function getPageSeo(overrides: Partial<Record<string, string | undefined>> = {}) {
+export function getPageSeo(overrides: Partial<SeoOverrides> = {}) {
   const baseUrl = siteConfig.baseUrl;
 
   return {
@@ -40,13 +55,13 @@ export function getPageSeo(overrides: Partial<Record<string, string | undefined>
     image: overrides.image ?? siteConfig.defaultImage,
     imageAlt: overrides.imageAlt ?? siteConfig.defaultImageAlt,
     robots: overrides.robots ?? "index, follow",
-    canonical: overrides.canonical ?? baseUrl,
+    canonical: overrides.canonical ?? overrides.url ?? baseUrl,
     lang: overrides.lang ?? "es",
     showHeader: overrides.showHeader !== undefined ? overrides.showHeader : false,
   };
 }
 
-export function buildBusinessSchema(overrides: Partial<Record<string, string | undefined>> = {}) {
+export function buildBusinessSchema(overrides: Partial<SeoOverrides> = {}) {
   const seo = getPageSeo(overrides);
 
   return {

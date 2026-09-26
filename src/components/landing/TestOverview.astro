@@ -111,7 +111,7 @@ const {
       </div>
       <div class="p-5">
         <div class="flex items-center gap-4">
-          <img src="/mbti/ENFJ-el-protagonista.webp" alt="El Protagonista — resultado del test de personalidad (censurado aquí)" width="128" height="128" class="w-24 h-24 rounded-lg object-cover shadow-md blur-[5px] select-none censor" loading="lazy" decoding="async" />
+          <img src="/mbti/ENFJ-el-protagonista.webp" alt="El Protagonista — resultado del test de personalidad (censurado aquí)" title="El Protagonista — resultado del test de personalidad (censurado aquí)" width="128" height="128" class="w-24 h-24 rounded-lg object-cover shadow-md blur-[5px] select-none censor" loading="lazy" decoding="async" />
           <div>
             <div class="text-2xl font-extrabold tracking-tight blur-[5px] select-none censor" style="color: #059669">ENFJ-A</div>
             <div class="text-base font-bold" style="color: #001d62">"El ▓▓▓▓▓▓▓▓▓▓▓"</div>
@@ -161,7 +161,7 @@ const {
     <div class="mt-5 grid grid-cols-4 gap-2.5 md:gap-4">
       {mbtiTypes.map((t: MbtiType) => (
         <a href="/personalidad" class="group relative rounded-xl overflow-hidden border bg-white shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all" style="border-color: rgba(31,56,117,0.08)" title={`${t.code} — ${t.name} (${t.role})`}>
-          <img src={`/mbti/${t.code}-${t.slug}.webp`} alt={`${t.code} — ${t.name} (${t.role})`} width="512" height="512" class="w-full aspect-square object-cover transition duration-300 group-hover:scale-105" loading="lazy" decoding="async" />
+          <img src={`/mbti/${t.code}-${t.slug}.webp`} alt={`${t.code} — ${t.name} (${t.role})`} title={`${t.code} — ${t.name} (${t.role})`} width="512" height="512" class="w-full aspect-square object-cover transition duration-300 group-hover:scale-105" loading="lazy" decoding="async" />
           <span class="absolute top-1.5 left-1.5 md:top-2 md:left-2 rounded-full px-2 py-0.5 text-[10px] font-black text-white shadow-md" style={`background: ${t.color}`}>{t.code}</span>
         </a>
       ))}

@@ -3,22 +3,9 @@ import "/src/styles/global.css";
 import "../styles/print.css";
 
 import { ClientRouter } from "astro:transitions";
-import { buildBusinessSchema, getPageSeo } from "../lib/seo";
+import { buildBusinessSchema, getPageSeo, type SeoOverrides } from "../lib/seo";
 
-interface Props {
-  title?: string;
-  description?: string;
-  keywords?: string;
-  author?: string;
-  applicationName?: string;
-  url?: string;
-  image?: string;
-  imageAlt?: string;
-  robots?: string;
-  canonical?: string;
-  lang?: string;
-  showHeader?: boolean;
-}
+type Props = Partial<SeoOverrides>;
 
 const seo = getPageSeo(Astro.props);
 const businessSchema = buildBusinessSchema(Astro.props);
@@ -37,7 +24,7 @@ const businessSchema = buildBusinessSchema(Astro.props);
 
     <title>{seo.title}</title>
     <meta name="description" content={seo.description} />
-    <meta name="keywords" content={seo.keywords} />
+    {seo.keywords && <meta name="keywords" content={seo.keywords} />}
     <meta name="author" content={seo.author} />
     <meta name="creator" content={seo.author} />
     <meta name="application-name" content={seo.applicationName} />
