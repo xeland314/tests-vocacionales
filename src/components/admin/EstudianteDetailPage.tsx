@@ -1,17 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { ArrowLeft, Printer, AlertTriangle, Minus, Download } from "lucide-react";
+import { ArrowLeft, Printer, AlertTriangle, Minus } from "lucide-react";
 import InformeMbti from "../../templates/mbti/InformeMbti";
 import InformeChaside from "../../templates/chaside/InformeChaside";
 import InformeKuder from "../../templates/kuder/InformeKuder";
 import { deriveIdentity } from "../../data/mbti/identity";
-
-function PdfDocenteButton({ label, className, onClick }: { label: string; className: string; onClick: () => void }) {
-  return (
-    <button onClick={onClick} className={`no-print mt-4 text-white px-4 py-2 rounded-full text-xs font-bold inline-flex items-center gap-1 ${className}`}>
-      <Download size={14} />{label}
-    </button>
-  );
-}
 
 function SeccionInforme({ numero, titulo, fecha, children }: { numero: number; titulo: string; fecha?: string | null; children: React.ReactNode }) {
   return (
@@ -177,22 +169,6 @@ export default function EstudianteDetailPage({ token }: { token: string }) {
                 studentName={nombre}
                 fecha={fmt(data.chaside?.fecha_unix)}
               />
-              <PdfDocenteButton
-                label="PDF docente CHASIDE"
-                className="bg-[#001d62]"
-                onClick={async () => {
-                  try {
-                    const { generateChasideTeacherPdf } = await import("../../lib/pdf/chaside");
-                    await generateChasideTeacherPdf({
-                      topInteres: data.chaside.topInteres,
-                      segundoInteres: data.chaside.segundoInteres,
-                      topAptitud: data.chaside.topAptitud,
-                      intereses: data.chaside.intereses,
-                      aptitudes: data.chaside.aptitudes,
-                    } as any, nombre, fmt(data.chaside.fecha_unix) || "");
-                  } catch (e) { console.warn(e); window.print(); }
-                }}
-              />
             </>
           ) : <Pendiente texto="CHASIDE pendiente de rendir (98 SÍ/NO)." />}
         </SeccionInforme>
@@ -208,20 +184,6 @@ export default function EstudianteDetailPage({ token }: { token: string }) {
                   identity: identidad!,
                 }}
               />
-              <PdfDocenteButton
-                label="PDF docente MBTI"
-                className="bg-[#7C3AED]"
-                onClick={async () => {
-                  try {
-                    const { generateMbtiTeacherPdf } = await import("../../lib/pdf/mbti");
-                    await generateMbtiTeacherPdf({
-                      type: data.personalidad.tipo,
-                      dimensions: data.personalidad.dimensiones,
-                      percentages: data.personalidad.percentages,
-                    }, nombre, fmt(data.personalidad.fecha_unix) || "");
-                  } catch (e) { console.warn(e); window.print(); }
-                }}
-              />
             </>
           ) : <Pendiente texto="MBTI pendiente de rendir (60 Likert -3..+3)." />}
         </SeccionInforme>
@@ -230,21 +192,6 @@ export default function EstudianteDetailPage({ token }: { token: string }) {
           {data.kuder ? (
             <>
               <InformeKuder result={{ top: data.kuder.top, ranking: data.kuder.ranking, scores: data.kuder.scores }} />
-              <PdfDocenteButton
-                label="PDF docente Kuder"
-                className="bg-[#2563EB]"
-                onClick={async () => {
-                  try {
-                    const { generateKuderTeacherPdf } = await import("../../lib/pdf/kuder");
-                    await generateKuderTeacherPdf({
-                      top: data.kuder.top,
-                      ranking: data.kuder.ranking,
-                      scores: data.kuder.scores,
-                      verificacion: data.kuder.verificacion,
-                    } as any, nombre, fmt(data.kuder.fecha_unix) || "");
-                  } catch (e) { console.warn(e); window.print(); }
-                }}
-              />
             </>
           ) : <Pendiente texto="Kuder pendiente de rendir (45 diadas)." />}
         </SeccionInforme>
