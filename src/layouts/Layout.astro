@@ -1,7 +1,15 @@
 ---
 import "../styles/global.css";
 import "../styles/print.css";
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const { title = "Test Vocacional CHASIDE — TeamGGM", description = "Test CHASIDE online 98 preguntas. Descubre tus intereses y aptitudes vocacionales con el mismo baremo que TestGratis.net. Guarda nombre, fecha y hora. TeamGGM." } = Astro.props;
 ---
+
 <!doctype html>
 <html lang="es">
   <head>
@@ -12,8 +20,9 @@ import "../styles/print.css";
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@700;800;900&display=swap" rel="stylesheet" />
     <meta name="generator" content={Astro.generator} />
-    <title>Test Vocacional CHASIDE — TeamGGM</title>
-    <meta name="description" content="Test CHASIDE online 98 preguntas. Descubre tus intereses y aptitudes vocacionales con el mismo baremo que TestGratis.net. Guarda nombre, fecha y hora. TeamGGM." />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <slot name="head" />
   </head>
   <body class="antialiased">
     <slot />
