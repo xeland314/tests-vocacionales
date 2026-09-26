@@ -12,7 +12,7 @@ import FinalCTA from "../components/landing/FinalCTA.astro";
 import SiteFooter from "../components/landing/SiteFooter.astro";
 
 const SITE = "https://teamggm.com";
-const WHATSAPP = "https://wa.me/593967941844";
+const WHATSAPP = `https://wa.me/593967941844?text=${encodeURIComponent("Hola, quiero orientación vocacional para mí o para mi hijo.")}`;
 
 const MBTI_TYPES: { code: string; name: string; slug: string; role: string; color: string }[] = [
   { code: "INTJ", name: "El Estratega", slug: "el-estratega", role: "Analistas", color: "#7C3AED" },
