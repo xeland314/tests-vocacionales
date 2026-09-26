@@ -28,3 +28,8 @@ data/*.db
 data/*.db-shm
 data/*.db-wal
 
+
+# empaquetado para siteground
+deploy-siteground.zip
+*.tar.gz
+siteground-deploy/
