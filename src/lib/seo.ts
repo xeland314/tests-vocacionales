@@ -23,7 +23,7 @@ export const siteConfig = {
   defaultKeywords:
     "tests vocacionales, MBTI, CHASIDE, Kuder, orientación vocacional, TeamGGM, Quito, Ecuador",
   defaultImage:
-    "https://testvocacional.teamggm.com/wp-content/uploads/2025/03/1-logo-horizontal-con-transparencia-1.png",
+    "https://testvocacional.teamggm.com/logo-teamggm-horizontal-con-transparencia.webp",
   defaultImageAlt: "Tests vocacionales y de personalidad TeamGGM",
   author: "TeamGGM",
   twitterHandle: "@teamggm",
