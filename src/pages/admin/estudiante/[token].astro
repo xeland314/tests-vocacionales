@@ -5,6 +5,16 @@ import EstudianteDetailPage from '../../../components/admin/EstudianteDetailPage
 const { token } = Astro.params;
 ---
 
-<Layout>
-  <EstudianteDetailPage client:load token={token} />
+<Layout
+  title="Detalle del estudiante | TeamGGM"
+  description="Consulta el detalle del estudiante y su información asociada dentro del panel administrativo de TeamGGM."
+  keywords="estudiante, detalle, administración, TeamGGM"
+  author="TeamGGM"
+  url={`https://teamggm.com/admin/estudiante/${token}`}
+  canonical={`https://teamggm.com/admin/estudiante/${token}`}
+  image="https://teamggm.com/wp-content/uploads/2025/03/1-logo-horizontal-con-transparencia-1.png"
+  imageAlt="Detalle del estudiante TeamGGM"
+  robots="noindex, nofollow"
+>
+  <EstudianteDetailPage client:load token={token ?? ""} />
 </Layout>

@@ -1,30 +1,120 @@
 ---
-import "../styles/global.css";
+import "/src/styles/global.css";
 import "../styles/print.css";
+
+import { ClientRouter } from "astro:transitions";
+import { buildBusinessSchema, getPageSeo } from "../lib/seo";
 
 interface Props {
   title?: string;
   description?: string;
+  keywords?: string;
+  author?: string;
+  applicationName?: string;
+  url?: string;
+  image?: string;
+  imageAlt?: string;
+  robots?: string;
+  canonical?: string;
+  lang?: string;
+  showHeader?: boolean;
 }
 
-const { title = "Test Vocacional CHASIDE — TeamGGM", description = "Test CHASIDE online 98 preguntas. Descubre tus intereses y aptitudes vocacionales con el mismo baremo que TestGratis.net. Guarda nombre, fecha y hora. TeamGGM." } = Astro.props;
+const seo = getPageSeo(Astro.props);
+const businessSchema = buildBusinessSchema(Astro.props);
 ---
 
 <!doctype html>
-<html lang="es">
+<html lang={seo.lang}>
   <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@700;800;900&display=swap" rel="stylesheet" />
-    <meta name="generator" content={Astro.generator} />
-    <title>{title}</title>
-    <meta name="description" content={description} />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#1f2937" media="(prefers-color-scheme: dark)" />
+    <link rel="apple-touch-icon" href="/assets/images/icon-192x192.png" />
+
+    <title>{seo.title}</title>
+    <meta name="description" content={seo.description} />
+    <meta name="keywords" content={seo.keywords} />
+    <meta name="author" content={seo.author} />
+    <meta name="creator" content={seo.author} />
+    <meta name="application-name" content={seo.applicationName} />
+    <meta name="robots" content={seo.robots} />
+    <meta property="og:title" content={seo.title} />
+    <meta property="og:description" content={seo.description} />
+    <meta property="og:url" content={seo.url} />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content={seo.image} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content={seo.imageAlt} />
+    <meta property="og:locale" content="es_EC" />
+    <meta property="og:site_name" content="TeamGGM" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content={seo.image} />
+    <meta name="twitter:image:alt" content={seo.imageAlt} />
+    <meta name="twitter:site" content="@teamggm" />
+    <meta name="twitter:creator" content="@teamggm" />
+    <meta name="twitter:title" content={seo.title} />
+    <meta name="twitter:description" content={seo.description} />
+
+    <link rel="sitemap" href="/sitemap-index.xml" />
+    {seo.canonical && <link rel="canonical" href={seo.canonical} />}
+
     <slot name="head" />
+
+    <script type="application/ld+json" set:html={JSON.stringify(businessSchema)} />
+
+    <script is:inline src="/coi-serviceworker.js"></script>
+    <script>
+      if (import.meta.env.PROD && "serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+          navigator.serviceWorker
+            .register("/sw.js")
+            .then((reg) => console.log("PWA ServiceWorker registrado exitosamente.", reg.scope))
+            .catch((err) => console.log("Error al registrar PWA ServiceWorker:", err));
+        });
+      } else if (import.meta.env.DEV && "serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+          navigator.serviceWorker.getRegistrations().then((regs) => {
+            for (const reg of regs) {
+              if (reg.active && reg.active.scriptURL.includes("/sw.js")) {
+                reg.unregister();
+              }
+            }
+          });
+        });
+      }
+    </script>
+
+    <script is:inline>
+      const theme = (() => {
+        if (typeof localStorage !== "undefined" && localStorage.getItem("theme")) {
+          return localStorage.getItem("theme");
+        }
+        if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+          return "dark";
+        }
+        return "light";
+      })();
+
+      if (theme === "dark") {
+        document.documentElement.classList.add("dark");
+      } else {
+        document.documentElement.classList.remove("dark");
+      }
+    </script>
+
+    <ClientRouter />
   </head>
-  <body class="antialiased">
-    <slot />
+  <body class="font-inter bg-white text-black dark:bg-gray-800 dark:text-white antialiased">
+    <div class="mx-auto pt-0">
+      {seo.showHeader && <slot name="header" />}
+      <slot />
+      <script is:inline src="/scripts/smoothScrollWithOffset.js"></script>
+    </div>
   </body>
 </html>

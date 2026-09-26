@@ -1,0 +1,92 @@
+export const siteConfig = {
+  name: "TeamGGM",
+  siteName: "TeamGGM",
+  baseUrl: "https://teamggm.com",
+  defaultTitle: "Tests vocacionales y de personalidad — CHASIDE, MBTI y Kuder | Preuniversitario TeamGGM",
+  defaultDescription:
+    "Descubre tu vocación con 3 tests: personalidad estilo MBTI (16 tipos), CHASIDE de intereses y aptitudes, y Kuder de áreas profesionales. Contáctanos para tu acceso desde el Moodle del preuniversitario TeamGGM, Quito y Ecuador.",
+  defaultKeywords:
+    "tests vocacionales, MBTI, CHASIDE, Kuder, orientación vocacional, TeamGGM, Quito, Ecuador",
+  defaultImage:
+    "https://teamggm.com/wp-content/uploads/2025/03/1-logo-horizontal-con-transparencia-1.png",
+  defaultImageAlt: "Tests vocacionales y de personalidad TeamGGM",
+  author: "TeamGGM",
+  twitterHandle: "@teamggm",
+  phone: "+593 96 794 1844",
+  email: "ggm.instituto@gmail.com",
+  address: {
+    streetAddress: "Quito",
+    addressLocality: "Quito",
+    addressRegion: "Pichincha",
+    addressCountry: "EC",
+  },
+  sameAs: [
+    "https://www.instagram.com/teamggm.ec/",
+    "https://www.tiktok.com/@teamggm.latam",
+    "https://wa.me/593967941844",
+  ],
+} as const;
+
+export function getPageSeo(overrides: Partial<Record<string, string | undefined>> = {}) {
+  const baseUrl = siteConfig.baseUrl;
+
+  return {
+    title: overrides.title ?? siteConfig.defaultTitle,
+    description: overrides.description ?? siteConfig.defaultDescription,
+    keywords: overrides.keywords ?? siteConfig.defaultKeywords,
+    author: overrides.author ?? siteConfig.author,
+    applicationName: overrides.applicationName ?? "TeamGGM Tests Vocacionales",
+    url: overrides.url ?? baseUrl,
+    image: overrides.image ?? siteConfig.defaultImage,
+    imageAlt: overrides.imageAlt ?? siteConfig.defaultImageAlt,
+    robots: overrides.robots ?? "index, follow",
+    canonical: overrides.canonical ?? baseUrl,
+    lang: overrides.lang ?? "es",
+    showHeader: overrides.showHeader !== undefined ? overrides.showHeader : false,
+  };
+}
+
+export function buildBusinessSchema(overrides: Partial<Record<string, string | undefined>> = {}) {
+  const seo = getPageSeo(overrides);
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "EducationalOrganization",
+    name: siteConfig.name,
+    legalName: siteConfig.name,
+    url: seo.url,
+    logo: siteConfig.defaultImage,
+    image: siteConfig.defaultImage,
+    description: seo.description,
+    telephone: siteConfig.phone,
+    email: siteConfig.email,
+    address: {
+      "@type": "PostalAddress",
+      ...siteConfig.address,
+    },
+    areaServed: ["Quito", "Ecuador"],
+    sameAs: siteConfig.sameAs,
+    knowsAbout: [
+      "Tests vocacionales",
+      "MBTI",
+      "CHASIDE",
+      "Kuder",
+      "Orientación vocacional",
+      "Preuniversitario",
+    ],
+    makesOffer: [
+      {
+        "@type": "Offer",
+        itemOffered: {
+          "@type": "Service",
+          name: "Tests vocacionales y orientación vocacional",
+          description: seo.description,
+          provider: {
+            "@type": "EducationalOrganization",
+            name: siteConfig.name,
+          },
+        },
+      },
+    ],
+  };
+}

@@ -3,6 +3,16 @@ import Layout from '../layouts/Layout.astro';
 import AdminGeneral from '../components/AdminGeneral.tsx';
 ---
 
-<Layout>
+<Layout
+  title="Administración | TeamGGM"
+  description="Panel administrativo del preuniversitario TeamGGM para gestionar estudiantes, resultados y accesos."
+  keywords="admin, administración, TeamGGM, estudiantes, panel"
+  author="TeamGGM"
+  url="https://teamggm.com/admin"
+  canonical="https://teamggm.com/admin"
+  image="https://teamggm.com/wp-content/uploads/2025/03/1-logo-horizontal-con-transparencia-1.png"
+  imageAlt="Panel administrativo TeamGGM"
+  robots="noindex, nofollow"
+>
   <AdminGeneral client:only="react" />
 </Layout>
