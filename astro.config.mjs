@@ -6,8 +6,11 @@ import tailwindcss from '@tailwindcss/vite';
 import react from '@astrojs/react';
 import node from '@astrojs/node';
 
+import sitemap from "@astrojs/sitemap";
+
 // https://astro.build/config
 export default defineConfig({
+  site: "https://teamggm.com",
   output: "server",
   adapter: node({ mode: "standalone" }),
   vite: {
@@ -42,5 +45,5 @@ export default defineConfig({
     },
   },
 
-  integrations: [react()]
+  integrations: [react(), sitemap()]
 });
