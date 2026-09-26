@@ -1,10 +1,74 @@
+---
+// Collage desorganizado determinista: 4 filas dispersas con rotaciones variadas.
+// size = lado del tile px, left/top = % sobre el lienzo del collage (canvas ancho = 110% para dejar margen al desplazamiento).
+const SCATTER = [
+  { code: "INTJ", size: 116, left: -3, top: 2, rot: -8 },
+  { code: "ENTP", size: 96, left: 10, top: 38, rot: 7 },
+  { code: "ESTJ", size: 138, left: 20, top: -8, rot: -5 },
+  { code: "ISFJ", size: 104, left: 32, top: 34, rot: 11 },
+  { code: "ENTJ", size: 124, left: 41, top: -6, rot: 6 },
+  { code: "ISTP", size: 92, left: 53, top: 42, rot: -10 },
+  { code: "ENFP", size: 132, left: 58, top: 2, rot: -7 },
+  { code: "ISTJ", size: 100, left: 71, top: 36, rot: 9 },
+  { code: "INTP", size: 114, left: 78, top: -4, rot: 5 },
+  { code: "ESFP", size: 128, left: 90, top: 30, rot: -9 },
+  { code: "ISFP", size: 110, left: 4, top: 58, rot: 6 },
+  { code: "ESFJ", size: 108, left: 16, top: 62, rot: -6 },
+  { code: "ENFJ", size: 126, left: 28, top: 55, rot: 8 },
+  { code: "ESTP", size: 100, left: 42, top: 66, rot: -5 },
+  { code: "INFJ", size: 120, left: 56, top: 56, rot: 7 },
+  { code: "INFP", size: 94, left: 70, top: 66, rot: -11 },
+  { code: "ESTJ", size: 112, left: 84, top: 60, rot: 5 },
+];
+---
+
 <section aria-label="Collage mezclado de resultados" class="my-6 md:my-10 px-3 md:px-6">
-  <div class="relative max-w-295 mx-auto rounded-3xl overflow-hidden" style="border: 1px solid rgba(31,56,117,0.10)">
-    <img src="/mbti-collage-color.jpg" alt="Collage mezclado con los 16 resultados del test de personalidad MBTI" title="Collage de los 16 resultados del test de personalidad MBTI" width="2000" height="2000" class="w-full h-64 md:h-96 object-cover" loading="lazy" decoding="async" />
-    <div class="absolute inset-0 flex items-end justify-center pb-4 md:pb-6" style="background: linear-gradient(to top, rgba(0,29,98,0.72) 0%, rgba(0,29,98,0.15) 55%, transparent 100%)">
-      <p class="text-center text-white text-sm md:text-lg font-extrabold drop-shadow px-4" style="font-family: Poppins, sans-serif">
-        Te ves reflejado en alguna de estas caras. Selecciona el test de personalidad.
-      </p>
+  <div class="collage relative max-w-295 mx-auto rounded-3xl overflow-hidden h-64 md:h-96" style="border: 1px solid rgba(31,56,117,0.10)">
+    <div class="absolute -inset-x-[8%] inset-y-0" aria-hidden="true">
+      {SCATTER.map((t) => (
+        <img
+          src={`/mbti/${t.code}-fondo-oscuro.webp`}
+          alt=""
+          width={t.size * 2}
+          height={t.size * 2}
+          class="ph absolute rounded-xl shadow-[0_10px_28px_rgba(0,0,0,0.30)] object-cover select-none pointer-events-none"
+          style={`left:${t.left}%;top:${t.top}%;width:${t.size}px;height:${t.size}px;--rot:${t.rot}deg;--px:${Math.round(t.size * 0.12)}px`}
+          loading="lazy"
+          decoding="async"
+          draggable="false"
+        />
+      ))}
     </div>
+
+    <div class="absolute inset-0" style="background: linear-gradient(to top, rgba(0,29,98,0.78) 0%, rgba(0,29,98,0.28) 55%, rgba(0,29,98,0.12) 100%)"></div>
+
+    <p class="absolute inset-x-0 bottom-4 md:bottom-6 text-center text-white text-sm md:text-lg font-extrabold drop-shadow px-4" style="font-family: Poppins, sans-serif">
+      Te ves reflejado en alguna de estas caras. Selecciona el test de personalidad.
+    </p>
   </div>
 </section>
+
+<style>
+  .collage .ph {
+    transform: rotate(var(--rot));
+    transition: transform 220ms ease, filter 220ms ease, box-shadow 220ms ease;
+  }
+
+  /* Al pasar el cursor por la seccion, todas se desplazan un poco a la derecha */
+  .collage:hover .ph {
+    transform: rotate(var(--rot)) translateX(14px);
+  }
+
+  /* Escalonado: cada tile reacciona con un pequeño delay, efecto de oleada */
+  .collage .ph:nth-child(4n + 1) { transition-delay: 0ms; }
+  .collage .ph:nth-child(4n + 2) { transition-delay: 40ms; }
+  .collage .ph:nth-child(4n + 3) { transition-delay: 80ms; }
+  .collage .ph:nth-child(4n) { transition-delay: 120ms; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .collage:hover .ph {
+      transform: rotate(var(--rot));
+      transition: none;
+    }
+  }
+</style>

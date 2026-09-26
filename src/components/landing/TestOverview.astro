@@ -160,17 +160,17 @@ const {
     </div>
     <div class="mt-5 grid grid-cols-4 gap-2.5 md:gap-4">
       {mbtiTypes.map((t: MbtiType) => (
-        <a href="/personalidad" class="group relative rounded-xl overflow-hidden border bg-white shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all" style="border-color: rgba(31,56,117,0.08)" title={`${t.code} — ${t.name} (${t.role})`}>
+        <div class="group relative rounded-xl overflow-hidden border bg-white shadow-sm" style="border-color: rgba(31,56,117,0.08)" title={`${t.code} — ${t.name} (${t.role})`}>
           <img src={`/mbti/${t.code}-${t.slug}.webp`} alt={`${t.code} — ${t.name} (${t.role})`} title={`${t.code} — ${t.name} (${t.role})`} width="512" height="512" class="w-full aspect-square object-cover transition duration-300 group-hover:scale-105" loading="lazy" decoding="async" />
           <span class="absolute top-1.5 left-1.5 md:top-2 md:left-2 rounded-full px-2 py-0.5 text-[10px] font-black text-white shadow-md" style={`background: ${t.color}`}>{t.code}</span>
-        </a>
+        </div>
       ))}
     </div>
     <div class="mt-6 flex flex-col md:flex-row items-center gap-3 md:gap-5 justify-between rounded-2xl p-5" style="background: #fcfcfc; border: 1px solid rgba(31,56,117,0.08)">
       <p class="text-sm" style="color: #0f2b6b">
         Una de estas 16 caras <strong style="color: #001d62">es tú</strong>: tu forma de decidir, de concentrarte y de trabajar en equipo. Saberlo cambia cómo estudias y qué carrera te conviene.
       </p>
-      <a href="/personalidad" class="inline-flex items-center gap-2 rounded-full px-6 py-3 text-sm font-bold text-white transition hover:-translate-y-px shrink-0" style="background: #d8215d; box-shadow: 0 4px 16px rgba(216,33,93,0.28)">
+      <a href={whatsapp} target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 rounded-full px-6 py-3 text-sm font-bold text-white transition hover:-translate-y-px shrink-0" style="background: #d8215d; box-shadow: 0 4px 16px rgba(216,33,93,0.28)">
         Descubrir mi tipo en 10 min
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
       </a>
