@@ -1,7 +1,7 @@
 import type { APIRoute } from "astro";
-import { authenticateToken, canEnableRetake } from "../../../../lib/auth";
-import { habilitarReintentoAdmin, revocarReintentoAdmin } from "../../../../lib/admin";
-import type { TestCodigo } from "../../../../lib/reintentos";
+import { authenticateToken, canEnableRetake } from "../../../../server/modules/identity";
+import { habilitarReintentoAdmin, revocarReintentoAdmin } from "../../../../server/modules/admin-panel";
+import type { TestCodigo } from "../../../../server/modules/testing";
 
 export const prerender = false;
 

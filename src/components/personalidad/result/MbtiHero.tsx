@@ -27,11 +27,11 @@ export function MbtiHero({
             alt={`${profile.title} (${suffix})`}
             width={208}
             height={208}
-            className="w-full aspect-square object-cover rounded-2xl border-4 border-[#fcfcfc] shadow"
+            className="w-full aspect-square object-cover rounded-2xl border-4 border-[#E1E3DA] shadow"
           />
         </div>
         <div className="text-center md:text-left">
-          <p className="text-[11px] font-black uppercase tracking-[0.25em] text-[#d8215d]">Tipo de personalidad</p>
+          <p className="text-[11px] font-black uppercase tracking-[0.25em] text-[#E8356A]">Tipo de personalidad</p>
           <h1 className="mt-2 text-3xl sm:text-4xl font-black tracking-tight" style={{ color: info.color }}>
             {profile.title} ({suffix})
           </h1>
@@ -45,7 +45,7 @@ export function MbtiHero({
         </p>
         <div className="mt-4 space-y-3">
           {intro.map((p, i) => (
-            <p key={i} className="text-[15px] leading-relaxed text-[#1f3875]">{p}</p>
+            <p key={i} className="text-[15px] leading-relaxed text-[#1D60A9]">{p}</p>
           ))}
         </div>
       </div>

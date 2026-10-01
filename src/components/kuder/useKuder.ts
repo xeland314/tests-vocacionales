@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { calculateKuder, type KuderAnswers } from "../../data/kuderScoring";
-import { useAnonGate } from "../../lib/anonGate";
-import { notifyMoodleCompletion } from "../../lib/moodle";
+import { useAnonGate } from "../../client/anonGate";
+import { notifyMoodleCompletion } from "../../client/moodle";
 import { KUDER_ORDER } from "../../data/kuder";
 
 const STORAGE = "kuder_answers_v1";
@@ -126,7 +126,7 @@ export function useKuder() {
     try {
       const date = savedAt || fmt(new Date());
       const name = (moodleUserName?.trim() || "resultado").trim();
-      const { generateKuderStudentPdf } = await import("../../lib/pdf/kuder");
+      const { generateKuderStudentPdf } = await import("../../client/pdf/kuder");
       await generateKuderStudentPdf(result as any, name, date);
     } catch {
       window.print();

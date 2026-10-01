@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { calculatePersonality, type AnswersPers } from "../../data/personalidadScoring";
 import { deriveIdentity } from "../../data/mbti/identity";
-import { useAnonGate } from "../../lib/anonGate";
-import { notifyMoodleCompletion } from "../../lib/moodle";
+import { useAnonGate } from "../../client/anonGate";
+import { notifyMoodleCompletion } from "../../client/moodle";
 
 const STORAGE = "pers_answers_v1";
 const STORAGE_NAME = "pers_student_name";

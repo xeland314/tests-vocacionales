@@ -1,5 +1,5 @@
 import { KUDER_AREAS } from "../../data/kuder";
-import { LucideIcon } from "../../lib/icons";
+import { LucideIcon } from "../../client/icons";
 
 export default function InformeKuder({
   result,
@@ -40,7 +40,7 @@ export default function InformeKuder({
           </div>
         </div>
       </div>
-      {footerNote && <p className="mt-6 text-xs text-[#0f2b6b]/50 text-center print:hidden">{footerNote}</p>}
+      {footerNote && <p className="mt-6 text-xs text-[#164F8D]/50 text-center print:hidden">{footerNote}</p>}
     </>
   );
 }

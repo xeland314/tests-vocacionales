@@ -14,7 +14,7 @@ function KuderDoc({ result, studentName, date, logo, isTeacher }: { result: Resu
     <div style={{ width: '794px', minHeight: '1123px', backgroundColor: '#ffffff', fontFamily: 'Inter, sans-serif', padding: 24, display: 'flex', flexDirection: 'column' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #e2e8f0', paddingBottom: 12 }}>
         <img src={logo} width={120} height={32} style={{ objectFit: 'contain' }} />
-        <div style={{ textAlign: 'right', fontSize: 10, color: '#0f2b6b', display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+        <div style={{ textAlign: 'right', fontSize: 10, color: '#164F8D', display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
           <div style={{ fontWeight: 700 }}>TEAM GGM</div>
           <div>Test Kuder — 10 áreas</div>
           <div>{date}</div>
@@ -30,7 +30,7 @@ function KuderDoc({ result, studentName, date, logo, isTeacher }: { result: Resu
       </div>
 
       <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column' }}>
-        <div style={{ fontSize: 10, fontWeight: 800, color: '#001d62', letterSpacing: 0.5 }}>RANKING 10 ÁREAS</div>
+        <div style={{ fontSize: 10, fontWeight: 800, color: '#1D60A9', letterSpacing: 0.5 }}>RANKING 10 ÁREAS</div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 8 }}>
           {result.ranking.map(k => {
             const info = (KUDER_AREAS as any)[k];
@@ -53,7 +53,7 @@ function KuderDoc({ result, studentName, date, logo, isTeacher }: { result: Resu
             const info = (KUDER_AREAS as any)[k];
             const isTop = k === result.top;
             return (
-              <div key={k} style={{ width: 72, border: `1px solid ${isTop ? '#001d62' : '#e2e8f0'}`, borderRadius: 8, padding: 6, backgroundColor: isTop ? '#001d62' : '#fcfcfc', color: isTop ? '#ffffff' : '#001d62', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+              <div key={k} style={{ width: 72, border: `1px solid ${isTop ? '#1D60A9' : '#e2e8f0'}`, borderRadius: 8, padding: 6, backgroundColor: isTop ? '#1D60A9' : '#E1E3DA', color: isTop ? '#ffffff' : '#1D60A9', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                 <div style={{ fontSize: 9, fontWeight: 800 }}>{k}</div>
                 <div style={{ fontSize: 7, fontWeight: 700 }}>{info.nombre}</div>
                 <div style={{ fontSize: 10, fontWeight: 800, marginTop: 2 }}>{(result.scores as any)[k]}</div>
@@ -64,7 +64,7 @@ function KuderDoc({ result, studentName, date, logo, isTeacher }: { result: Resu
       )}
 
       <div style={{ marginTop: 'auto', paddingTop: 12, borderTop: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', fontSize: 8, color: '#64748b' }}>
-        <div style={{ display: 'flex', flexDirection: 'row' }}><span>Estudiante: </span><span style={{ fontWeight: 700, color: '#001d62', marginLeft: 2, marginRight: 2 }}>{studentName}</span><span> · {date}</span></div>
+        <div style={{ display: 'flex', flexDirection: 'row' }}><span>Estudiante: </span><span style={{ fontWeight: 700, color: '#1D60A9', marginLeft: 2, marginRight: 2 }}>{studentName}</span><span> · {date}</span></div>
         <div>TEAM GGM · Verif: {result.verificacion}</div>
       </div>
     </div>

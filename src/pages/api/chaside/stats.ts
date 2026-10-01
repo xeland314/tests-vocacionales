@@ -1,6 +1,6 @@
 import type { APIRoute } from "astro";
-import { getStats } from "../../../lib/admin";
-import { authenticateToken } from "../../../lib/auth";
+import { getStats } from "../../../server/modules/admin-panel";
+import { authenticateToken } from "../../../server/modules/identity/repository";
 
 export const prerender = false;
 

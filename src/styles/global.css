@@ -1,12 +1,27 @@
 @import "tailwindcss";
 
+@theme {
+  --color-brand-blue: #1D60A9;
+  --color-brand-blue-dark: #164F8D;
+  --color-brand-purple: #662483;
+  --color-brand-pink: #E8356A;
+  --color-brand-pink-dark: #C22457;
+  --color-brand-cream: #E1E3DA;
+
+  --color-ggm-bg-dark: #1D60A9;
+  --color-ggm-bg-card-dark: #164F8D;
+  --color-ggm-primary-blue: #1D60A9;
+  --color-ggm-accent-red: #E8356A;
+  --color-ggm-bg-card: #E1E3DA;
+}
+
 :root {
-  --ggm-bg-dark: #001d62;
-  --ggm-bg-card-dark: #0f2b6b;
-  --ggm-primary-blue: #1f3875;
-  --ggm-accent-red: #d8215d;
-  --ggm-accent-yellow: #d8215d;
-  --ggm-bg-card: #fcfcfc;
+  --ggm-bg-dark: #1D60A9;
+  --ggm-bg-card-dark: #164F8D;
+  --ggm-primary-blue: #1D60A9;
+  --ggm-accent-red: #E8356A;
+  --ggm-accent-yellow: #E8356A;
+  --ggm-bg-card: #E1E3DA;
   --ggm-text-light: #f8fafc;
   --ggm-text-dark: #1e293b;
   --ggm-gray-muted: #64748b;
@@ -14,7 +29,7 @@
   --font-body: 'Inter', system-ui, sans-serif;
   --radius-card: 16px;
   --radius-btn: 50px;
-  --shadow-btn: 0 4px 15px rgba(216, 33, 93, 0.4);
+  --shadow-btn: 0 4px 15px rgba(232, 53, 106, 0.4);
 }
 
 body {

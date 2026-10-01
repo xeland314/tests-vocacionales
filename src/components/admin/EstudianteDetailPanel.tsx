@@ -54,7 +54,7 @@ export function EstudianteDetailPanel({ selected, setSelected, authHeader, load,
             <button
               onClick={openInNewTab}
               disabled={opening}
-              className="no-print bg-[#1f3875] hover:bg-[#001d62] disabled:opacity-60 text-white font-bold px-3 py-2 rounded-full text-xs inline-flex items-center gap-1"
+              className="no-print bg-[#1D60A9] hover:bg-[#164F8D] disabled:opacity-60 text-white font-bold px-3 py-2 rounded-full text-xs inline-flex items-center gap-1"
               title="Abrir el informe completo en una pestaña nueva"
             >
               {opening ? <Loader2 size={14} className="animate-spin" /> : <ExternalLink size={14} />} Informe completo

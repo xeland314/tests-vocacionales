@@ -4,13 +4,14 @@ import InformeMbti from "../../templates/mbti/InformeMbti";
 import InformeChaside from "../../templates/chaside/InformeChaside";
 import InformeKuder from "../../templates/kuder/InformeKuder";
 import { deriveIdentity } from "../../data/mbti/identity";
+import { RetakeModal, type RetakeTest } from "./RetakeModal";
 
 function SeccionInforme({ numero, titulo, fecha, children }: { numero: number; titulo: string; fecha?: string | null; children: React.ReactNode }) {
   return (
     <section className="mt-10 first:mt-0">
       <div className="flex items-baseline gap-2 flex-wrap">
-        <span className="w-7 h-7 rounded-full bg-[#001d62] text-white text-xs font-black flex items-center justify-center shrink-0">{numero}</span>
-        <h2 className="text-xl font-black text-[#001d62]">{titulo}</h2>
+        <span className="w-7 h-7 rounded-full bg-[#1D60A9] text-white text-xs font-black flex items-center justify-center shrink-0">{numero}</span>
+        <h2 className="text-xl font-black text-[#1D60A9]">{titulo}</h2>
         {fecha && <span className="text-xs text-slate-500">{fecha}</span>}
       </div>
       <div className="mt-4">{children}</div>
@@ -32,6 +33,7 @@ export default function EstudianteDetailPage({ token }: { token: string }) {
   const [authHeader, setAuthHeader] = useState("");
   const [state, setState] = useState<"loading" | "ok" | "login" | "error">("loading");
   const [error, setError] = useState<string | null>(null);
+  const [retakeModal, setRetakeModal] = useState<{ test: RetakeTest; nombre: string } | null>(null);
 
   useEffect(() => {
     const knox = typeof window !== "undefined" ? localStorage.getItem("knox_token") : null;
@@ -61,28 +63,9 @@ export default function EstudianteDetailPage({ token }: { token: string }) {
     })();
   }, [token]);
 
-  const habilitar = async (test: string, nombre: string) => {
+  const habilitar = (test: RetakeTest, nombre: string) => {
     if (!data) return;
-    const motivo = prompt(`Motivo para habilitar reintento de ${nombre} (queda auditado):`);
-    if (motivo === null) return;
-    let ventana_desde: string | undefined;
-    let ventana_hasta: string | undefined;
-    if (confirm("¿Acotar el reintento a un intervalo de fechas?\n(Aceptar = pedir fechas; Cancelar = disponible de inmediato, sin límite)")) {
-      const desde = prompt("Fecha DESDE (formato AAAA-MM-DD, vacío = desde ahora):");
-      if (desde === null) return;
-      const hasta = prompt("Fecha HASTA (formato AAAA-MM-DD, vacío = sin límite):");
-      if (hasta === null) return;
-      ventana_desde = desde.trim() || undefined;
-      ventana_hasta = hasta.trim() || undefined;
-    }
-    const r = await fetch("/api/admin/estudiante/retake", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: authHeader },
-      body: JSON.stringify({ estudiante_id: data.estudiante.id, test_codigo: test, motivo, ventana_desde, ventana_hasta }),
-    });
-    const j = await r.json().catch(() => ({}));
-    if (!r.ok) { alert(j.error || "No se pudo habilitar el reintento"); return; }
-    window.location.reload();
+    setRetakeModal({ test, nombre });
   };
 
   const revocar = async (test: string) => {
@@ -99,7 +82,7 @@ export default function EstudianteDetailPage({ token }: { token: string }) {
       <div className="max-w-md mx-auto mt-12 bg-white border rounded-2xl p-6 text-center">
         <p className="font-bold">Sesión requerida</p>
         <p className="text-sm text-slate-500 mt-1">Inicia sesión para ver este informe.</p>
-        <a href="/admin/login" className="mt-4 inline-block bg-[#001d62] text-white px-6 py-2 rounded-full font-bold">Ir a Login</a>
+        <a href="/admin/login" className="mt-4 inline-block bg-[#1D60A9] text-white px-6 py-2 rounded-full font-bold">Ir a Login</a>
       </div>
     );
   }
@@ -110,7 +93,7 @@ export default function EstudianteDetailPage({ token }: { token: string }) {
         <AlertTriangle className="mx-auto text-red-500" />
         <p className="font-bold mt-2">Enlace no disponible</p>
         <p className="text-sm text-slate-500 mt-1">{error}</p>
-        <a href="/admin" className="mt-4 inline-block bg-[#001d62] text-white px-6 py-2 rounded-full font-bold">Volver al panel</a>
+        <a href="/admin" className="mt-4 inline-block bg-[#1D60A9] text-white px-6 py-2 rounded-full font-bold">Volver al panel</a>
       </div>
     );
   }
@@ -122,11 +105,11 @@ export default function EstudianteDetailPage({ token }: { token: string }) {
 
   return (
     <div className="min-h-screen bg-[#F9F9FB] print:bg-white">
-      <div className="bg-[#001d62] text-white border-b no-print">
+      <div className="bg-[#1D60A9] text-white border-b no-print">
         <div className="max-w-4xl mx-auto px-4 py-3 flex items-center gap-3">
           <img src="/logo-teamggm-horizontal-con-transparencia.webp" alt="TEAM GGM Preuniversitario" className="h-7 w-auto shrink-0" />
           <span className="text-sm font-extrabold">Informe Vocacional del Estudiante</span>
-          <button onClick={() => window.print()} className="ml-auto bg-[#d8215d] hover:bg-[#a91a49] text-white font-bold px-4 py-2 rounded-full text-sm inline-flex items-center gap-1">
+          <button onClick={() => window.print()} className="ml-auto bg-[#E8356A] hover:bg-[#C22457] text-white font-bold px-4 py-2 rounded-full text-sm inline-flex items-center gap-1">
             <Printer size={15} /> Imprimir / PDF
           </button>
         </div>
@@ -140,11 +123,11 @@ export default function EstudianteDetailPage({ token }: { token: string }) {
 
         <div className="print-only text-center mb-4">
           <img src="/logo-teamggm-horizontal-con-transparencia.webp" alt="TEAM GGM Preuniversitario" className="h-10 mx-auto mb-2" />
-          <p className="text-xs font-black uppercase tracking-[0.2em] text-[#d8215d]">Informe Vocacional · TEAM GGM Preuniversitario</p>
+          <p className="text-xs font-black uppercase tracking-[0.2em] text-[#E8356A]">Informe Vocacional · TEAM GGM Preuniversitario</p>
         </div>
 
         <div className="print-block mb-2">
-          <h1 className="text-2xl font-black text-[#001d62]">{nombre}</h1>
+          <h1 className="text-2xl font-black text-[#1D60A9]">{nombre}</h1>
           <p className="text-xs text-slate-500 mt-1">
             Moodle {estudiante?.moodle_user_id ?? "—"} · Email {estudiante?.moodle_user_email || "—"} · Curso {estudiante?.moodle_course_id ?? "—"} · Registrado {new Date((estudiante?.created_at || 0) * 1000).toLocaleString()}
           </p>
@@ -198,7 +181,7 @@ export default function EstudianteDetailPage({ token }: { token: string }) {
 
         {isAdmin && (
           <div className="no-print mt-10 border-t pt-4 flex gap-2 flex-wrap items-center">
-            <span className="text-xs font-black uppercase tracking-wider text-[#001d62]">Reintentos:</span>
+            <span className="text-xs font-black uppercase tracking-wider text-[#1D60A9]">Reintentos:</span>
             {(data.reintentosPendientes || []).length > 0 && <span className="bg-amber-100 text-amber-800 border border-amber-200 px-2 py-1 rounded-full text-xs font-black">{data.reintentosPendientes.join(", ")} habilitado(s)</span>}
             {data.chaside && !(data.reintentosPendientes || []).includes("CHASIDE") && <button onClick={() => habilitar("CHASIDE", "CHASIDE")} className="bg-white border font-bold px-4 py-2 rounded-full text-sm">Habilitar CHASIDE</button>}
             {data.personalidad && !(data.reintentosPendientes || []).includes("PERSONALIDAD") && <button onClick={() => habilitar("PERSONALIDAD", "MBTI")} className="bg-white border font-bold px-4 py-2 rounded-full text-sm">Habilitar MBTI</button>}
@@ -208,6 +191,17 @@ export default function EstudianteDetailPage({ token }: { token: string }) {
           </div>
         )}
       </div>
+
+      {retakeModal && data && (
+        <RetakeModal
+          test={retakeModal.test}
+          estudianteId={data.estudiante.id}
+          estudianteNombre={String(data.estudiante.moodle_user_name || data.estudiante.id)}
+          authHeader={authHeader}
+          onClose={() => setRetakeModal(null)}
+          onSuccess={() => window.location.reload()}
+        />
+      )}
     </div>
   );
 }

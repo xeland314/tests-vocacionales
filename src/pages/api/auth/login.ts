@@ -1,7 +1,6 @@
 import type { APIRoute } from "astro";
-import { initDb } from "../../../lib/db";
-import { getUserByEmail } from "../../../lib/users";
-import { create_token, get_post_response_data, verifyPassword } from "../../../lib/auth";
+import { initDb } from "../../../server/db";
+import { getUserByEmail, create_token, get_post_response_data, verifyPassword } from "../../../server/modules/identity";
 
 export const prerender = false;
 
@@ -10,7 +9,7 @@ export const prerender = false;
 export const POST: APIRoute = async ({ request }) => {
   try {
     await initDb();
-    const body = await request.json().catch(()=> ({}));
+    const body = await request.json().catch(() => ({}));
     const email = (body.email ?? "").toString().trim().toLowerCase();
     const password = (body.password ?? "").toString();
     if (!email || !password) return new Response(JSON.stringify({ error: "email y password requeridos" }), { status: 400 });
@@ -23,7 +22,7 @@ export const POST: APIRoute = async ({ request }) => {
     const { token, instance } = await create_token(user.id);
     const data = get_post_response_data(token, instance, { id: user.id, email: user.email, first_name: user.first_name, last_name: user.last_name, role: (user as any).role, is_active: (user as any).is_active });
     return new Response(JSON.stringify(data), { status: 200, headers: { "Content-Type": "application/json" } });
-  } catch (e:any) {
+  } catch (e: any) {
     return new Response(JSON.stringify({ error: e.message }), { status: 500 });
   }
 };

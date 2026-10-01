@@ -1,6 +1,6 @@
 import type { APIRoute } from "astro";
-import { authenticateToken } from "../../../../lib/auth";
-import { getStudentDetail } from "../../../../lib/admin";
+import { authenticateToken } from "../../../../server/modules/identity/repository";
+import { getStudentDetail } from "../../../../server/modules/admin-panel";
 
 export const prerender = false;
 
@@ -14,5 +14,4 @@ export const GET: APIRoute = async ({ request, params }) => {
 };
 
 // Nota: ya NO existe DELETE aquí. Los intentos previos nunca se borran (regla de negocio
-// de reintentos). Para habilitar un nuevo intento usar /api/admin/estudiante/retake (POST),
-// que queda auditado en reintentos_habilitados (quién, cuándo, motivo).
+// de reintentos). Para habilitar un nuevo intento usar /api/admin/estudiante/retake (POST).

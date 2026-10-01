@@ -1,5 +1,11 @@
+/**
+ * Módulo Testing — Tokens opacos de vista de estudiante (uuid4, 30 min).
+ * No exponen el id real de la BD ni datos en la URL; expiran solos.
+ */
 import { randomUUID } from "node:crypto";
-import { db, initDb } from "./db";
+import { db, initDb } from "../../db";
+
+type AnyRow = Record<string, any>;
 
 export const VIEW_TOKEN_TTL_SECONDS = 30 * 60;
 
@@ -25,12 +31,12 @@ export async function resolveAdminViewToken(token: string): Promise<string | nul
   if (!token) return null;
   await initDb();
   const now = Math.floor(Date.now() / 1000);
-  const r = await db.execute({
+  const r = await db.execute<AnyRow>({
     sql: "SELECT estudiante_id, expires_unix FROM admin_view_tokens WHERE token = ?",
     args: [token],
   });
   if (!r.rows.length) return null;
-  const row = r.rows[0] as any;
+  const row = r.rows[0];
   if (Number(row.expires_unix) < now) {
     await db.execute({ sql: "DELETE FROM admin_view_tokens WHERE token = ?", args: [token] });
     return null;

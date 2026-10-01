@@ -28,7 +28,7 @@ describe("CHASIDE — paleta TEAM GGM y sin navegación en resultado", () => {
     expect(getByText(/Para volver a rendir, solicita habilitación al administrador/)).toBeTruthy();
   });
 
-  it("ChasideQuestions usa paleta: SÍ rosado #d8215d y NO azul bajo #1f3875", async () => {
+  it("ChasideQuestions usa paleta: SÍ rosado #E8356A y NO azul bajo #1D60A9", async () => {
     const { ChasideQuestions } = await import("../components/chaside/ChasideQuestions");
     const { container } = render(
       <ChasideQuestions
@@ -41,14 +41,14 @@ describe("CHASIDE — paleta TEAM GGM y sin navegación en resultado", () => {
       />
     );
     const html = container.innerHTML;
-    // SÍ seleccionado debe tener bg-[#d8215d]
-    expect(html).toContain("bg-[#d8215d]");
-    // NO seleccionado debe tener bg-[#1f3875]
-    expect(html).toContain("bg-[#1f3875]");
+    // SÍ seleccionado debe tener bg-[#E8356A]
+    expect(html).toContain("bg-[#E8356A]");
+    // NO seleccionado debe tener bg-[#1D60A9]
+    expect(html).toContain("bg-[#1D60A9]");
     // No debe contener slate-300 (fuera de paleta) en botones
     // Permitimos slate en otros, pero los botones SÍ/NO deben usar paleta
-    expect(html).toContain("border-[#1f3875]/30");
-    expect(html).toContain("text-[#0f2b6b]");
+    expect(html).toContain("border-[#1D60A9]/30");
+    expect(html).toContain("text-[#164F8D]");
   });
 });
 

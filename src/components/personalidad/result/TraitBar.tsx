@@ -5,9 +5,9 @@ export function TraitBar({ gauge, color }: { gauge: TraitGauge; color: string })
   return (
     <div>
       <div className="flex items-center justify-between gap-2 text-[11px] font-bold mb-1">
-        <span className={winLeft ? "text-[#001d62]" : "text-slate-400"}>{gauge.pair.left.name}</span>
+        <span className={winLeft ? "text-[#1D60A9]" : "text-slate-400"}>{gauge.pair.left.name}</span>
         <span className="text-[10px] uppercase tracking-wider text-slate-400">{gauge.pair.label}</span>
-        <span className={!winLeft ? "text-[#001d62]" : "text-slate-400"}>{gauge.pair.right.name}</span>
+        <span className={!winLeft ? "text-[#1D60A9]" : "text-slate-400"}>{gauge.pair.right.name}</span>
       </div>
       <div className="relative h-3 bg-slate-200 rounded-full overflow-hidden flex">
         <div style={{ width: `${gauge.leftPercent}%`, background: winLeft ? color : "#E5E7EB" }} />

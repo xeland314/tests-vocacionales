@@ -1,11 +1,12 @@
-import React from 'react';
-import { BookOpen, Check, Minus, RotateCcw, X, History, ArrowRight } from "lucide-react";
+import React, { useState } from 'react';
+import { BookOpen, Check, Minus, RotateCcw, X, History, ArrowRight, Clock } from "lucide-react";
 import { AREAS, AREA_ORDER, INTERESES_GRID, APTITUDES_GRID } from "../../data/chaside";
 import { TYPES } from "../../data/personalidad";
 import { KUDER_AREAS, KUDER_ORDER } from "../../data/kuder";
-import { LucideIcon } from "../../lib/icons";
+import { LucideIcon } from "../../client/icons";
 import { deriveIdentity } from "../../data/mbti/identity";
 import { MBTI_PROFILES } from "../../data/mbti";
+import { RetakeModal, type RetakeTest } from "./RetakeModal";
 
 /** ¿El reintento está dentro de su ventana de fechas (si tiene)? — versión cliente, sin imports de servidor. */
 function enVentana(row: any): boolean {
@@ -18,32 +19,120 @@ function enVentana(row: any): boolean {
 
 type TestCodigoUI = "CHASIDE" | "PERSONALIDAD" | "KUDER";
 
+// ---------------------------------------------------------------------------
+// Tiempo entre intentos — delta y lectura pedagógica del intervalo
+// ---------------------------------------------------------------------------
+
+/** Segundos entre los dos últimos intentos de un historial (null si no hay ≥2). */
+function deltaEntreIntentos(historial: any[] | undefined | null): number | null {
+  if (!Array.isArray(historial) || historial.length < 2) return null;
+  const curr = Number(historial[historial.length - 1]?.fecha_unix);
+  const prev = Number(historial[historial.length - 2]?.fecha_unix);
+  if (!Number.isFinite(curr) || !Number.isFinite(prev)) return null;
+  return Math.max(0, curr - prev);
+}
+
+/** Duración en texto humano: "45 min", "3 h 20 min", "5 días 3 h", "1 mes 4 d". */
+function formatearDuracion(seg: number): string {
+  if (!Number.isFinite(seg) || seg < 0) return "—";
+  const min = Math.floor(seg / 60);
+  const horas = Math.floor(min / 60);
+  const dias = Math.floor(horas / 24);
+  const meses = Math.floor(dias / 30);
+  if (min < 1) return "menos de 1 min";
+  if (min < 60) return `${min} min`;
+  if (horas < 24) {
+    const m = min % 60;
+    return m ? `${horas} h ${m} min` : `${horas} h`;
+  }
+  if (meses >= 1) {
+    const d = dias % 30;
+    return d ? `${meses} ${meses === 1 ? "mes" : "meses"} ${d} d` : `${meses} ${meses === 1 ? "mes" : "meses"}`;
+  }
+  const h = horas % 24;
+  return h ? `${dias} días ${h} h` : `${dias} días`;
+}
+
+/** Qué implica el intervalo entre intentos para leer la diferencia. */
+function implicacionTiempo(seg: number): { texto: string; color: string; bg: string } {
+  const horas = seg / 3600;
+  const dias = horas / 24;
+  if (horas < 1) {
+    return {
+      texto: "Reintento casi inmediato (menos de 1 hora): puede reflejar memoria de las respuestas más que un cambio real. Interpretar con cautela.",
+      color: "#b45309", bg: "#fffbeb",
+    };
+  }
+  if (horas < 24) {
+    return {
+      texto: "Reintento el mismo día: coincidir en poco tiempo sugiere memoria del test más que un cambio genuino de perfil.",
+      color: "#b45309", bg: "#fffbeb",
+    };
+  }
+  if (dias < 7) {
+    return {
+      texto: "Reintento dentro de la misma semana: la diferencia puede estar influida por el contexto reciente (exámenes, ánimo, novedad).",
+      color: "#1d4ed8", bg: "#eff6ff",
+    };
+  }
+  if (dias < 30) {
+    return {
+      texto: "Reintento tras más de una semana: el intervalo da razonable confiabilidad a la diferencia observada.",
+      color: "#15803d", bg: "#f0fdf4",
+    };
+  }
+  return {
+    texto: "Reintento tras más de un mes: con este intervalo, las diferencias tienden a reflejar una evolución real del perfil.",
+    color: "#15803d", bg: "#f0fdf4",
+  };
+}
+
+/** Bloque visual con el tiempo entre los dos últimos intentos y su interpretación. */
+function TiempoEntreIntentos({ historial }: { historial: any[] | undefined | null }) {
+  const delta = deltaEntreIntentos(historial);
+  if (delta == null) return null;
+  const imp = implicacionTiempo(delta);
+  const prev = historial![historial!.length - 2];
+  const curr = historial![historial!.length - 1];
+  return (
+    <div className="mt-2 rounded-xl px-3 py-2 text-[11px] leading-relaxed" style={{ background: imp.bg, color: imp.color }}>
+      <p className="font-black flex items-center gap-1">
+        <Clock size={12} /> Tiempo entre intentos: {formatearDuracion(delta)}
+        <span className="font-normal opacity-75">
+          ({new Date(prev.fecha_unix * 1000).toLocaleDateString()} → {new Date(curr.fecha_unix * 1000).toLocaleDateString()})
+        </span>
+      </p>
+      <p className="mt-0.5">{imp.texto}</p>
+    </div>
+  );
+}
+
 /** Bloque compacto de comparación entre el intento actual y el anterior. */
-function DiffResumen({ diff }: { diff: any }) {
+function DiffResumen({ diff, historial }: { diff: any; historial?: any[] }) {
   if (!diff) return null;
   const esPersonalidad = diff.tipoAnterior !== undefined;
   const esKuder = diff.topAnterior !== undefined && !esPersonalidad;
   return (
     <div className="mt-3 bg-white border rounded-xl p-3">
-      <p className="text-xs font-black uppercase tracking-wider text-[#001d62] flex items-center gap-1"><History size={13} />Comparación con intento anterior</p>
+      <p className="text-xs font-black uppercase tracking-wider text-[#1D60A9] flex items-center gap-1"><History size={13} />Comparación con intento anterior</p>
       {esPersonalidad && (
         <p className="text-xs mt-2 flex items-center gap-1 flex-wrap">
-          <b>{diff.tipoAnterior}</b><ArrowRight size={12} className="text-slate-400" /><b style={{ color: diff.tipoCambio ? "#d8215d" : undefined }}>{diff.tipoActual}</b>
-          {diff.tipoCambio && <span className="bg-[#d8215d]/10 text-[#d8215d] px-2 py-0.5 rounded-full font-bold">cambió de tipo</span>}
+          <b>{diff.tipoAnterior}</b><ArrowRight size={12} className="text-slate-400" /><b style={{ color: diff.tipoCambio ? "#E8356A" : undefined }}>{diff.tipoActual}</b>
+          {diff.tipoCambio && <span className="bg-[#E8356A]/10 text-[#E8356A] px-2 py-0.5 rounded-full font-bold">cambió de tipo</span>}
           <span className="ml-auto text-[10px] text-slate-400">{diff.dimensiones.filter((d: any) => d.cambioSignificativo).length}/4 dimensiones con cambio ≥15%</span>
         </p>
       )}
       {esKuder && (
         <p className="text-xs mt-2 flex items-center gap-1 flex-wrap">
-          <b>{diff.topAnterior}</b><ArrowRight size={12} className="text-slate-400" /><b style={{ color: diff.topAnterior !== diff.topActual ? "#d8215d" : undefined }}>{diff.topActual}</b>
-          {diff.topAnterior !== diff.topActual && <span className="bg-[#d8215d]/10 text-[#d8215d] px-2 py-0.5 rounded-full font-bold">cambió de área principal</span>}
+          <b>{diff.topAnterior}</b><ArrowRight size={12} className="text-slate-400" /><b style={{ color: diff.topAnterior !== diff.topActual ? "#E8356A" : undefined }}>{diff.topActual}</b>
+          {diff.topAnterior !== diff.topActual && <span className="bg-[#E8356A]/10 text-[#E8356A] px-2 py-0.5 rounded-full font-bold">cambió de área principal</span>}
           <span className="ml-auto text-[10px] text-slate-400">{diff.scores.filter((d: any) => d.cambioSignificativo).length}/10 áreas con cambio ≥15 pts</span>
         </p>
       )}
       {!esPersonalidad && !esKuder && (
         <p className="text-xs mt-2 flex items-center gap-1 flex-wrap">
-          Interés <b>{diff.topInteresAnterior}</b><ArrowRight size={12} className="text-slate-400" /><b style={{ color: diff.topInteresAnterior !== diff.topInteresActual ? "#d8215d" : undefined }}>{diff.topInteresActual}</b>
-          {" "}· Aptitud <b>{diff.topAptitudAnterior}</b><ArrowRight size={12} className="text-slate-400" /><b style={{ color: diff.topAptitudAnterior !== diff.topAptitudActual ? "#d8215d" : undefined }}>{diff.topAptitudActual}</b>
+          Interés <b>{diff.topInteresAnterior}</b><ArrowRight size={12} className="text-slate-400" /><b style={{ color: diff.topInteresAnterior !== diff.topInteresActual ? "#E8356A" : undefined }}>{diff.topInteresActual}</b>
+          {" "}· Aptitud <b>{diff.topAptitudAnterior}</b><ArrowRight size={12} className="text-slate-400" /><b style={{ color: diff.topAptitudAnterior !== diff.topAptitudActual ? "#E8356A" : undefined }}>{diff.topAptitudActual}</b>
           <span className="ml-auto text-[10px] text-slate-400">{diff.intereses.filter((d: any) => d.cambioSignificativo).length + diff.aptitudes.filter((d: any) => d.cambioSignificativo).length} áreas con cambio ≥15%</span>
         </p>
       )}
@@ -51,37 +140,50 @@ function DiffResumen({ diff }: { diff: any }) {
         {(esPersonalidad ? diff.dimensiones : esKuder ? diff.scores : [...diff.intereses, ...diff.aptitudes])
           .filter((d: any) => d.cambioSignificativo)
           .map((d: any) => (
-            <span key={d.clave} className="text-[10px] font-bold px-2 py-0.5 rounded-full border" style={{ borderColor: d.delta > 0 ? "#16a34a" : "#d8215d", color: d.delta > 0 ? "#16a34a" : "#d8215d" }}>
+            <span key={d.clave} className="text-[10px] font-bold px-2 py-0.5 rounded-full border" style={{ borderColor: d.delta > 0 ? "#16a34a" : "#E8356A", color: d.delta > 0 ? "#16a34a" : "#E8356A" }}>
               {d.clave} {d.delta > 0 ? "+" : ""}{d.delta}
             </span>
           ))}
       </div>
+      <TiempoEntreIntentos historial={historial} />
     </div>
   );
 }
 
 /** Tabla de evolución: comparación entre TODOS los intentos consecutivos de un test. */
-function EvolucionIntentos({ titulo, serie, resumen }: { titulo: string; serie: any[]; resumen: (row: any) => React.ReactNode }) {
+function EvolucionIntentos({ titulo, serie, historial, resumen }: { titulo: string; serie: any[]; historial?: any[]; resumen: (row: any) => React.ReactNode }) {
   if (!serie?.length) return null;
+  // serie[i] corresponde al intento historial[i+1]; el tiempo entre intentos = serie[i].fecha_unix - historial[i].fecha_unix
+  const tiempoDe = (i: number): number | null => {
+    if (!Array.isArray(historial) || !historial[i]?.fecha_unix || !serie[i]?.fecha_unix) return null;
+    return Math.max(0, Number(serie[i].fecha_unix) - Number(historial[i].fecha_unix));
+  };
   return (
     <div className="mt-3 bg-white border rounded-xl p-3">
-      <p className="text-xs font-black uppercase tracking-wider text-[#001d62] flex items-center gap-1"><History size={13} />{titulo} — todos los intentos</p>
+      <p className="text-xs font-black uppercase tracking-wider text-[#1D60A9] flex items-center gap-1"><History size={13} />{titulo} — todos los intentos</p>
       <div className="overflow-x-auto mt-2">
         <table className="w-full text-xs border-collapse">
-          <thead><tr className="border-b-2 border-[#001d62]/20"><th className="text-left px-1 py-1">Intento</th><th className="text-left px-1 py-1">Fecha</th><th className="text-left px-1 py-1">Resultado</th><th className="text-left px-1 py-1">vs anterior</th></tr></thead>
+          <thead><tr className="border-b-2 border-[#1D60A9]/20"><th className="text-left px-1 py-1">Intento</th><th className="text-left px-1 py-1">Fecha</th><th className="text-left px-1 py-1">Tiempo desde anterior</th><th className="text-left px-1 py-1">Resultado</th><th className="text-left px-1 py-1">vs anterior</th></tr></thead>
           <tbody>
-            {serie.map((s: any, i: number) => (
+            {serie.map((s: any, i: number) => {
+              const t = tiempoDe(i);
+              const imp = t != null ? implicacionTiempo(t) : null;
+              return (
               <tr key={i} className="border-b border-slate-100">
                 <td className="px-1 py-1 font-black">#{s.intento}</td>
                 <td className="px-1 py-1 text-slate-500">{new Date(s.fecha_unix * 1000).toLocaleDateString()}</td>
+                <td className="px-1 py-1" style={imp ? { color: imp.color } : undefined} title={imp?.texto}>
+                  {t != null ? formatearDuracion(t) : "—"}
+                </td>
                 <td className="px-1 py-1">{resumen(s.diff)}</td>
                 <td className="px-1 py-1">
                   {s.diff.cambioSignificativo
-                    ? <span className="bg-[#d8215d]/10 text-[#d8215d] px-2 py-0.5 rounded-full font-bold text-[10px]">cambio significativo</span>
+                    ? <span className="bg-[#E8356A]/10 text-[#E8356A] px-2 py-0.5 rounded-full font-bold text-[10px]">cambio significativo</span>
                     : <span className="bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-bold text-[10px]">estable</span>}
                 </td>
               </tr>
-            ))}
+              );
+            })}
           </tbody>
         </table>
       </div>
@@ -95,31 +197,12 @@ export function EstudianteDetailContent({ selected, authHeader, isAdmin, onDelet
   isAdmin: boolean;
   onDeleted?: () => void;
 }) {
+  // Modal de reintento (reemplaza prompt/confirm nativos). Hook antes del early-return.
+  const [retakeModal, setRetakeModal] = useState<{ test: RetakeTest; nombre: string } | null>(null);
   if (!selected) return null;
   const estudiante = selected.estudiante;
 
-  const habilitar = async (test: TestCodigoUI, nombre: string) => {
-    const motivo = prompt(`Motivo para habilitar reintento de ${nombre} (queda auditado):`);
-    if (motivo === null) return; // cancelado
-    let ventana_desde: string | undefined;
-    let ventana_hasta: string | undefined;
-    if (confirm(`¿Acotar el reintento a un intervalo de fechas?\n(Aceptar = pedir fechas; Cancelar = disponible de inmediato, sin límite)`)) {
-      const desde = prompt("Fecha DESDE (formato AAAA-MM-DD, vacío = desde ahora):");
-      if (desde === null) return;
-      const hasta = prompt("Fecha HASTA (formato AAAA-MM-DD, vacío = sin límite):");
-      if (hasta === null) return;
-      ventana_desde = desde.trim() || undefined;
-      ventana_hasta = hasta.trim() || undefined;
-    }
-    const r = await fetch("/api/admin/estudiante/retake", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: authHeader },
-      body: JSON.stringify({ estudiante_id: estudiante.id, test_codigo: test, motivo, ventana_desde, ventana_hasta }),
-    });
-    const j = await r.json().catch(() => ({}));
-    if (!r.ok) { alert(j.error || "No se pudo habilitar el reintento"); return; }
-    onDeleted?.();
-  };
+  const habilitar = (test: RetakeTest, nombre: string) => setRetakeModal({ test, nombre });
 
   const revocar = async (test: TestCodigoUI) => {
     if (!confirm("¿Revocar el reintento pendiente? El estudiante no podrá volver a rendir hasta que se habilite de nuevo.")) return;
@@ -147,60 +230,60 @@ export function EstudianteDetailContent({ selected, authHeader, isAdmin, onDelet
 
   return (
     <>
-      <div className="print-block bg-[#fcfcfc] border border-[#001d62]/10 rounded-xl p-3 text-xs">
+      <div className="print-block bg-[#E1E3DA] border border-[#1D60A9]/10 rounded-xl p-3 text-xs">
         <p className="font-black flex items-center gap-1"><BookOpen size={14} />Cómo leer (igual que ve el estudiante):</p>
         <p className="text-slate-600 mt-1"><b>CHASIDE</b> 7 áreas C/H/A/S/I/D/E — Intereses 0–10, Aptitudes 0–4. <b>MBTI</b> 4 dicotomías con leyenda abajo. <b>Kuder</b> 10 áreas 0–45 con leyenda (Excel).</p>
       </div>
 
       {/* CHASIDE — como lo ve el estudiante */}
       <div className={`print-block mt-4 border rounded-2xl p-4 ${selected.chaside ? "bg-green-50 border-green-200" : "bg-red-50 border-red-200"}`}>
-        <h4 className="font-black text-sm flex items-center gap-1 flex-wrap">CHASIDE {selected.chaside ? <><Check size={14} className="text-green-600" />{selected.chaside.topInteres} · {(AREAS as any)[selected.chaside.topInteres]?.nombre}<span className="text-[10px] font-bold text-slate-500">Intento {selected.historial?.chaside?.length || 1}</span></> : <><Minus size={14} className="text-red-500" />faltante</>}{btnReintento("CHASIDE", "CHASIDE", "#001d62")}</h4>
-        {selected.chaside && selected.diffs?.chaside && <DiffResumen diff={selected.diffs.chaside} />}
-        {selected.chaside && <EvolucionIntentos titulo="CHASIDE" serie={selected.evolucion?.chaside} resumen={(d: any) => <>Interés {d.topInteresAnterior}→<b>{d.topInteresActual}</b> · Apt {d.topAptitudAnterior}→<b>{d.topAptitudActual}</b></>} />}
+        <h4 className="font-black text-sm flex items-center gap-1 flex-wrap">CHASIDE {selected.chaside ? <><Check size={14} className="text-green-600" />{selected.chaside.topInteres} · {(AREAS as any)[selected.chaside.topInteres]?.nombre}<span className="text-[10px] font-bold text-slate-500">Intento {selected.historial?.chaside?.length || 1}</span></> : <><Minus size={14} className="text-red-500" />faltante</>}{btnReintento("CHASIDE", "CHASIDE", "#1D60A9")}</h4>
+        {selected.chaside && selected.diffs?.chaside && <DiffResumen diff={selected.diffs.chaside} historial={selected.historial?.chaside} />}
+        {selected.chaside && <EvolucionIntentos titulo="CHASIDE" serie={selected.evolucion?.chaside} historial={selected.historial?.chaside} resumen={(d: any) => <>Interés {d.topInteresAnterior}→<b>{d.topInteresActual}</b> · Apt {d.topAptitudAnterior}→<b>{d.topAptitudActual}</b></>} />}
         {selected.chaside ? <>
-          <div className="mt-3 bg-white border border-[#001d62]/10 rounded-xl p-3">
-            <p className="text-xs font-black uppercase tracking-wider text-[#001d62]">Leyenda CHASIDE — 7 áreas</p>
+          <div className="mt-3 bg-white border border-[#1D60A9]/10 rounded-xl p-3">
+            <p className="text-xs font-black uppercase tracking-wider text-[#1D60A9]">Leyenda CHASIDE — 7 áreas</p>
             <div className="mt-2 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2 text-xs">
-              {AREA_ORDER.map((k: any) => { const info = (AREAS as any)[k]; return <div key={k} className="flex gap-2 items-center bg-[#fcfcfc] border border-[#001d62]/10 rounded-xl px-2 py-2"><span className="w-6 h-6 rounded-full text-white text-xs font-black flex items-center justify-center shrink-0" style={{ background: info.color }}>{k}</span><div><p className="font-bold leading-none text-[#001d62] text-xs">{info.nombre}</p><p className="text-[10px] text-[#0f2b6b]/60">{info.nombreCorto}</p></div></div>; })}
+              {AREA_ORDER.map((k: any) => { const info = (AREAS as any)[k]; return <div key={k} className="flex gap-2 items-center bg-[#E1E3DA] border border-[#1D60A9]/10 rounded-xl px-2 py-2"><span className="w-6 h-6 rounded-full text-white text-xs font-black flex items-center justify-center shrink-0" style={{ background: info.color }}>{k}</span><div><p className="font-bold leading-none text-[#1D60A9] text-xs">{info.nombre}</p><p className="text-[10px] text-[#164F8D]/60">{info.nombreCorto}</p></div></div>; })}
             </div>
           </div>
           <div className="mt-4 bg-white border rounded-xl p-3">
-            <h5 className="font-bold text-[#001d62] text-sm">Lo que más le interesa</h5>
-            <p className="text-sm text-[#0f2b6b] mt-1">Obtuvo <b>{selected.chaside.intereses[selected.chaside.topInteres]}/10</b> en <b>{(AREAS as any)[selected.chaside.topInteres]?.nombre} ({selected.chaside.topInteres})</b></p>
-            <p className="text-xs text-[#0f2b6b] mt-2 leading-relaxed">{(AREAS as any)[selected.chaside.topInteres]?.interesesDesc} Aptitudes: {(AREAS as any)[selected.chaside.topInteres]?.aptitudesTraits}.</p>
+            <h5 className="font-bold text-[#1D60A9] text-sm">Lo que más le interesa</h5>
+            <p className="text-sm text-[#164F8D] mt-1">Obtuvo <b>{selected.chaside.intereses[selected.chaside.topInteres]}/10</b> en <b>{(AREAS as any)[selected.chaside.topInteres]?.nombre} ({selected.chaside.topInteres})</b></p>
+            <p className="text-xs text-[#164F8D] mt-2 leading-relaxed">{(AREAS as any)[selected.chaside.topInteres]?.interesesDesc} Aptitudes: {(AREAS as any)[selected.chaside.topInteres]?.aptitudesTraits}.</p>
             <p className="text-xs mt-2"><b>Carreras:</b> {(AREAS as any)[selected.chaside.topInteres]?.carreras}</p>
             {selected.chaside.segundoInteres && selected.chaside.intereses[selected.chaside.segundoInteres] > 0 && <>
-              <h5 className="font-bold text-[#001d62] text-sm mt-4">También le interesa</h5>
-              <p className="text-sm text-[#0f2b6b] mt-1">Obtuvo <b>{selected.chaside.intereses[selected.chaside.segundoInteres]}/10</b> en <b>{(AREAS as any)[selected.chaside.segundoInteres]?.nombre} ({selected.chaside.segundoInteres})</b></p>
-              <p className="text-xs text-[#0f2b6b] mt-2 leading-relaxed">{(AREAS as any)[selected.chaside.segundoInteres]?.interesesDesc}</p>
+              <h5 className="font-bold text-[#1D60A9] text-sm mt-4">También le interesa</h5>
+              <p className="text-sm text-[#164F8D] mt-1">Obtuvo <b>{selected.chaside.intereses[selected.chaside.segundoInteres]}/10</b> en <b>{(AREAS as any)[selected.chaside.segundoInteres]?.nombre} ({selected.chaside.segundoInteres})</b></p>
+              <p className="text-xs text-[#164F8D] mt-2 leading-relaxed">{(AREAS as any)[selected.chaside.segundoInteres]?.interesesDesc}</p>
               <p className="text-xs mt-2"><b>Carreras:</b> {(AREAS as any)[selected.chaside.segundoInteres]?.carreras}</p>
             </>}
-            <h5 className="font-bold text-[#001d62] text-sm mt-4">Tiene aptitudes para</h5>
-            <p className="text-sm text-[#0f2b6b] mt-1">Obtuvo <b>{selected.chaside.aptitudes[selected.chaside.topAptitud]}/4</b> en <b>{(AREAS as any)[selected.chaside.topAptitud]?.nombre} ({selected.chaside.topAptitud})</b></p>
-            <p className="text-xs text-[#0f2b6b] mt-2 leading-relaxed">Aptitudes: {(AREAS as any)[selected.chaside.topAptitud]?.aptitudesTraits}.</p>
+            <h5 className="font-bold text-[#1D60A9] text-sm mt-4">Tiene aptitudes para</h5>
+            <p className="text-sm text-[#164F8D] mt-1">Obtuvo <b>{selected.chaside.aptitudes[selected.chaside.topAptitud]}/4</b> en <b>{(AREAS as any)[selected.chaside.topAptitud]?.nombre} ({selected.chaside.topAptitud})</b></p>
+            <p className="text-xs text-[#164F8D] mt-2 leading-relaxed">Aptitudes: {(AREAS as any)[selected.chaside.topAptitud]?.aptitudesTraits}.</p>
             <p className="text-xs mt-2"><b>Carreras:</b> {(AREAS as any)[selected.chaside.topAptitud]?.carreras}</p>
           </div>
           <div className="mt-3 space-y-3">
             <div>
-              <p className="text-xs font-black uppercase tracking-wider text-[#001d62]">Test CHASIDE Intereses — como ve el estudiante</p>
-              <div className="overflow-x-auto mt-1 border border-[#001d62]/20 rounded-xl">
+              <p className="text-xs font-black uppercase tracking-wider text-[#1D60A9]">Test CHASIDE Intereses — como ve el estudiante</p>
+              <div className="overflow-x-auto mt-1 border border-[#1D60A9]/20 rounded-xl">
                 <table className="w-full text-xs text-center border-collapse">
-                  <thead><tr className="bg-[#001d62] text-white">{AREA_ORDER.map((k: any) => <th key={k} className="px-2 py-1.5 font-black">{k}</th>)}</tr></thead>
+                  <thead><tr className="bg-[#1D60A9] text-white">{AREA_ORDER.map((k: any) => <th key={k} className="px-2 py-1.5 font-black">{k}</th>)}</tr></thead>
                   <tbody>
-                    {INTERESES_GRID.map((row: any, i: number) => <tr key={i} className={i % 2 === 0 ? "bg-white" : "bg-[#fcfcfc]"}>{row.map((n: number, j: number) => <td key={j} className="px-2 py-1.5 border border-[#001d62]/10 text-[#001d62]">{n}</td>)}</tr>)}
-                    <tr className="bg-[#d8215d] text-white font-black">{AREA_ORDER.map((k: any) => <td key={k} className="px-2 py-1.5 border border-[#001d62]/10">{selected.chaside.intereses[k]}</td>)}</tr>
+                    {INTERESES_GRID.map((row: any, i: number) => <tr key={i} className={i % 2 === 0 ? "bg-white" : "bg-[#E1E3DA]"}>{row.map((n: number, j: number) => <td key={j} className="px-2 py-1.5 border border-[#1D60A9]/10 text-[#1D60A9]">{n}</td>)}</tr>)}
+                    <tr className="bg-[#E8356A] text-white font-black">{AREA_ORDER.map((k: any) => <td key={k} className="px-2 py-1.5 border border-[#1D60A9]/10">{selected.chaside.intereses[k]}</td>)}</tr>
                   </tbody>
                 </table>
               </div>
             </div>
             <div>
-              <p className="text-xs font-black uppercase tracking-wider text-[#001d62]">Test CHASIDE Aptitudes — como ve el estudiante</p>
-              <div className="overflow-x-auto mt-1 border border-[#001d62]/20 rounded-xl">
+              <p className="text-xs font-black uppercase tracking-wider text-[#1D60A9]">Test CHASIDE Aptitudes — como ve el estudiante</p>
+              <div className="overflow-x-auto mt-1 border border-[#1D60A9]/20 rounded-xl">
                 <table className="w-full text-xs text-center border-collapse">
-                  <thead><tr className="bg-[#001d62] text-white">{AREA_ORDER.map((k: any) => <th key={k} className="px-2 py-1.5 font-black">{k}</th>)}</tr></thead>
+                  <thead><tr className="bg-[#1D60A9] text-white">{AREA_ORDER.map((k: any) => <th key={k} className="px-2 py-1.5 font-black">{k}</th>)}</tr></thead>
                   <tbody>
-                    {APTITUDES_GRID.map((row: any, i: number) => <tr key={i} className={i % 2 === 0 ? "bg-white" : "bg-[#fcfcfc]"}>{row.map((n: number) => <td key={n} className="px-2 py-1.5 border border-[#001d62]/10 text-[#001d62]">{n}</td>)}</tr>)}
-                    <tr className="bg-[#d8215d] text-white font-black">{AREA_ORDER.map((k: any) => <td key={k} className="px-2 py-1.5 border border-[#001d62]/10">{selected.chaside.aptitudes[k]}</td>)}</tr>
+                    {APTITUDES_GRID.map((row: any, i: number) => <tr key={i} className={i % 2 === 0 ? "bg-white" : "bg-[#E1E3DA]"}>{row.map((n: number) => <td key={n} className="px-2 py-1.5 border border-[#1D60A9]/10 text-[#1D60A9]">{n}</td>)}</tr>)}
+                    <tr className="bg-[#E8356A] text-white font-black">{AREA_ORDER.map((k: any) => <td key={k} className="px-2 py-1.5 border border-[#1D60A9]/10">{selected.chaside.aptitudes[k]}</td>)}</tr>
                   </tbody>
                 </table>
               </div>
@@ -212,12 +295,12 @@ export function EstudianteDetailContent({ selected, authHeader, isAdmin, onDelet
 
       {/* MBTI — con leyenda de cada letra */}
       <div className={`print-block mt-4 border rounded-2xl p-4 ${selected.personalidad ? "bg-purple-50 border-purple-200" : "bg-red-50 border-red-200"}`}>
-        <h4 className="font-black text-sm flex items-center gap-1 flex-wrap">MBTI Personalidad {selected.personalidad ? <><Check size={14} className="text-green-600" />{selected.personalidad.tipo}{selected.personalidad.respuestas ? `-${deriveIdentity(selected.personalidad.respuestas).letter}` : ""} · {(TYPES as any)[selected.personalidad.tipo]?.name}<span className="text-[10px] font-bold text-slate-500">Intento {selected.historial?.personalidad?.length || 1}</span></> : <><Minus size={14} className="text-red-500" />faltante</>}{btnReintento("PERSONALIDAD", "MBTI", "#7C3AED")}</h4>
-        {selected.personalidad && selected.diffs?.personalidad && <DiffResumen diff={selected.diffs.personalidad} />}
-        {selected.personalidad && <EvolucionIntentos titulo="MBTI" serie={selected.evolucion?.personalidad} resumen={(d: any) => <>{d.tipoAnterior}→<b style={{ color: d.tipoCambio ? "#d8215d" : undefined }}>{d.tipoActual}</b></>} />}
+        <h4 className="font-black text-sm flex items-center gap-1 flex-wrap">MBTI Personalidad {selected.personalidad ? <><Check size={14} className="text-green-600" />{selected.personalidad.tipo}{selected.personalidad.respuestas ? `-${deriveIdentity(selected.personalidad.respuestas).letter}` : ""} · {(TYPES as any)[selected.personalidad.tipo]?.name}<span className="text-[10px] font-bold text-slate-500">Intento {selected.historial?.personalidad?.length || 1}</span></> : <><Minus size={14} className="text-red-500" />faltante</>}{btnReintento("PERSONALIDAD", "MBTI", "#662483")}</h4>
+        {selected.personalidad && selected.diffs?.personalidad && <DiffResumen diff={selected.diffs.personalidad} historial={selected.historial?.personalidad} />}
+        {selected.personalidad && <EvolucionIntentos titulo="MBTI" serie={selected.evolucion?.personalidad} historial={selected.historial?.personalidad} resumen={(d: any) => <>{d.tipoAnterior}→<b style={{ color: d.tipoCambio ? "#E8356A" : undefined }}>{d.tipoActual}</b></>} />}
         {selected.personalidad ? (() => { const t = (TYPES as any)[selected.personalidad.tipo]; const profile = (MBTI_PROFILES as any)[selected.personalidad.tipo]; return <>
           <div className="mt-3 bg-white border rounded-xl p-3">
-            <p className="text-xs font-black uppercase tracking-wider text-[#001d62]">Leyenda MBTI — qué significa cada letra</p>
+            <p className="text-xs font-black uppercase tracking-wider text-[#1D60A9]">Leyenda MBTI — qué significa cada letra</p>
             <div className="mt-2 grid sm:grid-cols-2 gap-2 text-xs">
               <div><b>E</b> Extravertido (energía con gente) vs <b>I</b> Introvertido (energía a solas)</div>
               <div><b>S</b> Observador/Sensorial (concreto, presente) vs <b>N</b> Intuitivo (posibilidades, futuro)</div>
@@ -231,7 +314,7 @@ export function EstudianteDetailContent({ selected, authHeader, isAdmin, onDelet
             <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-500">{t.role}</p>
             <p className="mt-1 text-lg font-black" style={{ color: t.color }}>{t.code} — {t.name}</p>
             <p className="text-xs text-slate-700 mt-1">{t.tagline} — {t.description}</p>
-            <div className="mt-2 flex flex-wrap gap-1 justify-center">{t.strengths.map((s: string) => <span key={s} className="text-[10px] font-bold px-2 py-1 rounded-full border bg-[#fcfcfc]">{s}</span>)}</div>
+            <div className="mt-2 flex flex-wrap gap-1 justify-center">{t.strengths.map((s: string) => <span key={s} className="text-[10px] font-bold px-2 py-1 rounded-full border bg-[#E1E3DA]">{s}</span>)}</div>
             {profile && <p className="text-[11px] text-slate-500 mt-2 italic">{(profile.career?.paragraphs?.[0] || "").slice(0, 220)}{profile.career?.paragraphs?.[0]?.length > 220 ? "…" : ""}</p>}
           </div>
           <div className="mt-3 space-y-2">{Object.entries(selected.personalidad.dimensiones as any).map(([k, v]: any) => {
@@ -247,13 +330,13 @@ export function EstudianteDetailContent({ selected, authHeader, isAdmin, onDelet
       {/* KUDER — con leyenda de cada abreviatura */}
       <div className={`print-block mt-4 border rounded-2xl p-4 ${selected.kuder ? "bg-blue-50 border-blue-200" : "bg-red-50 border-red-200"}`}>
         <h4 className="font-black text-sm flex items-center gap-1 flex-wrap">Kuder {selected.kuder ? <><Check size={14} className="text-green-600" />{selected.kuder.top} · {(KUDER_AREAS as any)[selected.kuder.top]?.nombre}<span className="text-[10px] font-bold text-slate-500">Intento {selected.historial?.kuder?.length || 1}</span></> : <><Minus size={14} className="text-red-500" />faltante</>}{btnReintento("KUDER", "Kuder", "#2563EB")}</h4>
-        {selected.kuder && selected.diffs?.kuder && <DiffResumen diff={selected.diffs.kuder} />}
-        {selected.kuder && <EvolucionIntentos titulo="Kuder" serie={selected.evolucion?.kuder} resumen={(d: any) => <>{d.topAnterior}→<b style={{ color: d.topAnterior !== d.topActual ? "#d8215d" : undefined }}>{d.topActual}</b></>} />}
+        {selected.kuder && selected.diffs?.kuder && <DiffResumen diff={selected.diffs.kuder} historial={selected.historial?.kuder} />}
+        {selected.kuder && <EvolucionIntentos titulo="Kuder" serie={selected.evolucion?.kuder} historial={selected.historial?.kuder} resumen={(d: any) => <>{d.topAnterior}→<b style={{ color: d.topAnterior !== d.topActual ? "#E8356A" : undefined }}>{d.topActual}</b></>} />}
         {selected.kuder ? (() => { const topInfo = (KUDER_AREAS as any)[selected.kuder.top]; return <>
           <div className="mt-3 bg-white border rounded-xl p-3">
-            <p className="text-xs font-black uppercase tracking-wider text-[#001d62]">Leyenda Kuder — 10 áreas</p>
+            <p className="text-xs font-black uppercase tracking-wider text-[#1D60A9]">Leyenda Kuder — 10 áreas</p>
             <div className="mt-2 grid grid-cols-2 sm:grid-cols-5 gap-2 text-xs">
-              {KUDER_ORDER.map((k: any) => { const info = (KUDER_AREAS as any)[k]; const isTop = k === selected.kuder.top; return <div key={k} className={`flex gap-2 items-center border rounded-xl px-2 py-2 ${isTop ? "bg-[#001d62] text-white border-[#001d62]" : "bg-[#fcfcfc] border-[#001d62]/10"}`}><LucideIcon name={info.icono} size={14} style={{ color: isTop ? "white" : info.color }} /><div><p className="font-black leading-none text-xs">{k}</p><p className="font-bold text-[10px] leading-none">{info.nombre}</p><p className="text-[9px] opacity-70">{info.nombreCorto}</p></div></div>; })}
+              {KUDER_ORDER.map((k: any) => { const info = (KUDER_AREAS as any)[k]; const isTop = k === selected.kuder.top; return <div key={k} className={`flex gap-2 items-center border rounded-xl px-2 py-2 ${isTop ? "bg-[#1D60A9] text-white border-[#1D60A9]" : "bg-[#E1E3DA] border-[#1D60A9]/10"}`}><LucideIcon name={info.icono} size={14} style={{ color: isTop ? "white" : info.color }} /><div><p className="font-black leading-none text-xs">{k}</p><p className="font-bold text-[10px] leading-none">{info.nombre}</p><p className="text-[9px] opacity-70">{info.nombreCorto}</p></div></div>; })}
             </div>
           </div>
           <div className="mt-3 bg-white border rounded-xl p-3">
@@ -263,7 +346,7 @@ export function EstudianteDetailContent({ selected, authHeader, isAdmin, onDelet
             <p className="text-xs mt-2"><b>Ranking:</b> {selected.kuder.ranking.join(" > ")}</p>
           </div>
           <div className="mt-3 grid grid-cols-5 gap-1 text-xs text-center">
-            {KUDER_ORDER.map((k: any) => { const v = selected.kuder.scores[k]; const isTop = k === selected.kuder.top; return <div key={k} className={`border rounded p-1.5 ${isTop ? "bg-[#d8215d] text-white font-black border-[#d8215d]" : "bg-white"}`}><span className="font-black">{k}</span><br />{v}</div>; })}
+            {KUDER_ORDER.map((k: any) => { const v = selected.kuder.scores[k]; const isTop = k === selected.kuder.top; return <div key={k} className={`border rounded p-1.5 ${isTop ? "bg-[#E8356A] text-white font-black border-[#E8356A]" : "bg-white"}`}><span className="font-black">{k}</span><br />{v}</div>; })}
           </div>
           <p className="text-xs text-slate-500 mt-2">{new Date(selected.kuder.fecha_unix * 1000).toLocaleString()} · Verif: {selected.kuder.verificacion}</p>
         </>; })() : <p className="text-xs text-slate-600 mt-2">Pendiente (45 diadas Excel).</p>}
@@ -278,7 +361,7 @@ export function EstudianteDetailContent({ selected, authHeader, isAdmin, onDelet
 
       {isAdmin && (
         <div className="no-print mt-4 border-t pt-4">
-          <p className="text-xs font-black uppercase tracking-wider text-[#001d62] mb-2">Auditoría de reintentos</p>
+          <p className="text-xs font-black uppercase tracking-wider text-[#1D60A9] mb-2">Auditoría de reintentos</p>
           {(() => {
             const hr = selected.historialReintentos || {};
             const rows: any[] = [...(hr.chaside || []), ...(hr.personalidad || []), ...(hr.kuder || [])];
@@ -296,8 +379,19 @@ export function EstudianteDetailContent({ selected, authHeader, isAdmin, onDelet
                 ))}
               </div>
             );
-          })()}
+           })()}
         </div>
+      )}
+
+      {retakeModal && (
+        <RetakeModal
+          test={retakeModal.test}
+          estudianteId={estudiante.id}
+          estudianteNombre={String(estudiante.moodle_user_name || estudiante.id)}
+          authHeader={authHeader}
+          onClose={() => setRetakeModal(null)}
+          onSuccess={() => { setRetakeModal(null); onDeleted?.(); }}
+        />
       )}
     </>
   );

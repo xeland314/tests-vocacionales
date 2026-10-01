@@ -12,19 +12,19 @@ function ChasideDoc({ result, studentName, date, logo, isTeacher }: { result: Re
   const secondI = result.segundoInteres;
   const topA = result.topAptitud;
   return (
-    <div style={{ width: '794px', minHeight: '1123px', backgroundColor: '#ffffff', color: '#001d62', fontFamily: 'Inter, sans-serif', padding: '24px', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ width: '794px', minHeight: '1123px', backgroundColor: '#ffffff', color: '#1D60A9', fontFamily: 'Inter, sans-serif', padding: '24px', display: 'flex', flexDirection: 'column' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #e2e8f0', paddingBottom: '12px' }}>
         <img src={logo} width={120} height={32} style={{ objectFit: 'contain' }} />
-        <div style={{ textAlign: 'right', fontSize: 10, color: '#0f2b6b', display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+        <div style={{ textAlign: 'right', fontSize: 10, color: '#164F8D', display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
           <div style={{ fontWeight: 700 }}>TEAM GGM</div>
           <div>Test Vocacional CHASIDE</div>
           <div>{date}</div>
         </div>
       </div>
 
-      <div style={{ marginTop: 16, backgroundColor: '#fcfcfc', border: '1px solid #e2e8f0', borderRadius: 12, padding: 12, display: 'flex', flexDirection: 'column' }}>
-        <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: 1, color: '#001d62' }}>CÓMO LEER TU RESULTADO</div>
-        <div style={{ fontSize: 9, color: '#0f2b6b', marginTop: 4 }}>CHASIDE mide 7 áreas vocacionales. Cada letra es un área. Intereses 0–10, Aptitudes 0–4.</div>
+      <div style={{ marginTop: 16, backgroundColor: '#E1E3DA', border: '1px solid #e2e8f0', borderRadius: 12, padding: 12, display: 'flex', flexDirection: 'column' }}>
+        <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: 1, color: '#1D60A9' }}>CÓMO LEER TU RESULTADO</div>
+        <div style={{ fontSize: 9, color: '#164F8D', marginTop: 4 }}>CHASIDE mide 7 áreas vocacionales. Cada letra es un área. Intereses 0–10, Aptitudes 0–4.</div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
           {AREA_ORDER.map(k => {
             const info = (AREAS as any)[k];
@@ -39,20 +39,20 @@ function ChasideDoc({ result, studentName, date, logo, isTeacher }: { result: Re
       </div>
 
       <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column' }}>
-        <div style={{ fontSize: 14, fontWeight: 800, color: '#001d62' }}>Intereses</div>
+        <div style={{ fontSize: 14, fontWeight: 800, color: '#1D60A9' }}>Intereses</div>
         {result.intereses[topI] === 0 ? (
           <div style={{ fontSize: 9, color: '#64748b', fontStyle: 'italic', marginTop: 4 }}>No se detectaron intereses predominantes.</div>
         ) : (
           <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column' }}>
-            <div style={{ fontSize: 10, fontWeight: 700, color: '#001d62' }}>Lo que más le interesa</div>
-            <div style={{ fontSize: 9, color: '#0f2b6b', marginTop: 2, display: 'flex', flexDirection: 'row' }}><span>Obtuvo </span><span style={{ fontWeight: 800, marginLeft: 2, marginRight: 2 }}>{result.intereses[topI]}/10</span><span> en {(AREAS as any)[topI].nombre}</span></div>
-            <div style={{ fontSize: 8, color: '#0f2b6b', marginTop: 4, lineHeight: 1.4 }}>{(AREAS as any)[topI].interesesDesc} Aptitudes: {(AREAS as any)[topI].aptitudesTraits}.</div>
+            <div style={{ fontSize: 10, fontWeight: 700, color: '#1D60A9' }}>Lo que más le interesa</div>
+            <div style={{ fontSize: 9, color: '#164F8D', marginTop: 2, display: 'flex', flexDirection: 'row' }}><span>Obtuvo </span><span style={{ fontWeight: 800, marginLeft: 2, marginRight: 2 }}>{result.intereses[topI]}/10</span><span> en {(AREAS as any)[topI].nombre}</span></div>
+            <div style={{ fontSize: 8, color: '#164F8D', marginTop: 4, lineHeight: 1.4 }}>{(AREAS as any)[topI].interesesDesc} Aptitudes: {(AREAS as any)[topI].aptitudesTraits}.</div>
             <div style={{ fontSize: 8, marginTop: 4, display: 'flex', flexDirection: 'row' }}><span style={{ fontWeight: 700 }}>Carreras:</span><span style={{ marginLeft: 4 }}>{(AREAS as any)[topI].carreras}</span></div>
             {secondI && result.intereses[secondI] > 0 && (
               <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column' }}>
-                <div style={{ fontSize: 10, fontWeight: 700, color: '#001d62' }}>También le interesa</div>
-                <div style={{ fontSize: 9, color: '#0f2b6b', marginTop: 2, display: 'flex', flexDirection: 'row' }}><span>Obtuvo </span><span style={{ fontWeight: 800, marginLeft: 2, marginRight: 2 }}>{result.intereses[secondI]}/10</span><span> en {(AREAS as any)[secondI].nombre}</span></div>
-                <div style={{ fontSize: 8, color: '#0f2b6b', marginTop: 4, lineHeight: 1.4 }}>{(AREAS as any)[secondI].interesesDesc}</div>
+                <div style={{ fontSize: 10, fontWeight: 700, color: '#1D60A9' }}>También le interesa</div>
+                <div style={{ fontSize: 9, color: '#164F8D', marginTop: 2, display: 'flex', flexDirection: 'row' }}><span>Obtuvo </span><span style={{ fontWeight: 800, marginLeft: 2, marginRight: 2 }}>{result.intereses[secondI]}/10</span><span> en {(AREAS as any)[secondI].nombre}</span></div>
+                <div style={{ fontSize: 8, color: '#164F8D', marginTop: 4, lineHeight: 1.4 }}>{(AREAS as any)[secondI].interesesDesc}</div>
                 <div style={{ fontSize: 8, marginTop: 4, display: 'flex', flexDirection: 'row' }}><span style={{ fontWeight: 700 }}>Carreras:</span><span style={{ marginLeft: 4 }}>{(AREAS as any)[secondI].carreras}</span></div>
               </div>
             )}
@@ -61,14 +61,14 @@ function ChasideDoc({ result, studentName, date, logo, isTeacher }: { result: Re
       </div>
 
       <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column' }}>
-        <div style={{ fontSize: 14, fontWeight: 800, color: '#001d62' }}>Aptitudes</div>
+        <div style={{ fontSize: 14, fontWeight: 800, color: '#1D60A9' }}>Aptitudes</div>
         {result.aptitudes[topA] === 0 ? (
           <div style={{ fontSize: 9, color: '#64748b', fontStyle: 'italic', marginTop: 4 }}>No se detectaron aptitudes.</div>
         ) : (
           <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column' }}>
-            <div style={{ fontSize: 10, fontWeight: 700, color: '#001d62' }}>Tiene aptitudes para</div>
-            <div style={{ fontSize: 9, color: '#0f2b6b', marginTop: 2, display: 'flex', flexDirection: 'row' }}><span>Obtuvo </span><span style={{ fontWeight: 800, marginLeft: 2, marginRight: 2 }}>{result.aptitudes[topA]}/4</span><span> en {(AREAS as any)[topA].nombre}</span></div>
-            <div style={{ fontSize: 8, color: '#0f2b6b', marginTop: 4, lineHeight: 1.4 }}>Aptitudes: {(AREAS as any)[topA].aptitudesTraits}.</div>
+            <div style={{ fontSize: 10, fontWeight: 700, color: '#1D60A9' }}>Tiene aptitudes para</div>
+            <div style={{ fontSize: 9, color: '#164F8D', marginTop: 2, display: 'flex', flexDirection: 'row' }}><span>Obtuvo </span><span style={{ fontWeight: 800, marginLeft: 2, marginRight: 2 }}>{result.aptitudes[topA]}/4</span><span> en {(AREAS as any)[topA].nombre}</span></div>
+            <div style={{ fontSize: 8, color: '#164F8D', marginTop: 4, lineHeight: 1.4 }}>Aptitudes: {(AREAS as any)[topA].aptitudesTraits}.</div>
             <div style={{ fontSize: 8, marginTop: 4, display: 'flex', flexDirection: 'row' }}><span style={{ fontWeight: 700 }}>Carreras:</span><span style={{ marginLeft: 4 }}>{(AREAS as any)[topA].carreras}</span></div>
           </div>
         )}
@@ -76,15 +76,15 @@ function ChasideDoc({ result, studentName, date, logo, isTeacher }: { result: Re
 
       {isTeacher && (
         <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
-          <div style={{ fontSize: 10, fontWeight: 800, color: '#001d62' }}>Tablas puntuación CHASIDE — docente</div>
+          <div style={{ fontSize: 10, fontWeight: 800, color: '#1D60A9' }}>Tablas puntuación CHASIDE — docente</div>
           <div style={{ border: '1px solid #cbd5e1', borderRadius: 8, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-            <div style={{ backgroundColor: '#001d62', color: '#ffffff', display: 'flex', fontSize: 7, fontWeight: 800, padding: '4px 0' }}>
+            <div style={{ backgroundColor: '#1D60A9', color: '#ffffff', display: 'flex', fontSize: 7, fontWeight: 800, padding: '4px 0' }}>
               {AREA_ORDER.map(k => <div key={k} style={{ flex: 1, textAlign: 'center' }}>{k}</div>)}
             </div>
-            <div style={{ display: 'flex', fontSize: 7, backgroundColor: '#d8215d', color: '#ffffff', fontWeight: 800, padding: '4px 0' }}>
+            <div style={{ display: 'flex', fontSize: 7, backgroundColor: '#E8356A', color: '#ffffff', fontWeight: 800, padding: '4px 0' }}>
               {AREA_ORDER.map(k => <div key={k} style={{ flex: 1, textAlign: 'center' }}>{result.intereses[k as keyof typeof result.intereses]}</div>)}
             </div>
-            <div style={{ display: 'flex', fontSize: 7, backgroundColor: '#fcfcfc', color: '#001d62', padding: '4px 0' }}>
+            <div style={{ display: 'flex', fontSize: 7, backgroundColor: '#E1E3DA', color: '#1D60A9', padding: '4px 0' }}>
               {AREA_ORDER.map(k => <div key={k} style={{ flex: 1, textAlign: 'center', borderRight: '1px solid #e2e8f0' }}>{result.aptitudes[k as keyof typeof result.aptitudes]}</div>)}
             </div>
           </div>
@@ -93,7 +93,7 @@ function ChasideDoc({ result, studentName, date, logo, isTeacher }: { result: Re
       )}
 
       <div style={{ marginTop: 'auto', paddingTop: 12, borderTop: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', fontSize: 8, color: '#64748b' }}>
-        <div style={{ display: 'flex', flexDirection: 'row' }}><span>Estudiante: </span><span style={{ fontWeight: 700, color: '#001d62', marginLeft: 2, marginRight: 2 }}>{studentName}</span><span> · {date}</span></div>
+        <div style={{ display: 'flex', flexDirection: 'row' }}><span>Estudiante: </span><span style={{ fontWeight: 700, color: '#1D60A9', marginLeft: 2, marginRight: 2 }}>{studentName}</span><span> · {date}</span></div>
         <div>TEAM GGM · Orientación Vocacional</div>
       </div>
     </div>

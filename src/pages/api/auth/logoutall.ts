@@ -1,6 +1,6 @@
 import type { APIRoute } from "astro";
-import { db, initDb } from "../../../lib/db";
-import { authenticateToken } from "../../../lib/auth";
+import { db, initDb } from "../../../server/db";
+import { authenticateToken } from "../../../server/modules/identity";
 
 export const prerender = false;
 

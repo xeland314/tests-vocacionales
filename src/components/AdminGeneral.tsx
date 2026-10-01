@@ -19,7 +19,7 @@ export default function AdminGeneral() {
     authHeader, isAdmin, isDocente, load, openDetail, logout, logoutAll,
   } = useAdminData();
 
-  if (needsLogin) return <div className="max-w-md mx-auto mt-12 bg-white border rounded-2xl p-6 text-center"><p className="font-bold">Sesión requerida</p><p className="text-sm text-slate-500 mt-1">Debes iniciar sesión (Knox token).</p><a href="/admin/login" className="mt-4 inline-block bg-[#001d62] text-white px-6 py-2 rounded-full font-bold">Ir a Login</a></div>;
+  if (needsLogin) return <div className="max-w-md mx-auto mt-12 bg-white border rounded-2xl p-6 text-center"><p className="font-bold">Sesión requerida</p><p className="text-sm text-slate-500 mt-1">Inicia sesión para continuar.</p><a href="/admin/login" className="mt-4 inline-block bg-[#1D60A9] text-white px-6 py-2 rounded-full font-bold">Ir a Login</a></div>;
   if (loading) return <div className="p-8 text-center text-slate-600">Cargando panel general…</div>;
   if (error) return <div className="p-8 text-center text-red-600">Error: {error} <button onClick={load} className="ml-2 underline">Reintentar</button> <a href="/admin/login" className="ml-2 underline">Login</a></div>;
 
@@ -27,15 +27,15 @@ export default function AdminGeneral() {
     <div className="max-w-7xl mx-auto px-4 py-6">
       <div className="flex items-center gap-3 mb-4 flex-wrap">
         <h1 className="text-2xl font-black" style={{ fontFamily: "Poppins" }}>Panel {isDocente ? "Docente" : "Admin"} — General</h1>
-        {currentUser && <span className={`text-xs font-bold px-3 py-1 rounded-full border ${isAdmin ? "bg-[#001d62] text-white border-[#001d62]" : "bg-amber-100 text-amber-800 border-amber-200"}`}>{currentUser.email} · {currentUser.role}</span>}
-        <span className="bg-[#001d62] text-white text-xs font-bold px-3 py-1 rounded-full">{students.length} estudiantes</span>
-        <span className="bg-[#001d62] text-white text-xs font-bold px-3 py-1 rounded-full">CHASIDE {overview?.totalChaside ?? 0}</span>
-        <span className="bg-[#7C3AED] text-white text-xs font-bold px-3 py-1 rounded-full">MBTI {overview?.totalPersonalidad ?? 0}</span>
+        {currentUser && <span className={`text-xs font-bold px-3 py-1 rounded-full border ${isAdmin ? "bg-[#1D60A9] text-white border-[#1D60A9]" : "bg-amber-100 text-amber-800 border-amber-200"}`}>{currentUser.email} · {currentUser.role}</span>}
+        <span className="bg-[#1D60A9] text-white text-xs font-bold px-3 py-1 rounded-full">{students.length} estudiantes</span>
+        <span className="bg-[#1D60A9] text-white text-xs font-bold px-3 py-1 rounded-full">CHASIDE {overview?.totalChaside ?? 0}</span>
+        <span className="bg-[#662483] text-white text-xs font-bold px-3 py-1 rounded-full">MBTI {overview?.totalPersonalidad ?? 0}</span>
         <span className="bg-[#2563EB] text-white text-xs font-bold px-3 py-1 rounded-full">Kuder {overview?.totalKuder ?? 0}</span>
         <div className="ml-auto flex gap-2 flex-wrap">
           <a href="/" className="bg-white border-2 border-slate-300 font-bold px-4 py-2 rounded-full text-sm">← Menú</a>
-          <button onClick={load} className="bg-[#1f3875] text-white font-bold px-4 py-2 rounded-full text-sm">↻ Actualizar</button>
-          {isAdmin && <button onClick={async () => { const r = await fetch("/api/admin/backup", { headers: { Authorization: authHeader } }); if (!r.ok) { alert((await r.json()).error || "Error respaldo"); return; } const blob = await r.blob(); const url = URL.createObjectURL(blob); const a = document.createElement("a"); a.href = url; a.download = `respaldo_${new Date().toISOString().slice(0,10)}.json`; a.click(); URL.revokeObjectURL(url); }} className="bg-[#0f2b6b] text-white font-bold px-4 py-2 rounded-full text-sm">⤓ Respaldo BD</button>}
+          <button onClick={load} className="bg-[#1D60A9] text-white font-bold px-4 py-2 rounded-full text-sm">↻ Actualizar</button>
+          {isAdmin && <button onClick={async () => { const r = await fetch("/api/admin/backup", { headers: { Authorization: authHeader } }); if (!r.ok) { alert((await r.json()).error || "Error respaldo"); return; } const blob = await r.blob(); const url = URL.createObjectURL(blob); const a = document.createElement("a"); a.href = url; a.download = `respaldo_${new Date().toISOString().slice(0,10)}.json`; a.click(); URL.revokeObjectURL(url); }} className="bg-[#164F8D] text-white font-bold px-4 py-2 rounded-full text-sm">⤓ Respaldo BD</button>}
           <button onClick={logout} className="bg-white border font-bold px-4 py-2 rounded-full text-sm">Logout</button>
           <button onClick={logoutAll} className="bg-red-50 border border-red-200 text-red-700 font-bold px-4 py-2 rounded-full text-sm">Logout All</button>
         </div>
@@ -51,7 +51,7 @@ export default function AdminGeneral() {
           ...(isAdmin ? [["usuarios", "Usuarios"] as const, ["moodle", "Moodle"] as const] : []),
           ["cuenta", "Mi cuenta"],
         ] as const).map(([k, label]) => (
-          <button key={k} onClick={() => setTab(k as any)} className={`px-5 py-2.5 rounded-full font-black text-sm whitespace-nowrap border-2 ${tab === k ? "bg-[#001d62] text-white border-[#001d62]" : "bg-white border-slate-200 hover:border-slate-300"}`}>{label}</button>
+          <button key={k} onClick={() => setTab(k as any)} className={`px-5 py-2.5 rounded-full font-black text-sm whitespace-nowrap border-2 ${tab === k ? "bg-[#1D60A9] text-white border-[#1D60A9]" : "bg-white border-slate-200 hover:border-slate-300"}`}>{label}</button>
         ))}
       </div>
       {isDocente && <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 mt-2">Rol <b>docente</b>: solo lectura. Gestión de usuarios solo <b>admin</b>. Cambia tu clave en <b>Mi cuenta</b>.</p>}

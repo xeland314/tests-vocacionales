@@ -13,22 +13,22 @@ const { rows, site, whatsapp } = Astro.props as {
 ---
 
 <section id="kuder" class="py-8 md:py-10">
-  <article class="grid lg:grid-cols-2 gap-8 items-center rounded-2xl border p-6 md:p-8" style="background: #fcfcfc; border-color: rgba(31,56,117,0.08)">
+  <article class="grid lg:grid-cols-2 gap-8 items-center rounded-2xl border p-6 md:p-8" style="background: #E1E3DA; border-color: rgba(31,56,117,0.08)">
     <div class="rounded-xl border bg-white p-5 shadow-sm order-2 lg:order-1" style="border-color: rgba(31,56,117,0.08)">
-      <div class="text-[11px] font-bold uppercase tracking-wider" style="color: #1f3875">Informe Kuder — resultado de otro estudiante</div>
+      <div class="text-[11px] font-bold uppercase tracking-wider" style="color: #1D60A9">Informe Kuder — resultado de otro estudiante</div>
       <div class="mt-4 space-y-2.5">
         {rows.map((r: KuderRow, i: number) => (
           <div class="flex items-center gap-3">
-            <span class={`w-6 h-6 shrink-0 rounded-md flex items-center justify-center text-[11px] font-black ${i === 0 ? "text-white" : ""}`} style={i === 0 ? "background: #d8215d" : "background: rgba(31,56,117,0.08); color: #1f3875"}>{i + 1}</span>
-            <span class="w-36 shrink-0 text-[11px] font-semibold" style="color: #0f2b6b">{r.label}</span>
+            <span class={`w-6 h-6 shrink-0 rounded-md flex items-center justify-center text-[11px] font-black ${i === 0 ? "text-white" : ""}`} style={i === 0 ? "background: #E8356A" : "background: rgba(31,56,117,0.08); color: #1D60A9"}>{i + 1}</span>
+            <span class="w-36 shrink-0 text-[11px] font-semibold" style="color: #164F8D">{r.label}</span>
             <div class="flex-1 h-2.5 rounded-full overflow-hidden" style="background: rgba(31,56,117,0.06)">
               <div class="h-full rounded-full" style={`width: ${r.w}%; background: ${r.color}`}></div>
             </div>
-            <span class="w-9 text-right text-[11px] font-extrabold" style="color: #1f3875">▓▓</span>
+            <span class="w-9 text-right text-[11px] font-extrabold" style="color: #1D60A9">▓▓</span>
           </div>
         ))}
         <div class="flex items-center gap-3">
-          <span class="w-6 h-6 shrink-0 rounded-md flex items-center justify-center text-[11px] font-black" style="background: rgba(31,56,117,0.08); color: #1f3875">…</span>
+          <span class="w-6 h-6 shrink-0 rounded-md flex items-center justify-center text-[11px] font-black" style="background: rgba(31,56,117,0.08); color: #1D60A9">…</span>
           <span class="flex-1 text-[11px]" style="color: #64748b">más ▓▓ ▓▓▓▓▓ ▓▓▓▓ areas censuradas…</span>
         </div>
       </div>
@@ -40,24 +40,24 @@ const { rows, site, whatsapp } = Astro.props as {
     </div>
 
     <div class="space-y-4 order-1 lg:order-2">
-      <span class="text-[11px] font-bold tracking-widest uppercase" style="color: #d8215d">Test de áreas profesionales · 10 áreas</span>
-      <h3 class="text-[22px] md:text-[26px] font-extrabold tracking-tight" style="color: #001d62">Kuder — ¿qué despierta más tu curiosidad?</h3>
-      <p class="text-sm leading-relaxed" style="color: #0f2b6b">
+      <span class="text-[11px] font-bold tracking-widest uppercase" style="color: #E8356A">Test de áreas profesionales · 10 áreas</span>
+      <h3 class="text-[22px] md:text-[26px] font-extrabold tracking-tight" style="color: #1D60A9">Kuder — ¿qué despierta más tu curiosidad?</h3>
+      <p class="text-sm leading-relaxed" style="color: #164F8D">
         45 decisiones forzadas entre parejas (diadas) que ordenan tus 10 áreas Kuder:
-        <strong style="color: #001d62">Aire Libre, Mecánico, Cálculo, Científico, Persuasivo, Artístico, Literario, Musical,
+        <strong style="color: #1D60A9">Aire Libre, Mecánico, Cálculo, Científico, Persuasivo, Artístico, Literario, Musical,
         Servicio Social y Oficina</strong>. Al final, el ranking con carreras afines.
       </p>
       <div class="flex flex-wrap gap-2 text-xs font-bold">
         <span class="px-3 py-1 rounded-full" style="background: #2563EB; color: #fff">Científico</span>
-        <span class="px-3 py-1 rounded-full border bg-white" style="border-color: rgba(31,56,117,0.10); color: #1f3875">Persuasivo</span>
-        <span class="px-3 py-1 rounded-full border bg-white" style="border-color: rgba(31,56,117,0.10); color: #1f3875">Musical</span>
+        <span class="px-3 py-1 rounded-full border bg-white" style="border-color: rgba(31,56,117,0.10); color: #1D60A9">Persuasivo</span>
+        <span class="px-3 py-1 rounded-full border bg-white" style="border-color: rgba(31,56,117,0.10); color: #1D60A9">Musical</span>
       </div>
       <div class="flex flex-wrap items-center gap-4 pt-2">
-        <a href={whatsapp} target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 rounded-full px-6 py-3 text-sm font-bold text-white transition hover:-translate-y-px" style="background: #d8215d; box-shadow: 0 4px 16px rgba(216,33,93,0.28)">
+        <a href={whatsapp} target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 rounded-full px-6 py-3 text-sm font-bold text-white transition hover:-translate-y-px" style="background: #E8356A; box-shadow: 0 4px 16px rgba(232,53,106,0.28)">
           Solicitar acceso
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
         </a>
-        <span class="text-xs" style="color: #1f3875">45 diadas · 12–15 min · Imprimible</span>
+        <span class="text-xs" style="color: #1D60A9">45 diadas · 12–15 min · Imprimible</span>
       </div>
     </div>
   </article>

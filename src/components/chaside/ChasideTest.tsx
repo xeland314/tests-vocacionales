@@ -16,7 +16,7 @@ export default function ChasideTest() {
 
   const gate = ChasideGate({ gateChecked, isMoodle, moodleUserId });
   if (gate) return gate;
-  if (loadingExisting) return <div className="min-h-screen bg-[#ffffff] flex items-center justify-center p-8"><p className="text-sm text-[#0f2b6b]">Cargando resultado guardado...</p></div>;
+  if (loadingExisting) return <div className="min-h-screen bg-[#ffffff] flex items-center justify-center p-8"><p className="text-sm text-[#164F8D]">Cargando resultado guardado...</p></div>;
   if (showResult) {
     return (
       <>

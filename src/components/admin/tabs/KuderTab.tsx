@@ -1,14 +1,14 @@
 import React from 'react';
 import { BookOpen } from "lucide-react";
 import { KUDER_AREAS, KUDER_ORDER } from "../../../data/kuder";
-import { LucideIcon } from "../../../lib/icons";
+import { LucideIcon } from "../../../client/icons";
 import { PlotlyChart } from "../PlotlyChart";
 
 export function KuderTab({ kuder }: { kuder: any }) {
   if (!kuder) return null;
   return (
     <div className="mt-6 space-y-4">
-      <div className="bg-[#fcfcfc] border border-[#2563EB]/20 rounded-2xl p-4">
+      <div className="bg-[#E1E3DA] border border-[#2563EB]/20 rounded-2xl p-4">
         <h3 className="font-black text-xs uppercase tracking-wider flex items-center gap-1"><BookOpen size={14} />Leyenda Kuder — 10 áreas</h3>
         <div className="mt-2 grid grid-cols-2 sm:grid-cols-5 gap-2 text-xs">
           {KUDER_ORDER.map((k: any) => { const info = (KUDER_AREAS as any)[k]; return <div key={k} className="bg-white border rounded-xl px-2 py-2 flex gap-2 items-center"><LucideIcon name={info.icono} size={16} style={{ color: info.color }} /><div><p className="font-black leading-none">{k}</p><p className="font-bold text-[11px] leading-none">{info.nombre}</p></div></div>; })}

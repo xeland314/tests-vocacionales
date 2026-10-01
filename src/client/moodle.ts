@@ -128,16 +128,9 @@ export function useMoodleBridge() {
   return info;
 }
 
-// Mapeo cmid por test — fallback si no hay config en BD (admin puede cambiar en /admin)
-const FALLBACK_CMID_MAP: Record<string, number> = {
-  CHASIDE: 9,
-  KUDER: 11,
-  MBTI: 10,
-  PERSONALIDAD: 10,
-};
-
-// Notifica a Moodle que el test completado (para calificación/completion)
-// Usa servidor Astro como proxy para no exponer WS_TOKEN
+// Notifica al parent (Moodle) que el test se completó — solo feedback visual vía
+// postMessage. NO escribe en Moodle: la nota/completado se gestiona en el panel /admin
+// y Moodle debe estar en Completion tracking = "Do not indicate".
 export function notifyMoodleCompletion(payload: {
   test: "CHASIDE" | "KUDER" | "MBTI" | "PERSONALIDAD";
   moodleUserId: number | null;
@@ -145,7 +138,6 @@ export function notifyMoodleCompletion(payload: {
   top?: string;
 }) {
   if (typeof window === "undefined") return;
-  // 1) postMessage al parent (feedback visual)
   try {
     window.parent?.postMessage(
       { testCompleted: payload.test, moodleUserId: payload.moodleUserId, score: payload.score, top: payload.top, at: Date.now() },
@@ -153,20 +145,4 @@ export function notifyMoodleCompletion(payload: {
     );
   } catch {}
   window.dispatchEvent(new CustomEvent("moodle:testCompleted", { detail: payload }));
-  // 2) llamada segura server-side (WS_TOKEN nunca sale al navegador)
-  if (!payload.moodleUserId) return;
-  // Normaliza 0-10 según test
-  let grade10 = 5;
-  const score = payload.score as any;
-  const top = payload.top as string;
-  if (payload.test === "CHASIDE") grade10 = Math.round((score?.[top] ?? 0)); // 0-10
-  else if (payload.test === "KUDER") grade10 = Math.round(((score?.[top] ?? 0) / 60) * 10); // 0-60 -> 0-10
-  else grade10 = 10; // MBTI completado
-  // cmid lo resuelve el servidor desde moodle_config (admin), enviamos solo testType para que el backend lo mapee
-  const cmid = FALLBACK_CMID_MAP[payload.test] ?? FALLBACK_CMID_MAP[payload.test.toUpperCase()] ?? null;
-  fetch("/api/moodle/grade", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ moodleUserId: payload.moodleUserId, score: grade10, testType: payload.test, courseId: 2, cmid }),
-  }).catch(() => {});
 }

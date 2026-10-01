@@ -1,6 +1,6 @@
 import type { APIRoute } from "astro";
-import { authenticateToken, requireRole } from "../../../../lib/auth";
-import { getUserById, updateUser, deleteUser } from "../../../../lib/users";
+import { authenticateToken, requireRole } from "../../../../server/modules/identity";
+import { getUserById, updateUser, deleteUser } from "../../../../server/modules/identity";
 
 export const prerender = false;
 
@@ -22,7 +22,7 @@ export const PATCH: APIRoute = async ({ request, params }) => {
   const isSelf = authed.user.id === params.id;
   const isAdmin = requireRole(authed.user, "admin");
   if (!isAdmin && !isSelf) return new Response(JSON.stringify({ error: "No autorizado: solo admin puede editar otros usuarios" }), { status: 403 });
-  const body = await request.json().catch(()=> ({}));
+  const body = await request.json().catch(() => ({}));
   // Docente no puede cambiar role ni is_active, solo admin
   if (!isAdmin && (body.role !== undefined || body.is_active !== undefined)) {
     return new Response(JSON.stringify({ error: "No autorizado: solo admin puede cambiar rol/estado" }), { status: 403 });
@@ -30,7 +30,7 @@ export const PATCH: APIRoute = async ({ request, params }) => {
   try {
     const u = await updateUser(params.id!, { email: body.email, first_name: body.first_name, last_name: body.last_name, is_active: body.is_active, role: body.role });
     return new Response(JSON.stringify(u), { headers: { "Content-Type": "application/json" } });
-  } catch(e:any){ return new Response(JSON.stringify({ error:e.message }), { status:400 }); }
+  } catch (e: any) { return new Response(JSON.stringify({ error: e.message }), { status: 400 }); }
 };
 
 export const DELETE: APIRoute = async ({ request, params }) => {

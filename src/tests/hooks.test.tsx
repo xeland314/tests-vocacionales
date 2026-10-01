@@ -14,22 +14,22 @@ describe("anonGate — BD solo Moodle", () => {
 
   it("gateReady solo si moodleUserId existe (mock)", async () => {
     // Mock useMoodleBridge para que devuelva null
-    vi.doMock("../lib/moodle", async () => {
-      const actual = await vi.importActual("../lib/moodle") as any;
+    vi.doMock("../client/moodle", async () => {
+      const actual = await vi.importActual("../client/moodle") as any;
       return {
         ...actual,
         useMoodleBridge: () => ({ moodleUserId: null, moodleUserName: null, moodleUserEmail: null, isMoodle: false, origin: null }),
       };
     });
-    const { useAnonGate } = await import("../lib/anonGate");
+    const { useAnonGate } = await import("../client/anonGate");
     const { result } = renderHook(() => useAnonGate("chaside"));
     expect(result.current.gateReady).toBe(false);
     expect(result.current.checked).toBe(true);
   });
 
   it("gateReady true con moodleUserId", async () => {
-    vi.doMock("../lib/moodle", async () => {
-      const actual = await vi.importActual("../lib/moodle") as any;
+    vi.doMock("../client/moodle", async () => {
+      const actual = await vi.importActual("../client/moodle") as any;
       return {
         ...actual,
         useMoodleBridge: () => ({ moodleUserId: 123, moodleUserName: "Test", moodleUserEmail: "test@test.com", isMoodle: true, origin: "http://localhost" }),
@@ -37,7 +37,7 @@ describe("anonGate — BD solo Moodle", () => {
     });
     // Necesitamos reset para que el mock tome efecto
     vi.resetModules();
-    const { useAnonGate } = await import("../lib/anonGate");
+    const { useAnonGate } = await import("../client/anonGate");
     const { result } = renderHook(() => useAnonGate("chaside"));
     expect(result.current.isMoodle).toBe(true);
     expect(result.current.moodleUserId).toBe(123);
@@ -58,8 +58,8 @@ describe("useChaside — validación", () => {
 
   it("missing detecta preguntas faltantes 1..98", async () => {
     vi.resetModules();
-    vi.doMock("../lib/moodle", async () => {
-      const actual = await vi.importActual("../lib/moodle") as any;
+    vi.doMock("../client/moodle", async () => {
+      const actual = await vi.importActual("../client/moodle") as any;
       return {
         ...actual,
         useMoodleBridge: () => ({ moodleUserId: 999, moodleUserName: "HookTest", moodleUserEmail: "hook@test.com", isMoodle: true, origin: "http://localhost" }),

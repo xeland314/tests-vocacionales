@@ -1,8 +1,8 @@
 import { useEffect, useState, useMemo } from "react";
 import { calculateScores, type Answers } from "../../data/scoring";
-import { useAnonGate } from "../../lib/anonGate";
-import { notifyMoodleCompletion } from "../../lib/moodle";
-import { generateCrispPdf } from "../../lib/pdf";
+import { useAnonGate } from "../../client/anonGate";
+import { notifyMoodleCompletion } from "../../client/moodle";
+import { generateCrispPdf } from "../../client/pdf";
 
 const STORAGE_KEY = "chaside_answers_v1";
 const STORAGE_NAME = "chaside_student_name";
@@ -182,7 +182,7 @@ export function useChaside() {
     try {
       const date = savedAt || formatDateTime(new Date());
       const name = (moodleUserName?.trim() || "resultado").trim();
-      const { generateChasideStudentPdf } = await import("../../lib/pdf/chaside");
+      const { generateChasideStudentPdf } = await import("../../client/pdf/chaside");
       await generateChasideStudentPdf(result as any, name, date);
     } catch {
       const rawName = (moodleUserName?.trim() || "resultado").replace(/\s+/g, "_").replace(/[^a-zA-Z0-9_\-áéíóúÁÉÍÓÚñÑ]/g, "");

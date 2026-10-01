@@ -36,7 +36,7 @@ export const AREAS: Record<AreaKey, AreaInfo> = {
     key: "C",
     nombre: "Administrativas y Contables",
     nombreCorto: "Administrativa",
-    color: "#1f3875",
+    color: "#1D60A9",
     interesesDesc:
       "Es una persona que se interesa por actividades afines a la supervisión, el orden, organización, análisis y síntesis, colaboración y cálculo.",
     aptitudesDesc:
@@ -50,7 +50,7 @@ export const AREAS: Record<AreaKey, AreaInfo> = {
     key: "H",
     nombre: "Humanísticas y Sociales",
     nombreCorto: "Humanística",
-    color: "#7C3AED",
+    color: "#662483",
     interesesDesc:
       "Se interesa por actividades relacionadas con el pensamiento reflexivo, la comunicación, las relaciones humanas y el estudio del hombre y la sociedad.",
     aptitudesDesc:
@@ -64,7 +64,7 @@ export const AREAS: Record<AreaKey, AreaInfo> = {
     key: "A",
     nombre: "Artísticas",
     nombreCorto: "Artística",
-    color: "#EC4899",
+    color: "#E8356A",
     interesesDesc:
       "Se interesa por actividades relacionadas con la creación, el diseño, la estética, la música y la expresión artística.",
     aptitudesDesc:

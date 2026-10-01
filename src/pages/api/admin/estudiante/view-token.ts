@@ -1,6 +1,6 @@
 import type { APIRoute } from "astro";
-import { authenticateToken } from "../../../../lib/auth";
-import { createAdminViewToken } from "../../../../lib/adminViewTokens";
+import { authenticateToken } from "../../../../server/modules/identity/repository";
+import { createAdminViewToken } from "../../../../server/modules/testing";
 
 export const prerender = false;
 

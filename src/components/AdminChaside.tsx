@@ -68,18 +68,18 @@ export default function AdminChaside(){
     localStorage.removeItem("knox_token"); window.location.href="/admin/login";
   };
 
-  if(needsLogin) return <div className="max-w-md mx-auto mt-12 bg-white border rounded-2xl p-6 text-center"><p className="font-bold">Sesión requerida</p><p className="text-sm text-slate-500 mt-1">Debes iniciar sesión con email/contraseña (Knox token).</p><a href="/admin/login" className="mt-4 inline-block bg-[#001d62] text-white px-6 py-2 rounded-full font-bold">Ir a Login</a></div>;
-  if(loading) return <div className="p-8 text-center text-slate-600">Cargando base libsql...</div>;
+  if(needsLogin) return <div className="max-w-md mx-auto mt-12 bg-white border rounded-2xl p-6 text-center"><p className="font-bold">Sesión requerida</p><p className="text-sm text-slate-500 mt-1">Inicia sesión con tu email y contraseña.</p><a href="/admin/login" className="mt-4 inline-block bg-[#1D60A9] text-white px-6 py-2 rounded-full font-bold">Ir a Login</a></div>;
+  if(loading) return <div className="p-8 text-center text-slate-600">Cargando datos...</div>;
   if(error) return <div className="p-8 text-center text-red-600">Error: {error} <button onClick={load} className="ml-2 underline">Reintentar</button> <a href="/admin/login" className="ml-2 underline">Login</a></div>;
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-6">
       <div className="flex items-center gap-3 mb-6 flex-wrap">
         <h1 className="text-2xl font-black" style={{fontFamily:"Poppins"}}>Panel Admin — CHASIDE</h1>
-        <span className="bg-[#001d62] text-white text-xs font-bold px-3 py-1 rounded-full">{students.length} estudiantes</span>
+        <span className="bg-[#1D60A9] text-white text-xs font-bold px-3 py-1 rounded-full">{students.length} estudiantes</span>
         <div className="ml-auto flex gap-2 flex-wrap">
           <a href="/chaside" className="bg-white border-2 border-slate-300 font-bold px-4 py-2 rounded-full text-sm">← Test</a>
-          <button onClick={load} className="bg-[#1f3875] text-white font-bold px-4 py-2 rounded-full text-sm">↻ Actualizar</button>
+          <button onClick={load} className="bg-[#1D60A9] text-white font-bold px-4 py-2 rounded-full text-sm">↻ Actualizar</button>
           <button onClick={async()=>{ await fetch("/api/chaside/init",{ headers:{ Authorization: authHeader }}); load(); }} className="bg-slate-100 border font-bold px-4 py-2 rounded-full text-sm">Init DB</button>
           <button onClick={logout} className="bg-white border font-bold px-4 py-2 rounded-full text-sm">Logout</button>
           <button onClick={logoutAll} className="bg-red-50 border border-red-200 text-red-700 font-bold px-4 py-2 rounded-full text-sm">Logout All</button>
@@ -100,18 +100,18 @@ export default function AdminChaside(){
             <button onClick={async()=>{
               const r=await fetch("/api/users",{ method:"POST", headers:{ "Content-Type":"application/json", Authorization: authHeader }, body: JSON.stringify(newUser)});
               if(r.ok) { setNewUser({email:"",password:"",first_name:""}); load(); } else alert((await r.json()).error);
-            }} className="bg-[#001d62] text-white px-4 py-2 rounded-full text-sm font-bold">Crear</button>
+            }} className="bg-[#1D60A9] text-white px-4 py-2 rounded-full text-sm font-bold">Crear</button>
           </div>
         </div>
         <div className="bg-white border rounded-2xl p-5">
-          <h3 className="font-black text-sm">Cambiar mi contraseña (bcrypt)</h3>
+          <h3 className="font-black text-sm">Cambiar mi contraseña</h3>
           <div className="mt-3 space-y-2">
             <input placeholder="Contraseña actual" type="password" value={pwOld} onChange={e=>setPwOld(e.target.value)} className="w-full border rounded-lg px-3 py-2 text-sm" />
             <input placeholder="Nueva contraseña (≥8)" type="password" value={pwNew} onChange={e=>setPwNew(e.target.value)} className="w-full border rounded-lg px-3 py-2 text-sm" />
             <button onClick={async()=>{
               const r=await fetch("/api/users/change-password",{ method:"POST", headers:{ "Content-Type":"application/json", Authorization: authHeader }, body: JSON.stringify({ old_password: pwOld, new_password: pwNew })});
               const j=await r.json(); if(r.ok) { alert("Contraseña cambiada"); setPwOld(""); setPwNew(""); } else alert(j.error);
-            }} className="w-full bg-[#001d62] text-white py-2 rounded-full text-sm font-bold">Cambiar contraseña</button>
+            }} className="w-full bg-[#1D60A9] text-white py-2 rounded-full text-sm font-bold">Cambiar contraseña</button>
           </div>
         </div>
       </div>
@@ -141,7 +141,7 @@ export default function AdminChaside(){
       <div className="bg-white border rounded-2xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="bg-[#001d62] text-white text-xs uppercase">
+            <thead className="bg-[#1D60A9] text-white text-xs uppercase">
               <tr><th className="px-3 py-2 text-left">Estudiante</th><th className="px-3 py-2">Padre</th><th className="px-3 py-2">Correos</th><th className="px-3 py-2">Cédulas</th><th className="px-3 py-2">Fecha UNIX</th><th className="px-3 py-2">Acción</th></tr>
             </thead>
             <tbody>
@@ -152,7 +152,7 @@ export default function AdminChaside(){
                   <td className="px-3 py-2 text-xs">{[s.correo_estudiante, s.correo_padre].filter(Boolean).join(" / ")||"—"}</td>
                   <td className="px-3 py-2 text-xs">{[s.cedula_estudiante, s.cedula_representante].filter(Boolean).join(" / ")||"—"}</td>
                   <td className="px-3 py-2 font-mono text-xs">{s.fecha_unix} <span className="text-slate-500">({new Date(s.fecha_unix*1000).toLocaleString()})</span></td>
-                  <td className="px-3 py-2"><button onClick={()=>openDetail(s.id)} className="bg-[#001d62] text-white px-3 py-1 rounded-full text-xs font-bold">Ver</button></td>
+                  <td className="px-3 py-2"><button onClick={()=>openDetail(s.id)} className="bg-[#1D60A9] text-white px-3 py-1 rounded-full text-xs font-bold">Ver</button></td>
                 </tr>
               ))}
               {students.length===0 && <tr><td colSpan={6} className="px-4 py-8 text-center text-slate-500">Sin datos aún. Rinde un test en /chaside y guarda.</td></tr>}
@@ -173,7 +173,7 @@ export default function AdminChaside(){
               <button onClick={()=>setSelected(null)} className="bg-slate-100 border rounded-full w-8 h-8 flex items-center justify-center"><X size={16} /></button>
             </div>
             <div className="mt-4 grid grid-cols-7 gap-2 text-center text-xs">
-              {Object.entries(selected.scores.intereses).map(([k,v]:any)=> <div key={k} className="bg-[#d8215d] font-black p-2 rounded-lg">{k}<br/>{String(v)}/10</div>)}
+              {Object.entries(selected.scores.intereses).map(([k,v]:any)=> <div key={k} className="bg-[#E8356A] font-black p-2 rounded-lg">{k}<br/>{String(v)}/10</div>)}
             </div>
             <div className="mt-2 grid grid-cols-7 gap-2 text-center text-xs">
               {Object.entries(selected.scores.aptitudes).map(([k,v]:any)=> <div key={k} className="bg-slate-100 border p-2 rounded-lg">{k}<br/>{String(v)}/4</div>)}
@@ -182,10 +182,10 @@ export default function AdminChaside(){
             <div className="mt-4">
               <h4 className="font-bold text-sm">Respuestas (98)</h4>
               <div className="mt-2 grid grid-cols-7 sm:grid-cols-14 gap-1 text-[10px]">
-                {(selected.respuestas as any[]).map((r:any)=> <span key={r.pregunta_id} className={`px-1 py-1 rounded text-center font-bold border ${r.respuesta? "bg-[#001d62] text-white":"bg-white"}`}>{r.pregunta_id}:{r.respuesta?"SÍ":"NO"}</span>)}
+                {(selected.respuestas as any[]).map((r:any)=> <span key={r.pregunta_id} className={`px-1 py-1 rounded text-center font-bold border ${r.respuesta? "bg-[#1D60A9] text-white":"bg-white"}`}>{r.pregunta_id}:{r.respuesta?"SÍ":"NO"}</span>)}
               </div>
             </div>
-            <button onClick={()=>setSelected(null)} className="mt-6 w-full bg-[#001d62] text-white font-bold py-2 rounded-full">Cerrar</button>
+            <button onClick={()=>setSelected(null)} className="mt-6 w-full bg-[#1D60A9] text-white font-bold py-2 rounded-full">Cerrar</button>
           </div>
         </div>
       )}

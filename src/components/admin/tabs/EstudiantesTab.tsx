@@ -60,7 +60,7 @@ export function EstudiantesTab({ students, openDetail }: { students: any[]; open
 
   return (
     <div className="mt-6 space-y-3">
-      <div className="bg-[#fcfcfc] border border-[#001d62]/10 rounded-2xl p-3 text-xs flex flex-wrap gap-3 items-center">
+      <div className="bg-[#E1E3DA] border border-[#1D60A9]/10 rounded-2xl p-3 text-xs flex flex-wrap gap-3 items-center">
         <span className="inline-flex items-center gap-1"><b>C</b> = CHASIDE (<Check size={12} className="inline text-green-600" /> + letra)</span>
         <span className="inline-flex items-center gap-1"><b>P</b> = MBTI (<Check size={12} className="inline text-green-600" /> + tipo)</span>
         <span className="inline-flex items-center gap-1"><b>K</b> = Kuder (<Check size={12} className="inline text-green-600" /> + área)</span>
@@ -71,8 +71,8 @@ export function EstudiantesTab({ students, openDetail }: { students: any[]; open
 
       <div className="bg-white border rounded-2xl p-3">
         <div className="flex items-center gap-2 mb-3">
-          <Filter size={14} className="text-[#001d62]" />
-          <span className="text-xs font-black uppercase tracking-wider text-[#001d62]">Filtros Excel</span>
+          <Filter size={14} className="text-[#1D60A9]" />
+          <span className="text-xs font-black uppercase tracking-wider text-[#1D60A9]">Filtros Excel</span>
           <span className="text-xs text-slate-500">{filtered.length} / {students.length}</span>
           {hasFilters && <button onClick={clear} className="ml-auto text-xs bg-slate-100 hover:bg-slate-200 border px-3 py-1 rounded-full inline-flex items-center gap-1"><X size={12} />Limpiar</button>}
         </div>
@@ -109,7 +109,7 @@ export function EstudiantesTab({ students, openDetail }: { students: any[]; open
       <div className="bg-white border rounded-2xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="bg-[#001d62] text-white text-xs uppercase">
+            <thead className="bg-[#1D60A9] text-white text-xs uppercase">
               <tr>
                 <th className="px-3 py-2 text-left cursor-pointer select-none" onClick={() => toggleSort("nombre")}>Moodle Nombre <ArrowUpDown size={12} className="inline ml-1 opacity-60" /></th>
                 <th className="px-3 py-2 cursor-pointer select-none" onClick={() => toggleSort("id")}>Moodle ID <ArrowUpDown size={12} className="inline ml-1 opacity-60" /></th>
@@ -133,7 +133,7 @@ export function EstudiantesTab({ students, openDetail }: { students: any[]; open
                   <td className="px-3 py-2 text-center">{s.hasPersonalidad ? <span className="bg-purple-100 text-purple-700 px-2 py-1 rounded-full text-xs font-bold">{s.personalidad?.tipo}{s.personalidad?.intento_numero > 1 ? <span className="opacity-70"> ·I{s.personalidad.intento_numero}</span> : null}</span> : <span className="bg-red-100 text-red-600 px-2 py-1 rounded-full text-xs inline-flex items-center gap-1"><Minus size={12} /></span>}</td>
                   <td className="px-3 py-2 text-center">{s.hasKuder ? <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded-full text-xs font-bold">{s.kuder?.top}{s.kuder?.intento_numero > 1 ? <span className="opacity-70">·I{s.kuder.intento_numero}</span> : null}</span> : <span className="bg-red-100 text-red-600 px-2 py-1 rounded-full text-xs inline-flex items-center gap-1"><Minus size={12} /></span>}</td>
                   <td className="px-3 py-2 text-center font-black text-red-600">{3 - s.completados}{(s.reintentosPendientes || []).length > 0 && <span className="ml-1 align-middle bg-amber-100 text-amber-800 border border-amber-200 rounded-full px-1.5 py-0.5 text-[10px] font-black" title={`Reintento habilitado: ${s.reintentosPendientes.join(", ")}`}>R</span>}</td>
-                  <td className="px-3 py-2"><button onClick={() => openDetail(s.id)} className="bg-[#001d62] text-white px-3 py-1 rounded-full text-xs font-bold">Ver</button></td>
+                  <td className="px-3 py-2"><button onClick={() => openDetail(s.id)} className="bg-[#1D60A9] text-white px-3 py-1 rounded-full text-xs font-bold">Ver</button></td>
                 </tr>
               ))}
               {filtered.length === 0 && <tr><td colSpan={9} className="px-4 py-8 text-center text-slate-500">Sin resultados con esos filtros. <button onClick={clear} className="underline">Limpiar</button></td></tr>}

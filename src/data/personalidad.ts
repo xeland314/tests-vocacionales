@@ -101,10 +101,10 @@ export interface TypeInfo {
 }
 
 export const TYPES: Record<PersonalityTypeCode, TypeInfo> = {
-  INTJ: { code: "INTJ", name: "Arquitecto", role: "Analistas", color: "#7C3AED", tagline: "Imaginativo y estratégico, con un plan para todo.", strengths: ["Visión a largo plazo","Determinación","Mente analítica"], description: "Piensan en grande y no descansan hasta alcanzar sus objetivos. Independientes y perfeccionistas." },
-  INTP: { code: "INTP", name: "Lógico", role: "Analistas", color: "#7C3AED", tagline: "Inventivo y curioso, ama las teorías.", strengths: ["Lógica","Creatividad conceptual","Objetividad"], description: "Fascinados por los sistemas y cómo funcionan. Analíticos y reservados." },
-  ENTJ: { code: "ENTJ", name: "Comandante", role: "Analistas", color: "#7C3AED", tagline: "Líder audaz, siempre encuentra la forma.", strengths: ["Liderazgo","Eficiencia","Decisión"], description: "Líderes naturales que organizan y movilizan a otros hacia metas." },
-  ENTP: { code: "ENTP", name: "Innovador", role: "Analistas", color: "#7C3AED", tagline: "Inteligente y curioso, adora debatir.", strengths: ["Ingenio","Versatilidad","Energía"], description: "Cuestionan el statu quo y generan ideas." },
+  INTJ: { code: "INTJ", name: "Arquitecto", role: "Analistas", color: "#662483", tagline: "Imaginativo y estratégico, con un plan para todo.", strengths: ["Visión a largo plazo","Determinación","Mente analítica"], description: "Piensan en grande y no descansan hasta alcanzar sus objetivos. Independientes y perfeccionistas." },
+  INTP: { code: "INTP", name: "Lógico", role: "Analistas", color: "#662483", tagline: "Inventivo y curioso, ama las teorías.", strengths: ["Lógica","Creatividad conceptual","Objetividad"], description: "Fascinados por los sistemas y cómo funcionan. Analíticos y reservados." },
+  ENTJ: { code: "ENTJ", name: "Comandante", role: "Analistas", color: "#662483", tagline: "Líder audaz, siempre encuentra la forma.", strengths: ["Liderazgo","Eficiencia","Decisión"], description: "Líderes naturales que organizan y movilizan a otros hacia metas." },
+  ENTP: { code: "ENTP", name: "Innovador", role: "Analistas", color: "#662483", tagline: "Inteligente y curioso, adora debatir.", strengths: ["Ingenio","Versatilidad","Energía"], description: "Cuestionan el statu quo y generan ideas." },
   INFJ: { code: "INFJ", name: "Abogado", role: "Diplomáticos", color: "#10B981", tagline: "Idealista y reservado, inspirado en ayudar.", strengths: ["Empatía","Visión","Compromiso"], description: "Buscan sentido y conexión profunda. Callados pero influyentes." },
   INFP: { code: "INFP", name: "Mediador", role: "Diplomáticos", color: "#10B981", tagline: "Poético y altruista, fiel a sus valores.", strengths: ["Idealismo","Adaptabilidad","Creatividad"], description: "Guiados por sus principios, buscan armonía." },
   ENFJ: { code: "ENFJ", name: "Protagonista", role: "Diplomáticos", color: "#10B981", tagline: "Carismático e inspirador, une a las personas.", strengths: ["Carisma","Altruismo","Liderazgo humano"], description: "Líderes empáticos que inspiran a otros." },
@@ -120,7 +120,7 @@ export const TYPES: Record<PersonalityTypeCode, TypeInfo> = {
 };
 
 export const ROLE_COLOR: Record<TypeInfo["role"], string> = {
-  Analistas: "#7C3AED",
+  Analistas: "#662483",
   Diplomáticos: "#10B981",
   Centinelas: "#0EA5E9",
   Exploradores: "#F59E0B",

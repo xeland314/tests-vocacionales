@@ -60,7 +60,7 @@ export default function InformeMbti({
         color={info.color}
       />
 
-      {footerNote && <p className="mt-8 text-xs text-[#0f2b6b]/50 text-center print:hidden">{footerNote}</p>}
+      {footerNote && <p className="mt-8 text-xs text-[#164F8D]/50 text-center print:hidden">{footerNote}</p>}
     </>
   );
 }

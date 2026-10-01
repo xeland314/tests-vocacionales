@@ -32,17 +32,17 @@ export default function MbtiResultado({
           <img src="/logo-fucsia.png" alt="TEAM GGM" className="h-9 w-auto" />
           <button
             onClick={onPrint}
-            className="no-print bg-[#001d62] hover:bg-[#0f2b6b] text-white font-bold px-5 py-2.5 rounded-full text-sm inline-flex items-center gap-2 transition"
+            className="no-print bg-[#1D60A9] hover:bg-[#164F8D] text-white font-bold px-5 py-2.5 rounded-full text-sm inline-flex items-center gap-2 transition"
           >
             <Printer size={16} /> Imprimir / PDF
           </button>
         </div>
         <div className="print-only text-center mb-4">
-          <p className="text-xs font-black uppercase tracking-[0.2em] text-[#d8215d]">TEAM GGM · Informe de Personalidad</p>
+          <p className="text-xs font-black uppercase tracking-[0.2em] text-[#E8356A]">TEAM GGM · Informe de Personalidad</p>
         </div>
-        {savedAt && <p className="no-print text-xs text-[#0f2b6b] mb-2">Guardado: <span className="font-bold">{savedAt}</span></p>}
+        {savedAt && <p className="no-print text-xs text-[#164F8D] mb-2">Guardado: <span className="font-bold">{savedAt}</span></p>}
         {error && <p className="no-print text-xs text-red-600 font-bold mb-3 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{error}</p>}
-        {saving && <p className="no-print text-xs text-[#0f2b6b] mb-3">Guardando...</p>}
+        {saving && <p className="no-print text-xs text-[#164F8D] mb-3">Guardando...</p>}
 
         <InformeMbti
           result={result}
